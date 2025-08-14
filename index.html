@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Poiz Exchange — Калькулятор</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./styles.css?v=4" />
+  <script src="./pricing.js?v=4"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<header>
+  <img src="./assets/logo.png" class="logo" alt="Poiz Exchange">
+  <div class="currency-strip">🇷🇺 ₽ · 🇨🇳 ¥ · 🇺🇸 $ · 💲 USDT</div>
+</header>
+
+<main>
+  <h2>Калькулятор обмена</h2>
+
+  <label>Отдаю</label>
+  <select id="from"></select>
+
+  <label>Получаю</label>
+  <select id="to"></select>
+
+  <div id="rubcnyModeBox">
+    <button id="modeByY" class="btn-ghost">RUB→CNY по ¥</button>
+    <button id="modeFix10" class="btn-ghost">RUB→CNY фикс 10</button>
+  </div>
+
+  <label>Сумма</label>
+  <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" />
+
+  <div id="result" class="result">Курс: — | К получению: —</div>
+
+  <h2>Заявка</h2>
+
+  <label>Контакт</label>
+  <input id="contact" placeholder="@username или телефон" />
+
+  <label>Реквизиты</label>
+  <textarea id="requisites" placeholder="Номер карты/кошелька, банк, ФИО"></textarea>
+
+  <label>Комментарий</label>
+  <textarea id="note" placeholder="Город, банк, срочность…"></textarea>
+
+  <label>QR-файл (опционально)</label>
+  <input type="file" id="qrfile" accept="image/*,.png,.jpg,.jpeg,.webp" />
+
+  <button id="sendBtn">📩 Отправить заявку</button>
+</main>
+
+<footer>
+  <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
+  <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
+  <a href="./rates.html?v=4">📊 Табло</a>
+</footer>
+
+<script>
+  const tg = window.Telegram?.WebApp; if (tg) tg.expand();
+
+  // Заполнение выпадающих списков
+  const selFrom=document.getElementById('from'), selTo=document.getElementById('to');
+  CURRENCIES.forEach(c=>{
+    const o1=new Option(c.title,c.code);
+    const o2=new Option(c.title,c.code);
+    selFrom.add(o1); selTo.add(o2);
+  });
+
+  // Направление из URL (?from=&to=) или дефолт
+  const qs=new URLSearchParams(location.search);
+  selFrom.value = qs.get('from') || 'USDT';
+  selTo.value   = qs.get('to')   || 'RUB';
+
+  let rubCnyMode="byy"; // режим RUB→CNY: по ¥ (byy) или фикс 10 (fix)
+  const modeBox=document.getElementById('rubcnyModeBox');
+  const btnByY=document.getElementById('modeByY');
+  const btnFix=document.getElementById('modeFix10');
+  const amt=document.getElementById('amount');
+  const res=document.getElementById('result');
+
+  function updateMode(){
+    modeBox.style.display = (selFrom.value==='RUB' && selTo.value==='CNY') ? 'flex' : 'none';
+  }
+
+  function recalc(){
+    updateMode();
+    const dir = buildDirection(selFrom.value, selTo.value, rubCnyMode);
+    const a   = parseFloat(amt.value||'0');
+    const q   = quote(dir, a);
+    if(!q){ res.textContent = 'Курс: — | К получению: —'; return null; }
+    res.textContent = `Курс: ${q.rate} | К получению: ${formatN(q.total)}`;
+    return {dir, a, rate:q.rate, total:q.total};
+  }
+
+  btnByY.onclick = ()=>{ rubCnyMode='byy'; recalc(); };
+  btnFix.onclick = ()=>{ rubCnyMode='fix'; recalc(); };
+
+  selFrom.onchange = recalc;
+  selTo.onchange   = recalc;
+  amt.oninput      = recalc;
+  recalc();
+
+  // Отправка заявки в бота
+  document.getElementById('sendBtn').onclick = ()=>{
+    const r = recalc(); if(!r) return;
+    const payload = {
+      action:'request',
+      direction:r.dir,
+      amount:r.a,
+      contact:document.getElementById('contact').value.trim(),
+      requisites:document.getElementById('requisites').value.trim(),
+      note:document.getElementById('note').value.trim(),
+      has_qr: !!document.getElementById('qrfile').files?.length,
+      qr_filename: document.getElementById('qrfile').files?.[0]?.name || null
+    };
+    if (tg){ tg.sendData(JSON.stringify(payload)); tg.close(); }
+    else { alert('Откройте внутри Telegram'); }
+  };
+</script>
+</body>
+</html>

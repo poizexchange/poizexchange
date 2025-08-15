@@ -1,5 +1,4 @@
-// ===== pricing.js =====
-// Все курсы меняешь тут. Комиссия = 0.
+// Все курсы редактируешь тут. Комиссия = 0.
 const TARIFFS = {
   "USDT>RUB":[
     {min:0,rate:82.5},{min:1000,rate:81.9},{min:5000,rate:81.4},{min:10000,rate:81.1}
@@ -18,7 +17,6 @@ const TARIFFS = {
   "RUB>CNYF":[{min:0,rate:10.0}] // фикс 10
 };
 
-// Список валют (с эмодзи/флагами в тайтле)
 const CURRENCIES = [
   { code: "USDT", title: "💲 USDT" },
   { code: "USD",  title: "💵 USD" },
@@ -51,4 +49,3 @@ function quote(dir, amount){
 }
 
 function formatN(x){ return Number(x).toLocaleString('ru-RU',{maximumFractionDigits:2}); }
-

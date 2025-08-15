@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Калькулятор</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=4" />
-  <script src="./pricing.js?v=4"></script>
+  <link rel="stylesheet" href="./styles.css?v=5" />
+  <script src="./pricing.js?v=5"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -23,7 +23,7 @@
   <label>Получаю</label>
   <select id="to"></select>
 
-  <div id="rubcnyModeBox">
+  <div id="rubcnyModeBox" style="display:none; gap:10px; margin-top:8px">
     <button id="modeByY" class="btn-ghost">RUB→CNY по ¥</button>
     <button id="modeFix10" class="btn-ghost">RUB→CNY фикс 10</button>
   </div>
@@ -53,70 +53,106 @@
 <footer>
   <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
   <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
-  <a href="./rates.html?v=4">📊 Табло</a>
+  <a href="./rates.html?v=5">📊 Табло</a>
 </footer>
 
 <script>
-  const tg = window.Telegram?.WebApp; if (tg) tg.expand();
+  // --- Telegram WebApp init ---
+  const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+  if (tg) { tg.expand(); tg.ready(); }
+
+  // --- Валюты из pricing.js ---
+  // CURRENCIES и функции quote/buildDirection/formatN/pickTariff приходят из pricing.js
 
   // Заполнение выпадающих списков
-  const selFrom=document.getElementById('from'), selTo=document.getElementById('to');
-  CURRENCIES.forEach(c=>{
-    const o1=new Option(c.title,c.code);
-    const o2=new Option(c.title,c.code);
-    selFrom.add(o1); selTo.add(o2);
+  const selFrom = document.getElementById('from');
+  const selTo   = document.getElementById('to');
+  CURRENCIES.forEach(c => {
+    selFrom.add(new Option(c.title, c.code));
+    selTo.add(new Option(c.title, c.code));
   });
 
   // Направление из URL (?from=&to=) или дефолт
-  const qs=new URLSearchParams(location.search);
+  const qs = new URLSearchParams(location.search);
   selFrom.value = qs.get('from') || 'USDT';
   selTo.value   = qs.get('to')   || 'RUB';
 
-  let rubCnyMode="byy"; // режим RUB→CNY: по ¥ (byy) или фикс 10 (fix)
-  const modeBox=document.getElementById('rubcnyModeBox');
-  const btnByY=document.getElementById('modeByY');
-  const btnFix=document.getElementById('modeFix10');
-  const amt=document.getElementById('amount');
-  const res=document.getElementById('result');
+  // Режим RUB→CNY: по ¥ или фикс 10
+  let rubCnyMode = 'byy';
+  const modeBox  = document.getElementById('rubcnyModeBox');
+  const btnByY   = document.getElementById('modeByY');
+  const btnFix   = document.getElementById('modeFix10');
+
+  const amt = document.getElementById('amount');
+  const res = document.getElementById('result');
 
   function updateMode(){
-    modeBox.style.display = (selFrom.value==='RUB' && selTo.value==='CNY') ? 'flex' : 'none';
+    modeBox.style.display = (selFrom.value === 'RUB' && selTo.value === 'CNY') ? 'flex' : 'none';
   }
 
   function recalc(){
     updateMode();
     const dir = buildDirection(selFrom.value, selTo.value, rubCnyMode);
-    const a   = parseFloat(amt.value||'0');
+    const a   = parseFloat(amt.value || '0');
     const q   = quote(dir, a);
-    if(!q){ res.textContent = 'Курс: — | К получению: —'; return null; }
+    if (!q) { res.textContent = 'Курс: — | К получению: —'; return null; }
     res.textContent = `Курс: ${q.rate} | К получению: ${formatN(q.total)}`;
-    return {dir, a, rate:q.rate, total:q.total};
+    return { dir, a, rate: q.rate, total: q.total };
   }
 
-  btnByY.onclick = ()=>{ rubCnyMode='byy'; recalc(); };
-  btnFix.onclick = ()=>{ rubCnyMode='fix'; recalc(); };
+  btnByY.onclick = () => { rubCnyMode = 'byy'; recalc(); };
+  btnFix.onclick = () => { rubCnyMode = 'fix'; recalc(); };
 
   selFrom.onchange = recalc;
   selTo.onchange   = recalc;
   amt.oninput      = recalc;
   recalc();
 
-  // Отправка заявки в бота
-  document.getElementById('sendBtn').onclick = ()=>{
-    const r = recalc(); if(!r) return;
-    const payload = {
-      action:'request',
-      direction:r.dir,
-      amount:r.a,
-      contact:document.getElementById('contact').value.trim(),
-      requisites:document.getElementById('requisites').value.trim(),
-      note:document.getElementById('note').value.trim(),
+  // --- Отправка заявки в бота ---
+  function isInsideTelegram(){
+    try { return !!(tg && tg.initDataUnsafe && tg.platform); } catch(e){ return false; }
+  }
+
+  function buildPayload(){
+    const r = recalc(); // гарантируем актуальные расчёты
+    return {
+      action: 'request',
+      direction: r ? r.dir : '',
+      amount:    r ? r.a   : 0,
+      contact:    (document.getElementById('contact').value    || '').trim(),
+      requisites: (document.getElementById('requisites').value || '').trim(),
+      note:       (document.getElementById('note').value       || '').trim(),
       has_qr: !!document.getElementById('qrfile').files?.length,
       qr_filename: document.getElementById('qrfile').files?.[0]?.name || null
     };
-    if (tg){ tg.sendData(JSON.stringify(payload)); tg.close(); }
-    else { alert('Откройте внутри Telegram'); }
-  };
+  }
+
+  async function sendRequest(){
+    const payload = buildPayload();
+    if (!isInsideTelegram()){
+      alert('Откройте форму через кнопку в Telegram, а не в браузере.');
+      return;
+    }
+    try{
+      tg.HapticFeedback && tg.HapticFeedback.impactOccurred('medium');
+      tg.showPopup && tg.showPopup({ title: 'Отправка', message: 'Заявка отправляется…' });
+      tg.sendData(JSON.stringify(payload));
+      tg.close();
+    }catch(e){
+      console.error(e);
+      alert('Ошибка отправки заявки. Попробуйте ещё раз или напишите @poizmanager');
+    }
+  }
+
+  // Кнопка на странице
+  document.getElementById('sendBtn').onclick = sendRequest;
+
+  // Telegram MainButton (низ экрана)
+  if (tg && tg.MainButton){
+    tg.MainButton.setText('📩 Отправить заявку');
+    tg.MainButton.show();
+    tg.onEvent('mainButtonClicked', sendRequest);
+  }
 </script>
 </body>
 </html>

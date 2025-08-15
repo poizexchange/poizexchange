@@ -4,151 +4,169 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Калькулятор</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=6" />
-  <script src="./pricing.js?v=6"></script>
+  <link rel="preconnect" href="https://telegram.org">
+  <link rel="stylesheet" href="./styles.css?v=18" />
+  <script src="./pricing.js?v=18"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-<header>
-  <img src="./5283028663249529640.jpg" class="logo" alt="Poiz Exchange">
-  <div class="currency-strip">🇷🇺 ₽ · 🇨🇳 ¥ · 🇺🇸 $ · 💲 USDT</div>
+<header class="header">
+  <div class="brand-strip">
+    <span>🇷🇺 ₽</span><span>·</span><span>🇨🇳 ¥</span><span>·</span><span>🇺🇸 $</span><span>·</span><span>💲 USDT</span>
+  </div>
 </header>
 
-<main>
-  <h2>Калькулятор обмена</h2>
+<main class="container">
+  <section class="card">
+    <h1 class="title">Калькулятор обмена</h1>
 
-  <label>Отдаю</label>
-  <select id="from"></select>
+    <!-- Шаг 1 -->
+    <div class="step-caption">Шаг 1 · Вы отдаёте</div>
+    <div id="coinsFrom" class="coins"></div>
 
-  <label>Получаю</label>
-  <select id="to"></select>
+    <!-- Шаг 2 -->
+    <div class="step-caption">Шаг 2 · Вы получаете</div>
+    <div id="coinsTo" class="coins"></div>
 
-  <div id="rubcnyModeBox" style="display:none; gap:10px; margin-top:8px">
-    <button id="modeByY" class="btn-ghost">RUB→CNY по ¥</button>
-    <button id="modeFix10" class="btn-ghost">RUB→CNY фикс 10</button>
-  </div>
+    <div class="grid2" style="margin-top:10px">
+      <div>
+        <label>Сумма</label>
+        <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" inputmode="decimal" />
+      </div>
+      <div>
+        <label>Курс/Итог</label>
+        <div id="result" class="resultBox">Курс: — | К получению: —</div>
+      </div>
+    </div>
 
-  <label>Сумма</label>
-  <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" />
+    <div class="divider"></div>
 
-  <div id="result" class="result">Курс: — | К получению: —</div>
+    <h2 class="subtitle">Заявка</h2>
+    <div class="grid2">
+      <div>
+        <label>Контакт</label>
+        <input id="contact" placeholder="@username или телефон" />
+      </div>
+      <div>
+        <label>QR-файл (опционально)</label>
+        <input type="file" id="qrfile" accept="image/*,.png,.jpg,.jpeg,.webp" />
+      </div>
+    </div>
 
-  <h2>Заявка</h2>
+    <label>Реквизиты</label>
+    <textarea id="requisites" placeholder="Номер карты/кошелька, банк, ФИО"></textarea>
 
-  <label>Контакт</label>
-  <input id="contact" placeholder="@username или телефон" />
+    <label>Комментарий</label>
+    <textarea id="note" placeholder="Город, банк, срочность…"></textarea>
 
-  <label>Реквизиты</label>
-  <textarea id="requisites" placeholder="Номер карты/кошелька, банк, ФИО"></textarea>
+    <button id="sendBtn" class="btn-primary">📩 Отправить заявку</button>
+    <p id="hint" class="hint" hidden>Откройте форму через кнопку в Telegram, чтобы отправить заявку напрямую боту.</p>
+  </section>
 
-  <label>Комментарий</label>
-  <textarea id="note" placeholder="Город, банк, срочность…"></textarea>
-
-  <label>QR-файл (опционально)</label>
-  <input type="file" id="qrfile" accept="image/*,.png,.jpg,.jpeg,.webp" />
-
-  <button id="sendBtn">📩 Отправить заявку</button>
+  <nav class="actions">
+    <a class="link" href="https://t.me/poizchat" target="_blank">💬 Чат</a>
+    <a class="link" href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
+    <a class="link" href="./rates.html?v=18">📊 Табло</a>
+  </nav>
 </main>
 
-<footer>
-  <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
-  <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
-  <a href="./rates.html?v=6">📊 Табло</a>
-</footer>
-
 <script>
-  // --- Telegram WebApp init ---
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
   if (tg) { tg.expand(); tg.ready(); }
+  function isInsideTelegram(){ try { return !!(tg && tg.initDataUnsafe && tg.platform); } catch(e){ return false; } }
 
-  // --- Валюты из pricing.js ---
-  const selFrom = document.getElementById('from');
-  const selTo   = document.getElementById('to');
-  CURRENCIES.forEach(c => {
-    selFrom.add(new Option(c.title, c.code));
-    selTo.add(new Option(c.title, c.code));
-  });
+  const coinsFrom = document.getElementById('coinsFrom');
+  const coinsTo   = document.getElementById('coinsTo');
+  const amt       = document.getElementById('amount');
+  const res       = document.getElementById('result');
+  const hint      = document.getElementById('hint');
 
-  // Направление из URL (?from=&to=) или дефолт
-  const qs = new URLSearchParams(location.search);
-  selFrom.value = qs.get('from') || 'USDT';
-  selTo.value   = qs.get('to')   || 'RUB';
+  const ICON_CLASS = {
+    USD:"usd", USDT:"usdt", CNY:"cny", BTC:"btc", ETH:"eth", XMR:"xmr", RUB:"rub"
+  };
 
-  // Режим RUB→CNY: по ¥ или фикс 10
-  let rubCnyMode = 'byy';
-  const modeBox  = document.getElementById('rubcnyModeBox');
-  const btnByY   = document.getElementById('modeByY');
-  const btnFix   = document.getElementById('modeFix10');
+  let FROM = "USDT";
+  let TO   = "RUB";
 
-  const amt = document.getElementById('amount');
-  const res = document.getElementById('result');
+  function coinTile(code){
+    const div = document.createElement('div');
+    div.className = 'coin';
+    div.dataset.code = code;
+    const ic = document.createElement('span');
+    ic.className = 'icon ' + (ICON_CLASS[code]||'');
+    const cap = document.createElement('div');
+    cap.className = 'cap';
+    cap.textContent = code;
+    div.append(ic, cap);
+    return div;
+  }
 
-  function updateMode(){
-    modeBox.style.display = (selFrom.value === 'RUB' && selTo.value === 'CNY') ? 'flex' : 'none';
+  function renderCoins(){
+    coinsFrom.innerHTML = '';
+    coinsTo.innerHTML   = '';
+
+    CURRENCIES.forEach(c=>{
+      const t1 = coinTile(c.code);
+      if (c.code === FROM) t1.classList.add('active');
+      t1.onclick = ()=>{ FROM=c.code; if (TO===FROM){ // выберем другой TO
+        TO = (CURRENCIES.find(x=>x.code!=="RUB" && x.code!==FROM)?.code) || "RUB";
+      } renderCoins(); recalc(); };
+      coinsFrom.appendChild(t1);
+
+      const t2 = coinTile(c.code);
+      if (c.code === TO) t2.classList.add('active');
+      if (c.code === FROM) { t2.style.opacity=.4; t2.style.pointerEvents='none'; }
+      t2.onclick = ()=>{ TO=c.code; if (TO===FROM){ FROM="RUB"; } renderCoins(); recalc(); };
+      coinsTo.appendChild(t2);
+    });
   }
 
   function recalc(){
-    updateMode();
-    const dir = buildDirection(selFrom.value, selTo.value, rubCnyMode);
-    const a   = parseFloat(amt.value || '0');
-    const q   = quote(dir, a);
-    if (!q) { res.textContent = 'Курс: — | К получению: —'; return null; }
-    res.textContent = `Курс: ${q.rate} | К получению: ${formatN(q.total)}`;
-    return { dir, a, rate: q.rate, total: q.total };
+    const a = parseFloat(amt.value||'0');
+    const q = quotePair(FROM, TO, a);
+    if (!q){ res.textContent='Курс: — | К получению: —'; return null; }
+    res.textContent = `Курс: ${q.rate.toFixed(6)} | К получению: ${formatN(q.total)}`;
+    return { from: FROM, to: TO, a, rate:q.rate, total:q.total };
   }
 
-  btnByY.onclick = () => { rubCnyMode = 'byy'; recalc(); };
-  btnFix.onclick = () => { rubCnyMode = 'fix'; recalc(); };
+  amt.oninput = recalc;
+  renderCoins(); recalc();
 
-  selFrom.onchange = recalc;
-  selTo.onchange   = recalc;
-  amt.oninput      = recalc;
-  recalc();
+  if (!isInsideTelegram()) hint.hidden = false;
 
-  // --- Отправка заявки в бота ---
-  function isInsideTelegram(){
-    try { return !!(tg && tg.initDataUnsafe && tg.platform); } catch(e){ return false; }
-  }
-
-  function buildPayload(){
-    const r = recalc(); // актуализируем расчёты
-    return {
+  // Отправка заявки через tg.sendData (как раньше)
+  document.getElementById('sendBtn').onclick = ()=>{
+    const r = recalc(); if(!r){ alert('Введите сумму'); return; }
+    const payload = {
       action: 'request',
-      direction: r ? r.dir : '',
-      amount:    r ? r.a   : 0,
-      contact:    (document.getElementById('contact').value    || '').trim(),
+      direction: `${r.from}>${r.to}`,
+      amount: r.a,
+      contact: (document.getElementById('contact').value || '').trim(),
       requisites: (document.getElementById('requisites').value || '').trim(),
-      note:       (document.getElementById('note').value       || '').trim(),
+      note: (document.getElementById('note').value || '').trim(),
       has_qr: !!document.getElementById('qrfile').files?.length,
       qr_filename: document.getElementById('qrfile').files?.[0]?.name || null
     };
-  }
-
-  async function sendRequest(){
-    const payload = buildPayload();
-    if (!isInsideTelegram()){
-      alert('Откройте форму через кнопку в Telegram, а не в браузере.');
-      return;
+    if (isInsideTelegram()){
+      try{
+        tg.HapticFeedback?.impactOccurred('medium');
+        tg.showPopup?.({ title: 'Отправка', message: 'Заявка отправляется…' });
+        tg.sendData(JSON.stringify(payload));
+        tg.close();
+      }catch(e){
+        console.error(e);
+        alert('Ошибка отправки через Telegram. Попробуйте ещё раз.');
+      }
+    } else {
+      alert('Откройте эту страницу из кнопки бота в Telegram, чтобы отправить заявку.');
     }
-    try{
-      tg.HapticFeedback && tg.HapticFeedback.impactOccurred('medium');
-      tg.showPopup && tg.showPopup({ title: 'Отправка', message: 'Заявка отправляется…' });
-      tg.sendData(JSON.stringify(payload));
-      tg.close();
-    }catch(e){
-      console.error(e);
-      alert('sendData отправлен. Если бот молчит — пришли /debug_links и скрин консоли бота.');
+  };
 
-    }
-  }
-
-  document.getElementById('sendBtn').onclick = sendRequest;
-
-  if (tg && tg.MainButton){
-    tg.MainButton.setText('📩 Отправить заявку');
-    tg.MainButton.show();
-    tg.onEvent('mainButtonClicked', sendRequest);
-  }
+  // «живой» фон
+  document.addEventListener('scroll', () => {
+    const y = window.scrollY || 0;
+    document.body.style.setProperty('--bg-shift', (y * 0.03).toFixed(2) + 'px');
+  }, {passive:true});
 </script>
 </body>
 </html>

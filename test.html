@@ -6,7 +6,7 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <body style="font-family:system-ui;padding:20px">
   <h3>WebApp ping</h3>
-  <p>Эта кнопка отправит простое сообщение в бота через tg.sendData.</p>
+  <p>Отправляем <code>{action:"ping"}</code> через <b>tg.sendData</b>. Окно НЕ закрываем.</p>
   <button id="ping">Отправить ping</button>
   <pre id="log" style="white-space:pre-wrap;background:#eee;padding:8px;border-radius:8px"></pre>
 <script>
@@ -15,11 +15,16 @@
   if (tg){ tg.expand(); tg.ready(); log("TG OK platform="+tg.platform); } else { log("NO TG WEBAPP"); }
 
   document.getElementById('ping').onclick = ()=>{
-    if(!tg){ alert("Открой через кнопку в Telegram"); return; }
+    if(!tg){ alert("Открой через кнопку в Telegram!"); return; }
+    const payload = {action:"ping", ts: Date.now()};
     try{
-      tg.sendData(JSON.stringify({action:"ping", ts: Date.now()}));
-      tg.close();
-    }catch(e){ console.error(e); alert("Ошибка tg.sendData"); }
+      tg.sendData(JSON.stringify(payload));
+      alert("✅ sendData отправлен:\n" + JSON.stringify(payload, null, 2));
+      // НЕ закрываем окно — без tg.close()
+    }catch(e){
+      console.error(e);
+      alert("❌ Ошибка tg.sendData: " + e);
+    }
   };
 </script>
 </body>

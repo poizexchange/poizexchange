@@ -13,7 +13,6 @@
   const log = (t)=>document.getElementById('log').textContent += t+"\n";
   const tg = window.Telegram?.WebApp;
   if (tg){ tg.expand(); tg.ready(); log("TG OK platform="+tg.platform); } else { log("NO TG WEBAPP"); }
-
   document.getElementById('ping').onclick = ()=>{
     if(!tg){ alert("Открой через кнопку в Telegram"); return; }
     try{

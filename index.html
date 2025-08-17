@@ -4,74 +4,76 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Калькулятор</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=23" />
-  <script src="./pricing.js?v=23"></script>
+  <link rel="stylesheet" href="./styles.css?v=20" />
+  <script src="./index.js?v=20" defer></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-<header class="header">
-  <div class="brand-strip">🇷🇺 ₽ · 🇨🇳 ¥ · 🇺🇸 $ · 💲 USDT</div>
+<header>
+  <div class="currency-strip">🇷🇺 ₽ · 🇨🇳 ¥ · 🇺🇸 $ · 💲 USDT · ₿ BTC · Ξ ETH · Ⓜ XMR</div>
 </header>
 
-<main class="container">
-  <section class="card">
-    <h1 class="title">Калькулятор обмена</h1>
+<main>
+  <h2>Калькулятор обмена</h2>
 
-    <!-- ШАГ 1 -->
-    <div class="step-caption">Шаг 1 · Вы отдаёте</div>
-    <div class="paytypes" id="payFrom">
-      <div class="pay btn-tile" data-type="cash"><img src="./icons/cash.svg" class="payicon"><div>Наличные</div></div>
-      <div class="pay btn-tile" data-type="bank"><img src="./icons/bank.svg" class="payicon"><div>Банк</div></div>
-      <div class="pay btn-tile" data-type="crypto"><img src="./icons/crypto.svg" class="payicon"><div>Крипто</div></div>
+  <!-- Блок "Отдаю" -->
+  <div class="block">
+    <h3>Отдаю</h3>
+    <div class="paytypes" id="from-pay">
+      <div class="pay" data-type="cash"><img src="./icons/cash.svg"> Наличные</div>
+      <div class="pay" data-type="bank"><img src="./icons/bank.svg"> Банковский перевод</div>
+      <div class="pay" data-type="crypto"><img src="./icons/crypto.svg"> Криптовалюта</div>
     </div>
-    <div id="cityFromBox" class="citybox" hidden>
+    <div id="from-city" class="citybox" style="display:none;">
       <label>Город</label>
-      <select id="cityFrom">
+      <select>
         <option value="moscow">Москва</option>
         <option value="guangzhou">Гуанчжоу</option>
       </select>
     </div>
-    <div id="coinsFrom" class="coins"></div>
+    <div class="currencies" id="from-currencies"></div>
+  </div>
 
-    <!-- ШАГ 2 -->
-    <div class="step-caption">Шаг 2 · Вы получаете</div>
-    <div class="paytypes" id="payTo">
-      <div class="pay btn-tile" data-type="cash"><img src="./icons/cash.svg" class="payicon"><div>Наличные</div></div>
-      <div class="pay btn-tile" data-type="bank"><img src="./icons/bank.svg" class="payicon"><div>Банк</div></div>
-      <div class="pay btn-tile" data-type="crypto"><img src="./icons/crypto.svg" class="payicon"><div>Крипто</div></div>
+  <!-- Блок "Получаю" -->
+  <div class="block">
+    <h3>Получаю</h3>
+    <div class="paytypes" id="to-pay">
+      <div class="pay" data-type="cash"><img src="./icons/cash.svg"> Наличные</div>
+      <div class="pay" data-type="bank"><img src="./icons/bank.svg"> Банковский перевод</div>
+      <div class="pay" data-type="crypto"><img src="./icons/crypto.svg"> Криптовалюта</div>
     </div>
-    <div id="cityToBox" class="citybox" hidden>
+    <div id="to-city" class="citybox" style="display:none;">
       <label>Город</label>
-      <select id="cityTo">
+      <select>
         <option value="moscow">Москва</option>
         <option value="guangzhou">Гуанчжоу</option>
       </select>
     </div>
-    <div id="coinsTo" class="coins"></div>
+    <div class="currencies" id="to-currencies"></div>
+  </div>
 
-    <label>Сумма</label>
-    <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" />
-    <div id="result" class="resultBox">Курс: — | К получению: —</div>
+  <!-- Сумма -->
+  <label>Сумма</label>
+  <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" />
 
-    <h2 class="subtitle">Заявка</h2>
-    <label>Контакт</label>
-    <input id="contact" placeholder="@username или телефон" />
-    <label>Реквизиты</label>
-    <textarea id="requisites" placeholder="Номер карты/кошелька"></textarea>
-    <label>Комментарий</label>
-    <textarea id="note" placeholder="Город, срочность…"></textarea>
+  <div id="result" class="result">Курс: — | К получению: —</div>
 
-    <button id="sendBtn" class="btn-primary">📩 Отправить заявку</button>
-    <p id="hint" class="hint" hidden>Откройте форму в Telegram-боте</p>
-  </section>
+  <!-- Заявка -->
+  <h2>Заявка</h2>
+  <label>Контакт</label>
+  <input id="contact" placeholder="@username или телефон" />
+  <label>Реквизиты</label>
+  <textarea id="requisites" placeholder="Номер карты/кошелька, банк, ФИО"></textarea>
+  <label>Комментарий</label>
+  <textarea id="note" placeholder="Город, банк, срочность…"></textarea>
 
-  <nav class="actions">
-    <a href="https://t.me/poizchat">💬 Чат</a>
-    <a href="https://t.me/poizmanager">📞 Админ</a>
-    <a href="./rates.html?v=23">📊 Табло</a>
-  </nav>
+  <button id="sendBtn">📩 Отправить заявку</button>
 </main>
 
-<script src="./index.js?v=23"></script>
+<footer>
+  <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
+  <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
+  <a href="./rates.html?v=20">📊 Табло</a>
+</footer>
 </body>
 </html>

@@ -1,54 +1,37 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Poiz Exchange — Курсы к рублю</title>
+  <meta charset="UTF-8">
+  <title>Poiz Exchange — Курсы</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=18" />
-  <script src="./pricing.js?v=18"></script>
+  <link rel="stylesheet" href="./styles.css?v=27" />
+  <script src="./pricing.js?v=27"></script>
 </head>
 <body>
-<header class="header">
-  <div class="brand-strip">
-    <span>🇷🇺 ₽</span><span>·</span><span>🇨🇳 ¥</span><span>·</span><span>🇺🇸 $</span><span>·</span><span>💲 USDT</span>
-  </div>
+<header class="site-header">
+  <div class="container"><div class="brandline">Курсы к ₽</div></div>
 </header>
 
 <main class="container">
   <section class="card">
-    <h1 class="title">Текущие курсы к рублю</h1>
-
-    <div class="coins" id="board"></div>
-
-    <div style="margin-top:12px">
-      <a class="link" href="./index.html?v=18">🧮 Перейти в калькулятор</a>
-    </div>
+    <div id="ratesGrid" class="coins"></div>
   </section>
 </main>
 
 <script>
-  const SHOW = ["USD","USDT","CNY","BTC","ETH","XMR"]; // что показываем к RUB
-  const ICON_CLASS = { USD:"usd", USDT:"usdt", CNY:"cny", BTC:"btc", ETH:"eth", XMR:"xmr", RUB:"rub" };
-  const board = document.getElementById('board');
-
-  function tile(code){
-    const div = document.createElement('div');
-    div.className = 'coin';
-    const ic = document.createElement('span');
-    ic.className = 'icon ' + (ICON_CLASS[code]||'');
-    const cap = document.createElement('div');
-    cap.className = 'cap';
-    const rate = (RATES_RUB[code] ?? null);
-    cap.textContent = `${code}/RUB · ${rate ? rate.toLocaleString('ru-RU') : '—'}`;
-    div.append(ic, cap);
-    return div;
+  const ICON = name => `./icons/${name}.svg`;
+  const CODES = ["USD","USDT","CNY","BTC","ETH","XMR"];
+  function tile(code, rate){
+    const d = document.createElement('button');
+    d.type='button'; d.className='coin';
+    d.innerHTML = `<img class="iconimg" src="${ICON(code.toLowerCase())}" alt=""><div class="cap">${code}</div><div class="cap" style="color:#555">₽ ${rate}</div>`;
+    return d;
   }
-
-  function render(){
-    board.innerHTML='';
-    SHOW.forEach(code => board.appendChild(tile(code)));
-  }
-  render();
+  const grid = document.getElementById('ratesGrid');
+  CODES.forEach(c=>{
+    const q = quotePair(c,"RUB",1);
+    grid.appendChild(tile(c, q ? q.rate.toFixed(2) : "—"));
+  });
 </script>
 </body>
 </html>

@@ -3,35 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <title>Poiz Exchange — Курсы</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=27" />
-  <script src="./pricing.js?v=27"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="stylesheet" href="./styles.css?v=29" />
+  <script src="./pricing.js?v=29"></script>
 </head>
-<body>
-<header class="site-header">
-  <div class="container"><div class="brandline">Курсы к ₽</div></div>
-</header>
+<body class="ocean-bg">
+  <div class="bg-fixed"></div>
 
-<main class="container">
-  <section class="card">
-    <div id="ratesGrid" class="coins"></div>
-  </section>
-</main>
+  <header class="site-header">
+    <div class="container">
+      <div class="brandline">Курсы к ₽</div>
+      <div class="brandbar small">
+        <img src="./icons/usd.svg"  alt="USD">
+        <img src="./icons/usdt.svg" alt="USDT">
+        <img src="./icons/cny.svg"  alt="CNY">
+        <img src="./icons/btc.svg"  alt="BTC">
+        <img src="./icons/eth.svg"  alt="ETH">
+        <img src="./icons/xmr.svg"  alt="XMR">
+      </div>
+    </div>
+  </header>
 
-<script>
-  const ICON = name => `./icons/${name}.svg`;
-  const CODES = ["USD","USDT","CNY","BTC","ETH","XMR"];
-  function tile(code, rate){
-    const d = document.createElement('button');
-    d.type='button'; d.className='coin';
-    d.innerHTML = `<img class="iconimg" src="${ICON(code.toLowerCase())}" alt=""><div class="cap">${code}</div><div class="cap" style="color:#555">₽ ${rate}</div>`;
-    return d;
-  }
-  const grid = document.getElementById('ratesGrid');
-  CODES.forEach(c=>{
-    const q = quotePair(c,"RUB",1);
-    grid.appendChild(tile(c, q ? q.rate.toFixed(2) : "—"));
-  });
-</script>
+  <main class="container main-safe">
+    <section class="card compact">
+      <div id="ratesGrid" class="coins"></div>
+    </section>
+  </main>
+
+  <script>
+    const ICON = n => `./icons/${n}.svg`;
+    const CODES = ["USD","USDT","CNY","BTC","ETH","XMR"];
+    function tile(code, rate){
+      const d = document.createElement('button');
+      d.type='button'; d.className='coin';
+      d.innerHTML = `
+        <img class="iconimg" src="${ICON(code.toLowerCase())}" alt="">
+        <div class="cap">${code}</div>
+        <div class="cap sub">₽ ${rate}</div>`;
+      return d;
+    }
+    const grid = document.getElementById('ratesGrid');
+    CODES.forEach(c=>{
+      const q = quotePair(c,"RUB",1);
+      grid.appendChild(tile(c, q ? q.rate.toFixed(2) : "—"));
+    });
+  </script>
 </body>
 </html>

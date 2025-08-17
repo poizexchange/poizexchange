@@ -4,350 +4,74 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Калькулятор</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="preconnect" href="https://telegram.org">
-  <link rel="stylesheet" href="./styles.css?v=22" />
-  <script src="./pricing.js?v=22"></script>
+  <link rel="stylesheet" href="./styles.css?v=23" />
+  <script src="./pricing.js?v=23"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 <header class="header">
-  <div class="brand-strip">
-    <span>🇷🇺 ₽</span><span>·</span><span>🇨🇳 ¥</span><span>·</span><span>🇺🇸 $</span><span>·</span><span>💲 USDT</span>
-  </div>
+  <div class="brand-strip">🇷🇺 ₽ · 🇨🇳 ¥ · 🇺🇸 $ · 💲 USDT</div>
 </header>
 
 <main class="container">
   <section class="card">
     <h1 class="title">Калькулятор обмена</h1>
 
-    <!-- ШАГ 1 · ОТДАЮ -->
+    <!-- ШАГ 1 -->
     <div class="step-caption">Шаг 1 · Вы отдаёте</div>
-
     <div class="paytypes" id="payFrom">
-      <button class="pay btn-tile" data-type="cash">💵 Наличные</button>
-      <button class="pay btn-tile" data-type="bank">🏦 Банковский перевод</button>
-      <button class="pay btn-tile" data-type="crypto">🪙 Криптовалюта</button>
+      <div class="pay btn-tile" data-type="cash"><img src="./icons/cash.svg" class="payicon"><div>Наличные</div></div>
+      <div class="pay btn-tile" data-type="bank"><img src="./icons/bank.svg" class="payicon"><div>Банк</div></div>
+      <div class="pay btn-tile" data-type="crypto"><img src="./icons/crypto.svg" class="payicon"><div>Крипто</div></div>
     </div>
-
-    <div class="grid2">
-      <div>
-        <label>Город (если наличные)</label>
-        <select id="cityFrom">
-          <option value="">— не выбрано —</option>
-          <option value="moscow">Москва</option>
-          <option value="guangzhou">Гуанчжоу</option>
-        </select>
-      </div>
+    <div id="cityFromBox" class="citybox" hidden>
+      <label>Город</label>
+      <select id="cityFrom">
+        <option value="moscow">Москва</option>
+        <option value="guangzhou">Гуанчжоу</option>
+      </select>
     </div>
-
     <div id="coinsFrom" class="coins"></div>
 
-    <!-- ШАГ 2 · ПОЛУЧАЮ -->
+    <!-- ШАГ 2 -->
     <div class="step-caption">Шаг 2 · Вы получаете</div>
-
     <div class="paytypes" id="payTo">
-      <button class="pay btn-tile" data-type="cash">💵 Наличные</button>
-      <button class="pay btn-tile" data-type="bank">🏦 Банковский перевод</button>
-      <button class="pay btn-tile" data-type="crypto">🪙 Криптовалюта</button>
+      <div class="pay btn-tile" data-type="cash"><img src="./icons/cash.svg" class="payicon"><div>Наличные</div></div>
+      <div class="pay btn-tile" data-type="bank"><img src="./icons/bank.svg" class="payicon"><div>Банк</div></div>
+      <div class="pay btn-tile" data-type="crypto"><img src="./icons/crypto.svg" class="payicon"><div>Крипто</div></div>
     </div>
-
-    <div class="grid2">
-      <div>
-        <label>Город (если наличные)</label>
-        <select id="cityTo">
-          <option value="">— не выбрано —</option>
-          <option value="moscow">Москва</option>
-          <option value="guangzhou">Гуанчжоу</option>
-        </select>
-      </div>
+    <div id="cityToBox" class="citybox" hidden>
+      <label>Город</label>
+      <select id="cityTo">
+        <option value="moscow">Москва</option>
+        <option value="guangzhou">Гуанчжоу</option>
+      </select>
     </div>
-
     <div id="coinsTo" class="coins"></div>
 
-    <div class="grid2" style="margin-top:10px">
-      <div>
-        <label>Сумма</label>
-        <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" inputmode="decimal" />
-      </div>
-      <div>
-        <label>Курс/Итог</label>
-        <div id="result" class="resultBox">Курс: — | К получению: —</div>
-      </div>
-    </div>
-
-    <div class="divider"></div>
+    <label>Сумма</label>
+    <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" />
+    <div id="result" class="resultBox">Курс: — | К получению: —</div>
 
     <h2 class="subtitle">Заявка</h2>
-    <div class="grid2">
-      <div>
-        <label>Контакт</label>
-        <input id="contact" placeholder="@username или телефон" />
-      </div>
-      <div>
-        <label>QR-файл (опционально)</label>
-        <input type="file" id="qrfile" accept="image/*,.png,.jpg,.jpeg,.webp" />
-      </div>
-    </div>
-
+    <label>Контакт</label>
+    <input id="contact" placeholder="@username или телефон" />
     <label>Реквизиты</label>
-    <textarea id="requisites" placeholder="Номер карты/кошелька, банк, ФИО"></textarea>
-
+    <textarea id="requisites" placeholder="Номер карты/кошелька"></textarea>
     <label>Комментарий</label>
-    <textarea id="note" placeholder="Город, банк, срочность…"></textarea>
+    <textarea id="note" placeholder="Город, срочность…"></textarea>
 
     <button id="sendBtn" class="btn-primary">📩 Отправить заявку</button>
-    <p id="hint" class="hint" hidden>Откройте форму через кнопку в Telegram, чтобы отправить заявку напрямую боту.</p>
+    <p id="hint" class="hint" hidden>Откройте форму в Telegram-боте</p>
   </section>
 
   <nav class="actions">
-    <a class="link" href="https://t.me/poizchat" target="_blank">💬 Чат</a>
-    <a class="link" href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
-    <a class="link" href="./rates.html?v=22">📊 Табло</a>
+    <a href="https://t.me/poizchat">💬 Чат</a>
+    <a href="https://t.me/poizmanager">📞 Админ</a>
+    <a href="./rates.html?v=23">📊 Табло</a>
   </nav>
 </main>
 
-<script>
-  const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-  if (tg) { tg.expand(); tg.ready(); }
-  function isInsideTelegram(){ try { return !!(tg && tg.initDataUnsafe && tg.platform); } catch(e){ return false; } }
-
-  // иконки-файлы (если используешь папку /icons)
-  const ICON_SRC = {
-    USD: "./icons/usd.svg",
-    USDT:"./icons/usdt.svg",
-    CNY: "./icons/cny.svg",
-    BTC: "./icons/btc.svg",
-    ETH: "./icons/eth.svg",
-    XMR: "./icons/xmr.svg",
-    RUB: "./icons/rub.svg",
-  };
-
-  // базы валют
-  const ALL_CODES = ["USD","USDT","CNY","BTC","ETH","XMR","RUB"];
-
-  // выборки по типу оплаты
-  const PAYMENT_COINS_FROM = {
-    cash:  ["RUB","USD"],                // наличные: юани ОТДАТЬ нельзя
-    bank:  ["RUB","USD","CNY"],
-    crypto:["USDT","BTC","ETH","XMR"],
-  };
-  const PAYMENT_COINS_TO = {
-    cash:  ["RUB","USD","CNY"],          // наличные: CNY можно ПОЛУЧИТЬ только в Гуанчжоу (проверим ниже)
-    bank:  ["RUB","USD","CNY"],
-    crypto:["USDT","BTC","ETH","XMR"],
-  };
-
-  // подписи для наличных
-  const CASH_LABEL = { RUB: "Рубль RUB", USD: "Доллар (новые) USD", CNY: "Юань CNY" };
-
-  // DOM
-  const payFrom = document.getElementById('payFrom');
-  const payTo   = document.getElementById('payTo');
-  const cityFrom= document.getElementById('cityFrom');
-  const cityTo  = document.getElementById('cityTo');
-
-  const coinsFrom = document.getElementById('coinsFrom');
-  const coinsTo   = document.getElementById('coinsTo');
-  const amt       = document.getElementById('amount');
-  const res       = document.getElementById('result');
-  const hint      = document.getElementById('hint');
-
-  // state
-  let PAYMENT_FROM = null; // 'cash' | 'bank' | 'crypto'
-  let PAYMENT_TO   = null;
-  let CITY_FROM    = "";
-  let CITY_TO      = "";
-
-  let FROM = "USDT";
-  let TO   = "RUB";
-
-  function coinCaption(code, sectionPayment){
-    if (sectionPayment === 'cash' && CASH_LABEL[code]) return CASH_LABEL[code];
-    return code;
-  }
-
-  function coinTile(code, sectionPayment){
-    const div = document.createElement('div');
-    div.className = 'coin';
-    div.dataset.code = code;
-
-    const img = document.createElement('img');
-    img.className = 'iconimg';
-    img.alt = code;
-    img.src = ICON_SRC[code] || '';
-
-    const cap = document.createElement('div');
-    cap.className = 'cap';
-    cap.textContent = coinCaption(code, sectionPayment);
-
-    div.append(img, cap);
-    return div;
-  }
-
-  function renderCoins(){
-    // FROM
-    coinsFrom.innerHTML = '';
-    let fromList = PAYMENT_FROM ? PAYMENT_COINS_FROM[PAYMENT_FROM] : [];
-    fromList.forEach(code=>{
-      const t1 = coinTile(code, PAYMENT_FROM);
-      if (code === FROM) t1.classList.add('active');
-      t1.onclick = ()=>{
-        FROM = code;
-        if (TO === FROM){
-          // подобрать альтернативу в списке TO
-          let toList = PAYMENT_TO ? PAYMENT_COINS_TO[PAYMENT_TO] : ALL_CODES;
-          toList = filterToByCity(toList); // учесть ограничение CNY/Гуанчжоу
-          const alt = toList.find(x=>x!==FROM);
-          if (alt) TO = alt;
-        }
-        renderCoins(); recalc();
-      };
-      coinsFrom.appendChild(t1);
-    });
-
-    // TO
-    coinsTo.innerHTML = '';
-    let toList = PAYMENT_TO ? PAYMENT_COINS_TO[PAYMENT_TO] : [];
-    toList = filterToByCity(toList); // учесть CNY/Гуанчжоу
-    toList.forEach(code=>{
-      const t2 = coinTile(code, PAYMENT_TO);
-      if (code === TO) t2.classList.add('active');
-      if (code === FROM) { t2.style.opacity=.4; t2.style.pointerEvents='none'; }
-      t2.onclick = ()=>{
-        TO = code;
-        if (TO === FROM){
-          // подобрать альтернативу
-          const alt = toList.find(x=>x!==FROM);
-          if (alt) TO = alt;
-        }
-        renderCoins(); recalc();
-      };
-      coinsTo.appendChild(t2);
-    });
-  }
-
-  function filterToByCity(list){
-    // «наличные юани получить можно только в Гуанчжоу»
-    if (PAYMENT_TO === 'cash'){
-      return list.filter(code=>{
-        if (code !== 'CNY') return true;
-        return CITY_TO === 'guangzhou'; // CNY наличными — только Гуанчжоу
-      });
-    }
-    return list;
-  }
-
-  function recalc(){
-    const a = parseFloat(amt.value||'0');
-    const q = quotePair(FROM, TO, a);
-    if (!q){ res.textContent='Курс: — | К получению: —'; return null; }
-    res.textContent = `Курс: ${q.rate.toFixed(6)} | К получению: ${formatN(q.total)}`;
-    return { from: FROM, to: TO, a, rate:q.rate, total:q.total };
-  }
-
-  function bindPayGroup(root, setter, isFrom){
-    root.querySelectorAll('.pay').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        root.querySelectorAll('.pay').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        setter(btn.dataset.type);
-
-        // при выборе наличных — включаем выбор города; иначе сбрасываем
-        const citySel = isFrom ? cityFrom : cityTo;
-        if (btn.dataset.type === 'cash'){
-          citySel.disabled = false;
-        } else {
-          citySel.value = ""; // сброс
-          citySel.disabled = true;
-          if (isFrom) CITY_FROM = "";
-          else CITY_TO = "";
-        }
-
-        // переотрисовать валюты
-        renderCoins(); recalc();
-      });
-    });
-  }
-  bindPayGroup(payFrom, (t)=>{ PAYMENT_FROM = t; }, true);
-  bindPayGroup(payTo,   (t)=>{ PAYMENT_TO   = t; }, false);
-
-  // города
-  cityFrom.addEventListener('change', ()=>{
-    CITY_FROM = cityFrom.value;
-    renderCoins(); recalc();
-  });
-  cityTo.addEventListener('change', ()=>{
-    CITY_TO = cityTo.value;
-    renderCoins(); recalc();
-  });
-
-  // init
-  // по умолчанию поставим типы (можно поменять)
-  PAYMENT_FROM = 'crypto';  payFrom.querySelector('[data-type="crypto"]').classList.add('active');
-  cityFrom.disabled = true;
-
-  PAYMENT_TO = 'cash';      payTo.querySelector('[data-type="cash"]').classList.add('active');
-  cityTo.disabled = false;
-
-  // дефолтные валюты подставим под выбранные типы
-  FROM = 'USDT';
-  TO   = 'RUB';
-
-  renderCoins(); recalc();
-
-  if (!isInsideTelegram()) hint.hidden = false;
-
-  // отправка заявки
-  document.getElementById('sendBtn').onclick = ()=>{
-    const r = recalc(); if(!r){ alert('Введите сумму'); return; }
-    if (!PAYMENT_FROM || !PAYMENT_TO){
-      alert('Выберите тип оплаты для «Отдаёте» и «Получаете».');
-      return;
-    }
-    if (PAYMENT_FROM === 'cash' && !CITY_FROM){
-      alert('Выберите город для «Отдаёте (наличные)».');
-      return;
-    }
-    if (PAYMENT_TO === 'cash' && !CITY_TO){
-      alert('Выберите город для «Получаете (наличные)».');
-      return;
-    }
-
-    const payload = {
-      action: 'request',
-      payment_from: PAYMENT_FROM,
-      payment_to:   PAYMENT_TO,
-      city_from:    CITY_FROM || null,
-      city_to:      CITY_TO   || null,
-      direction: `${r.from}>${r.to}`,
-      amount: r.a,
-      contact: (document.getElementById('contact').value || '').trim(),
-      requisites: (document.getElementById('requisites').value || '').trim(),
-      note: (document.getElementById('note').value || '').trim(),
-      has_qr: !!document.getElementById('qrfile').files?.length,
-      qr_filename: document.getElementById('qrfile').files?.[0]?.name || null
-    };
-
-    if (isInsideTelegram()){
-      try{
-        tg.HapticFeedback?.impactOccurred('medium');
-        tg.showPopup?.({ title: 'Отправка', message: 'Заявка отправляется…' });
-        tg.sendData(JSON.stringify(payload));
-        tg.close();
-      }catch(e){
-        console.error(e);
-        alert('Ошибка отправки через Telegram. Попробуйте ещё раз.');
-      }
-    } else {
-      alert('Откройте эту страницу из кнопки бота в Telegram, чтобы отправить заявку.');
-    }
-  };
-
-  // «живой» фон
-  document.addEventListener('scroll', () => {
-    const y = window.scrollY || 0;
-    document.body.style.setProperty('--bg-shift', (y * 0.03).toFixed(2) + 'px');
-  }, {passive:true});
-</script>
+<script src="./index.js?v=23"></script>
 </body>
 </html>

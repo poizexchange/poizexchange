@@ -4,76 +4,104 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Калькулятор</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=20" />
-  <script src="./index.js?v=20" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=24" />
+  <script src="./index.js?v=24" defer></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-<header>
-  <div class="currency-strip">🇷🇺 ₽ · 🇨🇳 ¥ · 🇺🇸 $ · 💲 USDT · ₿ BTC · Ξ ETH · Ⓜ XMR</div>
+<header class="site-header">
+  <div class="container">
+    <div class="brandline">₽ · ¥ · $ · USDT · BTC · ETH · XMR</div>
+  </div>
 </header>
 
-<main>
-  <h2>Калькулятор обмена</h2>
+<main class="container">
+  <section class="card">
+    <h1 class="title">Калькулятор обмена</h1>
 
-  <!-- Блок "Отдаю" -->
-  <div class="block">
-    <h3>Отдаю</h3>
-    <div class="paytypes" id="from-pay">
-      <div class="pay" data-type="cash"><img src="./icons/cash.svg"> Наличные</div>
-      <div class="pay" data-type="bank"><img src="./icons/bank.svg"> Банковский перевод</div>
-      <div class="pay" data-type="crypto"><img src="./icons/crypto.svg"> Криптовалюта</div>
+    <!-- Отдаю -->
+    <h2 class="section-title">Отдаю</h2>
+    <div class="pay-row" id="from-pay">
+      <button class="pay btn-tile" data-type="cash"  aria-pressed="false">
+        <img class="payicon" src="./icons/cash.svg" alt=""> Наличные
+      </button>
+      <button class="pay btn-tile" data-type="bank"  aria-pressed="false">
+        <img class="payicon" src="./icons/bank.svg" alt=""> Банковский перевод
+      </button>
+      <button class="pay btn-tile" data-type="crypto" aria-pressed="false">
+        <img class="payicon" src="./icons/crypto.svg" alt=""> Криптовалюта
+      </button>
     </div>
-    <div id="from-city" class="citybox" style="display:none;">
-      <label>Город</label>
-      <select>
+
+    <div id="from-citybox" class="citybox" hidden>
+      <label class="label" for="cityFrom">Город</label>
+      <select id="cityFrom" class="select">
         <option value="moscow">Москва</option>
         <option value="guangzhou">Гуанчжоу</option>
       </select>
     </div>
-    <div class="currencies" id="from-currencies"></div>
-  </div>
 
-  <!-- Блок "Получаю" -->
-  <div class="block">
-    <h3>Получаю</h3>
-    <div class="paytypes" id="to-pay">
-      <div class="pay" data-type="cash"><img src="./icons/cash.svg"> Наличные</div>
-      <div class="pay" data-type="bank"><img src="./icons/bank.svg"> Банковский перевод</div>
-      <div class="pay" data-type="crypto"><img src="./icons/crypto.svg"> Криптовалюта</div>
+    <div id="from-currencies" class="coins" aria-label="Выбор валюты отдачи"></div>
+
+    <!-- Получаю -->
+    <h2 class="section-title">Получаю</h2>
+    <div class="pay-row" id="to-pay">
+      <button class="pay btn-tile" data-type="cash"  aria-pressed="false">
+        <img class="payicon" src="./icons/cash.svg" alt=""> Наличные
+      </button>
+      <button class="pay btn-tile" data-type="bank"  aria-pressed="false">
+        <img class="payicon" src="./icons/bank.svg" alt=""> Банковский перевод
+      </button>
+      <button class="pay btn-tile" data-type="crypto" aria-pressed="false">
+        <img class="payicon" src="./icons/crypto.svg" alt=""> Криптовалюта
+      </button>
     </div>
-    <div id="to-city" class="citybox" style="display:none;">
-      <label>Город</label>
-      <select>
+
+    <div id="to-citybox" class="citybox" hidden>
+      <label class="label" for="cityTo">Город</label>
+      <select id="cityTo" class="select">
         <option value="moscow">Москва</option>
         <option value="guangzhou">Гуанчжоу</option>
       </select>
     </div>
-    <div class="currencies" id="to-currencies"></div>
-  </div>
 
-  <!-- Сумма -->
-  <label>Сумма</label>
-  <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" />
+    <div id="to-currencies" class="coins" aria-label="Выбор валюты получения"></div>
 
-  <div id="result" class="result">Курс: — | К получению: —</div>
+    <!-- Сумма и расчёт -->
+    <div class="grid-2">
+      <div>
+        <label class="label" for="amount">Сумма</label>
+        <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00">
+      </div>
+      <div>
+        <label class="label">Курс / Итог</label>
+        <div id="result" class="result">Курс: — | К получению: —</div>
+      </div>
+    </div>
+  </section>
 
   <!-- Заявка -->
-  <h2>Заявка</h2>
-  <label>Контакт</label>
-  <input id="contact" placeholder="@username или телефон" />
-  <label>Реквизиты</label>
-  <textarea id="requisites" placeholder="Номер карты/кошелька, банк, ФИО"></textarea>
-  <label>Комментарий</label>
-  <textarea id="note" placeholder="Город, банк, срочность…"></textarea>
+  <section class="card">
+    <h2 class="section-title">Заявка</h2>
 
-  <button id="sendBtn">📩 Отправить заявку</button>
+    <label class="label" for="contact">Контакт</label>
+    <input id="contact" class="input" placeholder="@username или телефон">
+
+    <label class="label" for="requisites">Реквизиты</label>
+    <textarea id="requisites" class="textarea" placeholder="Номер карты/кошелька, банк, ФИО"></textarea>
+
+    <label class="label" for="note">Комментарий</label>
+    <textarea id="note" class="textarea" placeholder="Детали, срочность…"></textarea>
+
+    <button id="sendBtn" class="btn-primary">📩 Отправить заявку</button>
+    <p id="hint" class="hint" hidden>Откройте форму из бота в Telegram, чтобы отправить напрямую.</p>
+  </section>
+
+  <nav class="footer-links">
+    <a class="link" href="https://t.me/poizchat" target="_blank">💬 Чат</a>
+    <a class="link" href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
+    <a class="link" href="./rates.html?v=24">📊 Табло</a>
+  </nav>
 </main>
-
-<footer>
-  <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
-  <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
-  <a href="./rates.html?v=20">📊 Табло</a>
-</footer>
 </body>
 </html>

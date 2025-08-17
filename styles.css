@@ -1,162 +1,91 @@
-:root{
-  --ink:#0b1633;
-  --white:#fff;
-  --bg1:#0d6efd;
-  --bg2:#6ec7ff;
-  --glass: rgba(255,255,255,0.1);
-  --glass-strong: rgba(255,255,255,0.18);
-  --shadow: 0 10px 30px rgba(0,0,0,.25);
-  --bg-shift: 0px;
+body {
+  font-family: Arial, sans-serif;
+  margin: 0; padding: 0;
+  background: linear-gradient(135deg,#0a0f2c,#092642);
+  color: #fff;
 }
 
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  color:var(--white);
-  font-family: Inter, system-ui, Segoe UI, Roboto, Arial, sans-serif;
-  background:
-    radial-gradient(900px 700px at calc(15% + var(--bg-shift)) 5%, rgba(255,255,255,.25) 0%, transparent 60%),
-    radial-gradient(700px 500px at calc(85% - var(--bg-shift)) 10%, rgba(255,255,255,.20) 0%, transparent 60%),
-    linear-gradient(160deg, var(--bg1), var(--bg2));
-  background-attachment: scroll; /* фон двигается вместе со скроллом */
+header {
+  padding: 10px;
+  text-align: center;
+  background: #00000055;
+}
+.currency-strip {
+  font-size: 14px;
+  opacity: 0.9;
 }
 
-.header{
-  position: sticky; top:0; z-index:10;
-  display:flex; flex-direction:column; align-items:center;
-  padding:16px 12px 6px;
-  backdrop-filter: blur(8px);
+main {
+  padding: 15px;
 }
 
-.brand-strip{
-  display:inline-flex; gap:10px; align-items:center;
-  background: rgba(255,255,255,.92); color:#111;
-  padding:6px 12px; border-radius:999px; font-weight:800;
-  margin:4px 0 8px;
+h2, h3 { margin: 15px 0 10px; }
+
+.block { margin-bottom: 20px; }
+
+.paytypes {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.pay {
+  flex: 1;
+  background: #1a1f3a;
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.pay.active { background: #2b4cb3; }
+.pay img { height: 20px; display:block; margin: 0 auto 5px; }
+
+.citybox {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #fff3;
+  border-radius: 8px;
+  background: #ffffff10;
+}
+.citybox select {
+  width: 100%; padding: 8px;
+  border-radius: 6px; border: none;
 }
 
-.container{max-width:900px; margin:0 auto; padding:16px}
-.card{
-  background: var(--glass);
-  border: 1px solid var(--glass-strong);
-  box-shadow: var(--shadow);
-  border-radius: 18px;
-  padding: 20px;
-  backdrop-filter: blur(8px);
+.currencies {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 10px;
+  margin-top: 10px;
 }
-.title{margin:0 0 10px 0}
-.subtitle{margin:6px 0 10px 0}
-
-.grid2{ display:grid; grid-template-columns:1fr; gap:12px; }
-@media (min-width:720px){ .grid2{ grid-template-columns:1fr 1fr; } }
-
-label{display:block; margin:8px 0 6px; font-weight:700}
-input,textarea{
-  width:100%;
-  padding:12px 14px;
-  border-radius:12px;
-  border:1px solid var(--glass-strong);
-  background: rgba(255,255,255,.95);
-  color:#111; outline:none;
+.curr {
+  background: #141a33;
+  border-radius: 10px;
+  text-align: center;
+  padding: 10px;
+  cursor: pointer;
 }
-textarea{min-height:90px; resize:vertical}
+.curr.active { background: #2b4cb3; }
+.curr img { height: 30px; margin-bottom: 5px; }
 
-.btn-primary{
-  width:100%; padding:12px 16px; border:0; border-radius:14px; cursor:pointer;
-  color:#fff; font-weight:800; letter-spacing:.2px;
-  background: linear-gradient(145deg, #2f5fe6, #4b7bff);
-  box-shadow: 0 6px 18px rgba(47,95,230,.35);
+input, textarea, select, button {
+  width: 100%; margin: 8px 0; padding: 10px;
+  border-radius: 8px; border: none;
+  font-size: 15px;
 }
-.btn-primary:active{ transform: translateY(1px); }
-
-.hint{opacity:.9; margin:10px 0 0}
-.actions{ display:flex; gap:10px; justify-content:center; margin:16px 0 8px; }
-.link{
-  color:#fff; text-decoration:none; font-weight:700;
-  border:1px solid var(--glass-strong); border-radius:999px; padding:8px 12px;
-  background: rgba(255,255,255,.12);
+button {
+  background: #2b4cb3; color: #fff;
+  cursor: pointer; font-weight: bold;
 }
-.link:hover{ background: rgba(255,255,255,.18); }
-
-/* --- Плитки валют --- */
-.coins{
-  display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin:10px 0 4px;
+.result {
+  margin: 15px 0; padding: 10px;
+  background: #00000044;
+  border-radius: 8px;
+  font-size: 16px;
 }
-@media (min-width:720px){ .coins{ grid-template-columns: repeat(7, 1fr); } }
-.coin{
-  display:flex; flex-direction:column; align-items:center; gap:6px;
-  background: rgba(255,255,255,.12);
-  border:1px solid var(--glass-strong);
-  border-radius:14px; padding:10px; cursor:pointer; user-select:none;
-  transition: transform .06s ease;
+footer {
+  text-align: center;
+  padding: 10px;
+  background: #00000055;
 }
-.coin:hover{ transform: translateY(-1px); }
-.coin.active{ outline:2px solid rgba(255,255,255,.9); background: rgba(255,255,255,.18); }
-
-.icon{
-  width:36px; height:36px; border-radius:50%;
-  display:inline-block;
-  background-size: 100% 100%;
-  box-shadow: inset 0 0 0 2px rgba(0,0,0,.1);
-}
-.cap{ font-weight:800; letter-spacing:.2px; }
-
-/* Иконки (стилизованные «как оригинальные») */
-.icon.usd { background: radial-gradient(circle at 30% 30%, #7bf29b, #1da44c); position:relative; }
-.icon.usd::after { content:"$"; color:#fff; font-weight:900; position:absolute; inset:0; display:grid; place-items:center; }
-
-.icon.usdt{ background: radial-gradient(circle at 30% 30%, #2bb673, #16a06b); position:relative; }
-.icon.usdt::after{ content:"T"; color:#fff; font-weight:900; position:absolute; inset:0; display:grid; place-items:center; }
-
-.icon.cny { background: radial-gradient(circle at 30% 30%, #ff5a5a, #d51b1b); position:relative; }
-.icon.cny::after { content:"¥"; color:#fff; font-weight:900; position:absolute; inset:0; display:grid; place-items:center; }
-
-.icon.btc { background: radial-gradient(circle at 30% 30%, #ffa326, #ff7b00); position:relative; }
-.icon.btc::after { content:"₿"; color:#fff; font-weight:900; position:absolute; inset:0; display:grid; place-items:center; }
-
-.icon.eth { background: radial-gradient(circle at 30% 30%, #8e9acb, #5a67a1); position:relative; clip-path: polygon(50% 0%, 60% 25%, 50% 50%, 40% 25%); }
-.icon.eth::after{ content:""; } /* декоративный ромб */
-
-.icon.xmr { background: radial-gradient(circle at 30% 30%, #ff8c42, #ff5a1f); position:relative; }
-.icon.xmr::after{ content:"M"; color:#fff; font-weight:900; position:absolute; inset:0; display:grid; place-items:center; }
-
-.icon.rub { background: radial-gradient(circle at 30% 30%, #2aa0ff, #0c66e4); position:relative; }
-.icon.rub::after{ content:"₽"; color:#fff; font-weight:900; position:absolute; inset:0; display:grid; place-items:center; }
-
-.step-caption{ margin:4px 0 4px; opacity:.92; font-weight:700; }
-.resultBox{
-  display:flex; align-items:center; justify-content:space-between;
-  background: rgba(255,255,255,.95); color:#111;
-  border-radius:12px; padding:10px 12px; font-weight:800;
-}
-/* --- Плитки валют --- */
-.coins{
-  display:grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 в ряд на телефоне */
-  gap:10px;
-  margin:10px 0 4px;
-}
-/* Чуть шире — 4 в ряд */
-@media (min-width: 480px){
-  .coins{ grid-template-columns: repeat(4, 1fr); }
-}
-/* Планшет — 6 в ряд */
-@media (min-width: 768px){
-  .coins{ grid-template-columns: repeat(6, 1fr); }
-}
-/* --- Плитки валют --- */
-.coins{
-  display:grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 в ряд на телефоне */
-  gap:10px;
-  margin:10px 0 4px;
-}
-/* Чуть шире — 4 в ряд */
-@media (min-width: 480px){
-  .coins{ grid-template-columns: repeat(4, 1fr); }
-}
-/* Планшет — 6 в ряд */
-@media (min-width: 768px){
-  .coins{ grid-template-columns: repeat(6, 1fr); }
-}
+footer a { margin: 0 10px; color: #fff; text-decoration: none; }

@@ -4,82 +4,63 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Калькулятор</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <link rel="stylesheet" href="./styles.css?v=29" />
+  <link rel="stylesheet" href="./styles.css?v=31" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="./pricing.js?v=29"></script>
-  <script src="./index.js?v=29" defer></script>
+  <script src="./pricing.js?v=31"></script>
+  <script src="./index.js?v=31" defer></script>
 </head>
-<body class="ocean-bg">
-  <div class="bg-fixed"></div>
+<body class="fx-bg">
+  <div class="fx-grid"></div>
 
-  <header class="site-header">
-    <div class="container">
-      <div class="brandline">₽ · ¥ · $ · USDT · BTC · ETH · XMR</div>
-      <div class="brandbar">
-        <img src="./icons/btc.svg"  alt="BTC">
-        <img src="./icons/eth.svg"  alt="ETH">
-        <img src="./icons/usdt.svg" alt="USDT">
-        <img src="./icons/xmr.svg"  alt="XMR">
-        <img src="./icons/usd.svg"  alt="USD">
-        <img src="./icons/cny.svg"  alt="CNY">
-      </div>
+  <header class="fx-header">
+    <div class="wrap">
+      <div class="badge">POIZ EXCHANGE</div>
+      <div class="subline">Калькулятор · Курсы · Заявки</div>
     </div>
   </header>
 
-  <main class="container main-safe">
-    <section class="card">
-      <h1 class="title">Калькулятор обмена</h1>
+  <main class="wrap main-safe">
+    <section class="glass">
+      <h1 class="h1">Калькулятор обмена</h1>
 
-      <h2 class="section-title">Отдаю</h2>
-      <div class="pay-row" id="from-pay">
-        <button class="pay btn-tile" data-type="cash"  aria-pressed="false">
-          <img class="payicon" src="./icons/cash.svg" alt=""> Наличные
-        </button>
-        <button class="pay btn-tile" data-type="bank"  aria-pressed="false">
-          <img class="payicon" src="./icons/bank.svg" alt=""> Банк перевод
-        </button>
-        <button class="pay btn-tile" data-type="crypto" aria-pressed="false">
-          <img class="payicon" src="./icons/crypto.svg" alt=""> Криптовалюта
-        </button>
+      <h2 class="h2">Отдаю</h2>
+      <div class="row" id="from-pay">
+        <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
+        <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
+        <button class="chip" data-type="crypto"><img src="./icons/crypto.svg" alt="">Крипто</button>
       </div>
 
       <div id="from-citybox" class="citybox" hidden>
         <label class="label" for="cityFrom">Город</label>
-        <select id="cityFrom" class="select">
+        <select id="cityFrom" class="input">
           <option value="moscow">Москва</option>
           <option value="guangzhou">Гуанчжоу</option>
         </select>
       </div>
 
-      <div id="from-currencies" class="coins" aria-label="Выбор валюты/банка отдачи"></div>
+      <div id="from-currencies" class="tiles"></div>
 
-      <h2 class="section-title">Получаю</h2>
-      <div class="pay-row" id="to-pay">
-        <button class="pay btn-tile" data-type="cash"  aria-pressed="false">
-          <img class="payicon" src="./icons/cash.svg" alt=""> Наличные
-        </button>
-        <button class="pay btn-tile" data-type="bank"  aria-pressed="false">
-          <img class="payicon" src="./icons/bank.svg" alt=""> Банк перевод
-        </button>
-        <button class="pay btn-tile" data-type="crypto" aria-pressed="false">
-          <img class="payicon" src="./icons/crypto.svg" alt=""> Криптовалюта
-        </button>
+      <h2 class="h2">Получаю</h2>
+      <div class="row" id="to-pay">
+        <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
+        <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
+        <button class="chip" data-type="crypto"><img src="./icons/crypto.svg" alt="">Крипто</button>
       </div>
 
       <div id="to-citybox" class="citybox" hidden>
         <label class="label" for="cityTo">Город</label>
-        <select id="cityTo" class="select">
+        <select id="cityTo" class="input">
           <option value="moscow">Москва</option>
           <option value="guangzhou">Гуанчжоу</option>
         </select>
       </div>
 
-      <div id="to-currencies" class="coins" aria-label="Выбор валюты/банка получения"></div>
+      <div id="to-currencies" class="tiles"></div>
 
-      <div class="grid-2">
+      <div class="grid2">
         <div>
           <label class="label" for="amount">Сумма</label>
-          <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00">
+          <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
         </div>
         <div>
           <label class="label">Курс / Итог</label>
@@ -88,22 +69,22 @@
       </div>
     </section>
 
-    <section class="card">
-      <h2 class="section-title">Заявка</h2>
+    <section class="glass">
+      <h2 class="h2">Заявка</h2>
       <label class="label" for="contact">Контакт</label>
-      <input id="contact" class="input" placeholder="@username или телефон">
+      <input id="contact" class="input" placeholder="@username или телефон" />
       <label class="label" for="requisites">Реквизиты</label>
-      <textarea id="requisites" class="textarea" placeholder="Номер карты/кошелька, банк, ФИО"></textarea>
+      <textarea id="requisites" class="input" rows="3" placeholder="Номер карты/кошелька, банк, ФИО"></textarea>
       <label class="label" for="note">Комментарий</label>
-      <textarea id="note" class="textarea" placeholder="Детали, срочность…"></textarea>
-      <button id="sendBtn" class="btn-primary">📩 Отправить заявку</button>
+      <textarea id="note" class="input" rows="3" placeholder="Детали, срочность…"></textarea>
+      <button id="sendBtn" class="cta">📩 Отправить заявку</button>
       <p id="hint" class="hint" hidden>Откройте форму из бота в Telegram, чтобы отправить напрямую.</p>
     </section>
 
-    <nav class="footer-links">
-      <a class="link" href="https://t.me/poizchat" target="_blank">💬 Чат</a>
-      <a class="link" href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
-      <a class="link" href="./rates.html?v=29">📊 Табло</a>
+    <nav class="footlinks">
+      <a href="./rates.html?v=31">📊 Табло</a>
+      <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
+      <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
     </nav>
   </main>
 </body>

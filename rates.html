@@ -4,29 +4,21 @@
   <meta charset="UTF-8">
   <title>Poiz Exchange — Курсы</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <link rel="stylesheet" href="./styles.css?v=29" />
-  <script src="./pricing.js?v=29"></script>
+  <link rel="stylesheet" href="./styles.css?v=31" />
+  <script src="./pricing.js?v=31"></script>
 </head>
-<body class="ocean-bg">
-  <div class="bg-fixed"></div>
+<body class="fx-bg">
+  <div class="fx-grid"></div>
 
-  <header class="site-header">
-    <div class="container">
-      <div class="brandline">Курсы к ₽</div>
-      <div class="brandbar small">
-        <img src="./icons/usd.svg"  alt="USD">
-        <img src="./icons/usdt.svg" alt="USDT">
-        <img src="./icons/cny.svg"  alt="CNY">
-        <img src="./icons/btc.svg"  alt="BTC">
-        <img src="./icons/eth.svg"  alt="ETH">
-        <img src="./icons/xmr.svg"  alt="XMR">
-      </div>
+  <header class="fx-header">
+    <div class="wrap">
+      <div class="badge">Курсы к ₽</div>
     </div>
   </header>
 
-  <main class="container main-safe">
-    <section class="card compact">
-      <div id="ratesGrid" class="coins"></div>
+  <main class="wrap main-safe">
+    <section class="glass">
+      <div id="ratesGrid" class="tiles"></div>
     </section>
   </main>
 
@@ -35,11 +27,11 @@
     const CODES = ["USD","USDT","CNY","BTC","ETH","XMR"];
     function tile(code, rate){
       const d = document.createElement('button');
-      d.type='button'; d.className='coin';
+      d.type='button'; d.className='tile';
       d.innerHTML = `
-        <img class="iconimg" src="${ICON(code.toLowerCase())}" alt="">
-        <div class="cap">${code}</div>
-        <div class="cap sub">₽ ${rate}</div>`;
+        <span class="ico"><img src="${ICON(code.toLowerCase())}" alt=""></span>
+        <span class="cap">${code}</span>
+        <span class="sub">₽ ${rate}</span>`;
       return d;
     }
     const grid = document.getElementById('ratesGrid');

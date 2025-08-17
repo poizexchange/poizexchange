@@ -52,14 +52,13 @@ let codeFrom=null, codeTo=null;
 function toggleCityBoxes(){ fromCityBox.hidden = pFrom!=='cash'; toCityBox.hidden = pTo!=='cash'; }
 function toggleQr(){ qrBox.hidden = !(kindTo==='cnpay'); }
 
-// Guangzhou & Moscow rules
 function applyGuangzhou(list, side){
   if (side==='from' && pFrom==='cash' && cityFrom==='guangzhou') return list.filter(x=>x.code==='USD');
   if (side==='to'   && pTo==='cash'   && cityTo==='guangzhou')   return list.filter(x=>x.code==='USD'||x.code==='CNY');
   return list;
 }
 
-// Allowed lists with new CN services logic
+// Allowed lists with CN services logic
 function allowedList(side){
   const isFrom = side==='from';
 
@@ -77,14 +76,15 @@ function allowedList(side){
   }
 
   // FROM side (may be restricted by TO selection, when cn services chosen)
-  if (pFrom==='bank'){ kindFrom='bank'; var list=BANKS.slice(); }
-  else if (pFrom==='crypto'){ kindFrom='currency'; var list=CURRENCIES.filter(x=>['USDT','BTC','ETH','XMR'].includes(x.code)); }
-  else if (pFrom==='cash'){ kindFrom='currency'; var list=CURRENCIES.filter(x=>['RUB','USD','CNY'].includes(x.code)); list=applyGuangzhou(list,'from'); if (cityFrom!=='guangzhou'){ list=list.filter(x=>x.code!=='CNY'); } }
-  else { kindFrom='currency'; var list=CURRENCIES.slice(); }
+  let list=[];
+  if (pFrom==='bank'){ kindFrom='bank'; list=BANKS.slice(); }
+  else if (pFrom==='crypto'){ kindFrom='currency'; list=CURRENCIES.filter(x=>['USDT','BTC','ETH','XMR'].includes(x.code)); }
+  else if (pFrom==='cash'){ kindFrom='currency'; list=CURRENCIES.filter(x=>['RUB','USD','CNY'].includes(x.code)); list=applyGuangzhou(list,'from'); if (cityFrom!=='guangzhou'){ list=list.filter(x=>x.code!=='CNY'); } }
+  else { kindFrom='currency'; list=CURRENCIES.slice(); }
 
   // Restrictions if receiving via CN services
   if (kindTo==='cnpay'){
-    // можно только: наличные RUB, все банки РФ, USDT
+    // Allowed sources: cash RUB, any RF bank, USDT
     list = list.filter(x=>
       (pFrom==='bank') ||
       (pFrom==='cash' && x.code==='RUB') ||
@@ -107,7 +107,6 @@ function renderTiles(root, list, activeCode, onPick){
 
 function recalc(){
   const a=parseFloat(amountEl.value||'0');
-  // Only currency-to-currency has rate for now
   if (typeof quotePair==='function' && kindFrom==='currency' && kindTo==='currency'){
     const q=quotePair(codeFrom||'USDT', codeTo||'RUB', a||0);
     if (q){ rateEl.textContent=q.rate.toFixed(6); totalEl.textContent=q.total.toLocaleString('ru-RU'); return; }
@@ -117,42 +116,40 @@ function recalc(){
 
 function rerender(){
   toggleCityBoxes(); toggleQr();
-  // Validate lists & active selections
   const lf=allowedList('from'); if(!codeFrom || !lf.find(x=>x.code===codeFrom)) codeFrom=lf[0]?.code;
-  const lt=allowedList('to');   if(!codeTo   || !lt.find(x=>x.code===codeTo))   codeTo=lt[0]?.code;
+  const lt=allowedList('to');   if(!codeTo   || !lt.find(x=>x.code===codeTo))   codeTo  =lt[0]?.code;
   if (kindFrom==='currency' && kindTo==='currency' && codeFrom===codeTo){
     const alt=lt.find(x=>x.code!==codeFrom); if(alt) codeTo=alt.code;
   }
   renderTiles(tilesFrom, lf, codeFrom, c=>{ codeFrom=c; rerender(); recalc(); });
-  renderTiles(tilesTo,   lt, codeTo,   c=>{ codeTo  =c; rerender(); recalc(); });
+  renderTiles(tilesTo,   lt, toCode,   c=>{ codeTo  =c; rerender(); recalc(); });
   recalc();
 }
 
-function bindRow(root, setter, isTo=false){
+function bindRow(root, setter){
   root.querySelectorAll('.chip').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       root.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       setter(btn.dataset.type);
-      // when to selects cn services, ensure from side obeys allowed sources
       rerender();
     });
   });
 }
 bindRow(fromRow, v=>pFrom=v);
-bindRow(toRow,   v=>pTo=v, true);
+bindRow(toRow,   v=>pTo=v);
 
-// cities
+// city handlers
 cityFromEl.addEventListener('change', ()=>{ cityFrom=cityFromEl.value; rerender(); });
 cityToEl  .addEventListener('change', ()=>{ cityTo  =cityToEl.value;   rerender(); });
 
-// Init
+// Init defaults
 (function init(){
-  fromRow.querySelector('[data-type="crypto"]').click(); // default: отдаю крипто
-  toRow  .querySelector('[data-type="cash"]').click();   // default: получаю наличные
+  fromRow.querySelector('[data-type="crypto"]').click();
+  toRow  .querySelector('[data-type="cash"]').click();
   cityFrom=cityFromEl.value='moscow';
   cityTo  =cityToEl.value  ='moscow';
-  if (!inTG()) document.getElementById('hint').hidden=false;
+  if (!inTG()) document.getElementById('hint')?.removeAttribute('hidden');
   rerender();
 })();
 

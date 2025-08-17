@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Калькулятор</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <link rel="stylesheet" href="./styles.css?v=32" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
+  <link rel="stylesheet" href="./styles.css?v=33" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="./pricing.js?v=32"></script>
-  <script src="./index.js?v=32" defer></script>
+  <script src="./pricing.js?v=33"></script>
+  <script src="./index.js?v=33" defer></script>
 </head>
 <body class="tg-white">
   <header class="tg-header">
@@ -38,11 +38,11 @@
 
     <section class="card">
       <h2 class="h2">Получаю</h2>
-      <div class="chips" id="to-pay">
+      <div class="chips wrap" id="to-pay">
         <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
         <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
         <button class="chip" data-type="crypto"><img src="./icons/crypto.svg" alt="">Крипто</button>
-        <button class="chip" data-type="cnpay"><img src="./icons/bankcn.svg" alt="">Кит. сервисы</button>
+        <button class="chip full" data-type="cnpay"><img src="./icons/bankcn.svg" alt="">Китайские сервисы</button>
       </div>
 
       <div id="to-citybox" class="citybox" hidden>
@@ -96,7 +96,7 @@
     </section>
 
     <nav class="footlinks">
-      <a href="./rates.html?v=32">📊 Табло</a>
+      <a href="./rates.html?v=33">📊 Табло</a>
       <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
       <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
     </nav>

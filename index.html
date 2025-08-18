@@ -103,3 +103,22 @@
   </main>
 </body>
 </html>
+const tg = window.Telegram?.WebApp;
+const payload = {
+  type: 'order',
+  from_currency: selFrom.value,
+  to_currency: selTo.value,
+  amount: parseFloat(amountInput.value || '0'),
+  rate: currentQuote.rate,
+  total: currentQuote.total,
+  contact: document.getElementById('contact').value.trim(),
+  requisites: document.getElementById('requisites').value.trim(),
+  note: document.getElementById('note').value.trim(),
+};
+
+if (tg) {
+  tg.sendData(JSON.stringify(payload));
+  tg.close();
+} else {
+  alert('Откройте форму через Telegram, чтобы отправить заявку.');
+}

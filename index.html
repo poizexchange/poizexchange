@@ -122,3 +122,53 @@ if (tg) {
 } else {
   alert('Откройте форму через Telegram, чтобы отправить заявку.');
 }
+<script>
+  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+
+  function isInsideTelegram() {
+    try { return !!(tg && tg.initDataUnsafe); } catch (e) { return false; }
+  }
+
+  // Показываем кнопку "Открыть в Telegram", если открыто в браузере
+  (function ensureInsideTelegram(){
+    if (!isInsideTelegram()) {
+      const box = document.createElement('div');
+      box.style.cssText = "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;z-index:9999;padding:24px;text-align:center;";
+      box.innerHTML = `
+        <div>
+          <p style="font:600 18px system-ui;margin-bottom:12px">Откройте калькулятор внутри Telegram</p>
+          <a href="https://t.me/PoizExchangeBot?startapp=calc"
+             style="display:inline-block;padding:12px 20px;border-radius:10px;background:#2a9df4;color:#fff;text-decoration:none;font:600 16px system-ui">
+            Открыть в Telegram
+          </a>
+        </div>`;
+      document.body.appendChild(box);
+    } else {
+      tg.ready();
+      tg.expand();
+    }
+  })();
+
+  // Отправка заявки
+  async function sendRequest(payload) {
+    if (!isInsideTelegram()) {
+      alert('Откройте форму через Telegram, чтобы отправить заявку.');
+      return;
+    }
+    try {
+      tg.HapticFeedback && tg.HapticFeedback.impactOccurred('medium');
+      tg.sendData(JSON.stringify(payload));
+      tg.close();
+    } catch(e) {
+      alert('Ошибка отправки. Напишите @poizmanager');
+      console.error(e);
+    }
+  }
+
+  // Пример: повесь на твою кнопку
+  // document.getElementById('sendBtn').onclick = () => {
+  //   const payload = {...собери поля формы..., type:'order'};
+  //   sendRequest(payload);
+  // };
+</script>
+

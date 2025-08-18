@@ -1,27 +1,21 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Poiz Exchange — Курсы</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <link rel="stylesheet" href="./styles.css?v=33b" />
-  <script src="./pricing.js?v=33b"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
+  <link rel="stylesheet" href="./styles.css?v=34" />
+  <script src="./pricing.js?v=34"></script>
 </head>
-<body>
-  <header class="site-header">
+<body class="tg-white">
+  <header class="tg-header">
     <div class="wrap">
-      <picture>
-        <source media="(min-width: 1100px)" srcset="./poiz_header_1440x360.webp">
-        <source media="(min-width: 900px)"  srcset="./poiz_header_1200x300.webp">
-        <source media="(min-width: 700px)"  srcset="./poiz_header_960x240.webp">
-        <img src="./poiz_header_768x192.webp" alt="Poiz Exchange">
-      </picture>
+      <h1 class="title small">ТАБЛО КУРСОВ</h1>
     </div>
   </header>
 
-  <main class="wrap">
-    <h1 class="page-title">Табло курсов</h1>
-    <section class="card">
+  <main class="wrap main-safe">
+    <section class="card compact">
       <div id="ratesGrid" class="tiles"></div>
     </section>
   </main>
@@ -46,4 +40,3 @@
   </script>
 </body>
 </html>
-

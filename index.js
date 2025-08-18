@@ -1,10 +1,8 @@
 // Telegram helpers
 const tg=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null; if(tg){tg.expand(); tg.ready();}
-const inTG=()=>{ try{ return !!(tg && tg.initDataUnsafe); } catch(e){ return false; } };
-
 const ICON = n => `./icons/${n}.svg`;
 
-// Datasets
+// Данные (валюты — с классическими иконками)
 const CURRENCIES=[
   {code:'RUB',title:'RUB',icon:ICON('rub')},
   {code:'USD',title:'USD',icon:ICON('usd')},
@@ -29,7 +27,7 @@ const CNPAY=[
   {code:'BANKCN',title:'Bank CN',icon:ICON('bankcn')},
 ];
 
-// Elements
+// Элементы
 const fromRow=document.getElementById('from-pay');
 const toRow  =document.getElementById('to-pay');
 const fromCityBox=document.getElementById('from-citybox');
@@ -44,9 +42,10 @@ const totalEl    =document.getElementById('totalVal');
 const qrBox      =document.getElementById('qrbox');
 const qrFile     =document.getElementById('qrfile');
 
-let pFrom=null, pTo=null; // cash, bank, crypto, (to-only) cnpay
+// Состояние
+let pFrom=null, pTo=null; // cash | bank | crypto | (только для to) cnpay
 let cityFrom='moscow', cityTo='moscow';
-let kindFrom='currency', kindTo='currency'; // 'bank' | 'currency' | 'cnpay'
+let kindFrom='currency', kindTo='currency';
 let codeFrom=null, codeTo=null;
 
 function toggleCityBoxes(){ fromCityBox.hidden = pFrom!=='cash'; toCityBox.hidden = pTo!=='cash'; }
@@ -58,11 +57,11 @@ function applyGuangzhou(list, side){
   return list;
 }
 
-// Allowed lists with CN services logic
+// Разрешённые списки
 function allowedList(side){
   const isFrom = side==='from';
 
-  if (!isFrom){ // TO side
+  if (!isFrom){ // куда получаем
     if (pTo==='cnpay'){ kindTo='cnpay'; return CNPAY.slice(); }
     if (pTo==='bank'){ kindTo='bank'; return BANKS.slice(); }
     if (pTo==='crypto'){ kindTo='currency'; return CURRENCIES.filter(x=>['USDT','BTC','ETH','XMR'].includes(x.code)); }
@@ -75,16 +74,15 @@ function allowedList(side){
     kindTo='currency'; return CURRENCIES.slice();
   }
 
-  // FROM side (may be restricted by TO selection, when cn services chosen)
+  // откуда отдаём
   let list=[];
   if (pFrom==='bank'){ kindFrom='bank'; list=BANKS.slice(); }
   else if (pFrom==='crypto'){ kindFrom='currency'; list=CURRENCIES.filter(x=>['USDT','BTC','ETH','XMR'].includes(x.code)); }
   else if (pFrom==='cash'){ kindFrom='currency'; list=CURRENCIES.filter(x=>['RUB','USD','CNY'].includes(x.code)); list=applyGuangzhou(list,'from'); if (cityFrom!=='guangzhou'){ list=list.filter(x=>x.code!=='CNY'); } }
   else { kindFrom='currency'; list=CURRENCIES.slice(); }
 
-  // Restrictions if receiving via CN services
+  // Ограничения, если получаем через китайские сервисы
   if (kindTo==='cnpay'){
-    // Allowed sources: cash RUB, any RF bank, USDT
     list = list.filter(x=>
       (pFrom==='bank') ||
       (pFrom==='cash' && x.code==='RUB') ||
@@ -118,11 +116,14 @@ function rerender(){
   toggleCityBoxes(); toggleQr();
   const lf=allowedList('from'); if(!codeFrom || !lf.find(x=>x.code===codeFrom)) codeFrom=lf[0]?.code;
   const lt=allowedList('to');   if(!codeTo   || !lt.find(x=>x.code===codeTo))   codeTo  =lt[0]?.code;
+
+  // нельзя одинаковые (для валют)
   if (kindFrom==='currency' && kindTo==='currency' && codeFrom===codeTo){
     const alt=lt.find(x=>x.code!==codeFrom); if(alt) codeTo=alt.code;
   }
+
   renderTiles(tilesFrom, lf, codeFrom, c=>{ codeFrom=c; rerender(); recalc(); });
-  renderTiles(tilesTo,   lt, toCode,   c=>{ codeTo  =c; rerender(); recalc(); });
+  renderTiles(tilesTo,   lt, codeTo,   c=>{ codeTo  =c; rerender(); recalc(); }); // <-- FIX: codeTo (не опечатка)
   recalc();
 }
 
@@ -139,21 +140,20 @@ function bindRow(root, setter){
 bindRow(fromRow, v=>pFrom=v);
 bindRow(toRow,   v=>pTo=v);
 
-// city handlers
+// Город
 cityFromEl.addEventListener('change', ()=>{ cityFrom=cityFromEl.value; rerender(); });
 cityToEl  .addEventListener('change', ()=>{ cityTo  =cityToEl.value;   rerender(); });
 
-// Init defaults
+// Init
 (function init(){
   fromRow.querySelector('[data-type="crypto"]').click();
   toRow  .querySelector('[data-type="cash"]').click();
   cityFrom=cityFromEl.value='moscow';
   cityTo  =cityToEl.value  ='moscow';
-  if (!inTG()) document.getElementById('hint')?.removeAttribute('hidden');
   rerender();
 })();
 
-// Send
+// Отправка заявки
 document.getElementById('sendBtn').addEventListener('click', ()=>{
   const amount=parseFloat(amountEl.value||'0');
   if (!pFrom||!pTo){ alert('Выберите тип оплаты (отдаю/получаю).'); return; }
@@ -180,15 +180,8 @@ document.getElementById('sendBtn').addEventListener('click', ()=>{
   };
 
   if (tg){
-    try{
-      tg.HapticFeedback && tg.HapticFeedback.impactOccurred('medium');
-      tg.showPopup && tg.showPopup({ title:'Отправка', message:'Заявка отправляется…' });
-      tg.sendData(JSON.stringify(payload));
-      tg.close();
-    }catch(e){
-      console.error(e);
-      alert('Не удалось отправить заявку. Попробуйте ещё раз или напишите @poizmanager');
-    }
+    try{ tg.sendData(JSON.stringify(payload)); tg.close(); }
+    catch(e){ console.error(e); alert('Не удалось отправить заявку. Попробуйте ещё раз или напишите @poizmanager'); }
   } else {
     alert('Откройте форму из кнопки бота в Telegram.');
   }

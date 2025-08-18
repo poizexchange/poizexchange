@@ -1,37 +1,102 @@
-
-body {
-  background: #ffffff;
-  color: #222;
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
+:root{
+  --bg:#ffffff;
+  --ink:#1f2a37;
+  --muted:#5f6b85;
+  --line:#e8eef7;
+  --soft:#eaf4ff;      /* Тот самый «нежно-голубой», как у плашки Город */
+  --soft-brd:#cfe3ff;
+  --soft-hov:#d9ebff;
+  --accent:#0a67c8;    /* Кнопка заявки */
 }
 
-header {
-  text-align: center;
-  padding: 10px;
-  background: #f9f9f9;
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  -webkit-text-size-adjust:100%;
 }
 
-button, .currency-btn {
-  background: #a7d8ff; /* нежно-голубой */
-  color: #fff;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.2s;
+/* Фиксированный баннер */
+.site-header{
+  position:sticky; top:0; z-index:5;
+  background:linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);
+  border-bottom:1px solid var(--line);
 }
+.site-header .wrap{max-width:420px;margin:0 auto;padding:10px 16px}
+.site-header picture, .site-header img{width:100%; height:auto; display:block; max-width:420px}
 
-button:hover, .currency-btn:hover {
-  background: #7ec8ff;
-}
+/* Контейнер */
+.wrap{width:100%;max-width:420px;margin:0 auto;padding:14px 16px}
+.page-title{margin:8px 0 6px; text-align:center; color:#0b437a; font-size:20px; font-weight:800}
 
-.section {
-  background: #fff;
-  margin: 12px;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+/* Карточки */
+.card{
+  background:#fff; border:1px solid var(--line); border-radius:16px;
+  padding:14px; margin:12px 0; box-shadow:0 8px 24px rgba(10,103,200,.06)
 }
+.card h2{ margin:0 0 10px; font-size:16px; font-weight:800; color:#0b437a }
+.label{ display:block; margin:8px 0 6px; font-size:12px; color:var(--muted); font-weight:700 }
+
+/* Кнопки выбора типа оплаты */
+.chips{display:flex; gap:8px; flex-wrap:wrap}
+.chip{
+  flex:1 1 calc(33.33% - 8px);
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:10px 8px; background:var(--soft); border:1px solid var(--soft-brd); border-radius:12px;
+  color:#0b437a; font-weight:700; cursor:pointer; transition:.15s ease;
+}
+.chip.full{flex:1 1 100%}
+.chip img{width:18px;height:18px;object-fit:contain}
+.chip:hover,.chip.active{background:var(--soft-hov)}
+
+/* Плашка города */
+.citybox{
+  margin-top:10px; background:var(--soft); border:1px dashed var(--soft-brd);
+  border-radius:12px; padding:10px;
+}
+.input{
+  width:100%; padding:10px 12px; border:1px solid var(--soft-brd); border-radius:12px;
+  background:#fff; font-size:16px; outline:none;
+}
+.input:focus{ box-shadow:0 0 0 3px rgba(10,103,200,.08) }
+
+/* Плитки валют/банков */
+.tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.tile{
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  min-height:100px; padding:12px;
+  background:var(--soft); border:1px solid var(--soft-brd); border-radius:14px;
+  cursor:pointer; transition:.15s ease;
+}
+.tile:hover,.tile.active{background:var(--soft-hov)}
+.ico{width:40px;height:40px;display:flex;align-items:center;justify-content:center}
+.ico img{width:40px;height:40px;object-fit:contain}
+.cap{font-weight:800;color:#0b437a;font-size:13px}
+
+/* Блок расчёта */
+.calc{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:380px){.calc{grid-template-columns:1fr 1fr}}
+.calc-right{ background:var(--soft); border:1px solid var(--soft-brd); border-radius:14px; padding:12px }
+.calc-right .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--soft-brd)}
+.calc-right .row.big{border-bottom:none}
+.calc-right .cap{font-size:12px;color:#43617f}
+.calc-right .val{font-weight:900;color:#0a67c8}
+.calc-right .row.big .val{font-size:18px}
+
+/* QR бокс */
+.qrbox{ margin-top:8px; padding:10px; background:#f7fbff; border:1px dashed var(--soft-brd); border-radius:12px }
+
+/* Кнопка отправки */
+.btn{
+  width:100%; padding:12px 14px; border:none; border-radius:12px;
+  background:var(--accent); color:#fff; font-weight:800; font-size:16px; cursor:pointer; transition:.15s ease;
+}
+.btn:hover{filter:brightness(.97)}
+
+/* Низ */
+.footlinks{ display:flex; gap:10px; justify-content:center; padding:6px 0 16px }
+.footlinks a{ background:var(--soft); border:1px solid var(--soft-brd); color:#0b437a; text-decoration:none; padding:8px 10px; border-radius:10px; font-weight:800 }
+
+/* Подсказка */
+.hint{ color:#a33; font-size:12px; margin:8px 0 0 }

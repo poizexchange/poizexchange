@@ -122,7 +122,7 @@ function rerender(){
     const alt=lt.find(x=>x.code!==codeFrom); if(alt) codeTo=alt.code;
   }
   renderTiles(tilesFrom, lf, codeFrom, c=>{ codeFrom=c; rerender(); recalc(); });
-  renderTiles(tilesTo,   lt, codeTo,   c=>{ codeTo  =c; rerender(); recalc(); }); // <- FIX: codeTo (не toCode)
+  renderTiles(tilesTo,   lt, toCode,   c=>{ codeTo  =c; rerender(); recalc(); });
   recalc();
 }
 

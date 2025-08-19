@@ -1,21 +1,44 @@
-<!-- /opt/poizexchange1/webapp/rates.html -->
-<!doctype html><html lang="ru"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>Курсы — Poiz</title>
-<link rel="stylesheet" href="./styles.css?v=35">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-</head><body>
-<header><div class="currency-strip">🇷🇺 ₽ · 🇨🇳 ¥ · 🇺🇸 $ · 💲 USDT</div></header>
-<main class="card">
-  <h2>Курсы на 19 августа (вт)</h2>
-  <div class="rates-grid">
-    <div class="rate-card"><div class="pair">USD → RUB</div><div class="val">Покупка 79.30 · Продажа 82.05</div><div class="muted">от 5000: 79.30 · 81.50</div></div>
-    <div class="rate-card"><div class="pair">USDT → RUB (Cash)</div><div class="val">До 5k: 77.00 · 82.05</div><div class="muted">От 5k: 79.00 · 81.50</div></div>
-    <div class="rate-card"><div class="pair">CNY (Alipay/WeChat/карты)</div><div class="val">11.85 · 11.75 · 11.70 · 11.65 · 11.60</div><div class="muted">чеки 500–1000¥: 12.9</div></div>
-    <div class="rate-card"><div class="pair">BTC → RUB</div><div class="val">по запросу</div></div>
-    <div class="rate-card"><div class="pair">ETH → RUB</div><div class="val">по запросу</div></div>
-    <div class="rate-card"><div class="pair">XMR → RUB</div><div class="val">по запросу</div></div>
-  </div>
-  <p class="muted" style="margin-top:10px">Без скрытых комиссий. Наличный обмен: г. Москва.</p>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Poiz Exchange — Табло курсов</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./styles.css?v=34b" />
+  <script src="./pricing.js?v=34b"></script>
+</head>
+<body>
+<header class="appbar">
+  <h1>ТАБЛО КУРСОВ</h1>
+</header>
+
+<main class="container">
+  <section class="cards-grid" id="board"></section>
+  <footer class="footer">
+    <a class="link" href="./index.html?v=34b">🧮 Калькулятор</a>
+  </footer>
 </main>
-</body></html>
+
+<script>
+const board = document.getElementById('board');
+const data = getBoardToday(); // из pricing.js
+
+data.forEach(card=>{
+  const el = document.createElement('article');
+  el.className = 'card card--board';
+  el.innerHTML = `
+    <div class="pair">
+      <img src="${card.icon}" alt="">
+      <div>
+        <h3>${card.title}</h3>
+        <div class="sub">${card.subtitle||''}</div>
+      </div>
+    </div>
+    <div class="rows">
+      ${card.rows.map(r=>`<div class="row"><span>${r.l}</span><strong>${r.r}</strong></div>`).join('')}
+    </div>`;
+  board.appendChild(el);
+});
+</script>
+</body>
+</html>

@@ -1,43 +1,42 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-  <title>Poiz Exchange — Табло</title>
-  <link rel="stylesheet" href="./styles.css?v=34.3"/>
-  <script src="./pricing.js?v=34.3"></script>
+  <meta charset="UTF-8">
+  <title>Poiz Exchange — Курсы</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
+  <link rel="stylesheet" href="./styles.css?v=34" />
+  <script src="./pricing.js?v=34"></script>
 </head>
-<body class="theme-white">
-<header class="sticky"><h1>ТАБЛО КУРСОВ</h1></header>
+<body class="tg-white">
+  <header class="tg-header">
+    <div class="wrap">
+      <h1 class="title small">ТАБЛО КУРСОВ</h1>
+    </div>
+  </header>
 
-<main class="container">
-  <section class="card">
-    <div id="grid" class="tile-grid"></div>
-  </section>
+  <main class="wrap main-safe">
+    <section class="card compact">
+      <div id="ratesGrid" class="tiles"></div>
+    </section>
+  </main>
 
-  <div class="center mt">
-    <a class="btn-primary" href="./index.html?v=34.3">🧮 Калькулятор</a>
-  </div>
-</main>
-
-<script>
-(function(){
-  const g=document.getElementById('grid');
-  const R=window.RATES||{};
-  const list=[
-    {code:'USD→RUB', sub: R.USD_RUB ? `П ${R.USD_RUB.buy} · ПР ${R.USD_RUB.sell}` : '—'},
-    {code:'USDT→RUB (нал)', sub: R.USDT_RUB_CASH ? `до5к: ${R.USDT_RUB_CASH.buy_upto5k} · ${R.USDT_RUB_CASH.sell_upto5k} / от5к: ${R.USDT_RUB_CASH.buy_from5k} · ${R.USDT_RUB_CASH.sell_from5k}` : '—'},
-    {code:'CNY→RUB (Alipay/WeChat/карты)', sub: Array.isArray(R.CNY_RUB)? R.CNY_RUB.join(' · ') : '—'},
-    {code:'BTC→RUB', sub:'по запросу'},
-    {code:'ETH→RUB', sub:'по запросу'},
-    {code:'XMR→RUB', sub:'по запросу'},
-  ];
-  list.forEach(x=>{
-    const d=document.createElement('div'); d.className='tile large';
-    d.innerHTML=`<div class="tt">${x.code}</div><div class="sub">${x.sub}</div>`;
-    g.appendChild(d);
-  });
-})();
-</script>
+  <script>
+    const ICON = n => `./icons/${n}.svg`;
+    const CODES = ["USD","USDT","CNY","BTC","ETH","XMR"];
+    function tile(code, rate){
+      const d = document.createElement('button');
+      d.type='button'; d.className='tile';
+      d.innerHTML = `
+        <span class="ico"><img src="${ICON(code.toLowerCase())}" alt=""></span>
+        <span class="cap">${code}</span>
+        <span class="sub">₽ ${rate}</span>`;
+      return d;
+    }
+    const grid = document.getElementById('ratesGrid');
+    CODES.forEach(c=>{
+      const q = quotePair(c,"RUB",1);
+      grid.appendChild(tile(c, q ? q.rate.toFixed(2) : "—"));
+    });
+  </script>
 </body>
 </html>

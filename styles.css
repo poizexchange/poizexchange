@@ -71,3 +71,41 @@ input, select, textarea, button{ font-size:16px }
 .footlinks a{ color:#0b2c66; text-decoration:none; font-weight:1000; padding:6px 10px; border-radius:10px; background:#f3f9ff; border:1px solid var(--line); box-shadow:0 4px 10px rgba(14,120,255,.08) }
 
 .hint{ color:#a33; font-size:12px; margin:8px 0 0 }
+/* Сетка табло: 3 в ряд на телефоне — как просил */
+.tile-grid.tile-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+/* Карточка-квадрат */
+.tile.square {
+  aspect-ratio: 1 / 1;          /* делает квадрат */
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(32, 93, 216, 0.08);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid rgba(36, 103, 214, 0.10);
+}
+
+.tile-title{
+  font-weight: 600;
+  font-size: 12px;
+  color: #1f3b75;
+}
+.tile-main{
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f3fb2;
+}
+
+/* Адаптив — когда тесно, делаем 2 или 1 в ряд */
+@media (max-width: 380px){
+  .tile-grid.tile-3 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 300px){
+  .tile-grid.tile-3 { grid-template-columns: 1fr; }
+}

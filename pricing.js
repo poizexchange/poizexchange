@@ -1,45 +1,44 @@
-// Мини-прайс и расчёт
-window.RATES = {
-  // USD→RUB (нал)
-  USD_RUB: { buy: 79.30, sell: 82.05, buy5k:79.30, sell5k:81.50 },
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>Poiz Exchange — Табло</title>
+  <link rel="stylesheet" href="./styles.css?v=34.3"/>
+  <!-- ВАЖНО: сначала прайс! -->
+  <script src="./pricing.js?v=34.3"></script>
+</head>
+<body class="theme-white">
+<header class="sticky"><h1>ТАБЛО КУРСОВ</h1></header>
 
-  // USDT→RUB (нал)
-  USDT_RUB_CASH: { buy_upto5k:77.00, sell_upto5k:82.05, buy_from5k:79.00, sell_from5k:81.50 },
+<main class="container">
+  <section class="card">
+    <div id="grid" class="tile-grid"></div>
+  </section>
 
-  // CNY (Alipay / WeChat / карты)
-  CNY_RUB: [11.85, 11.75, 11.70, 11.65, 11.60],
-  CNY_CHECKS: 12.9,
+  <div class="center mt">
+    <a class="btn-primary" href="./index.html?v=34.3">🧮 Калькулятор</a>
+  </div>
+</main>
 
-  // Курс USDT/Alipay
-  USDT_CNY: 7.00
-};
-
-// формат
-function fmt(n){ return (Math.round(n*100)/100).toLocaleString('ru-RU', {minimumFractionDigits:2, maximumFractionDigits:2}); }
-
-// Главный калькулятор
-window.getQuote = function(sel, amount){
-  if(!sel.from || !sel.to || !amount) return null;
-
-  // Примеры правил:
-  // USDT (from crypto) → RUB (to cash)
-  if(sel.from==='USDT' && sel.to==='RUB' && sel.toType==='cash'){
-    const r = amount<5000 ? window.RATES.USDT_RUB_CASH.sell_upto5k : window.RATES.USDT_RUB_CASH.sell_from5k;
-    return {rate:fmt(r), total_fmt:fmt(amount*r), total:amount*r};
-  }
-
-  // USD cash → RUB cash (продажа USD)
-  if(sel.from==='USD' && sel.fromType==='cash' && sel.to==='RUB' && sel.toType==='cash'){
-    const r = amount<5000 ? window.RATES.USD_RUB.sell : window.RATES.USD_RUB.sell5k;
-    return {rate:fmt(r), total_fmt:fmt(amount*r), total:amount*r};
-  }
-
-  // CNY сервисы → RUB (по среднему для упрощения)
-  if(['ALIPAY','WECHAT','CN_CARD'].includes(sel.from) && sel.to==='RUB'){
-    const r = window.RATES.CNY_RUB[0];
-    return {rate:fmt(r), total_fmt:fmt(amount*r), total:amount*r};
-  }
-
-  // по запросу — вернём заглушку
-  return {rate:'по запросу', total_fmt:'—', total:0};
-};
+<script>
+(function(){
+  const g=document.getElementById('grid');
+  const R=window.RATES||{};
+  const list=[
+    {code:'USD→RUB', sub: R.USD_RUB ? `П ${R.USD_RUB.buy} · ПР ${R.USD_RUB.sell}` : '—'},
+    {code:'USDT→RUB (нал)', sub: R.USDT_RUB_CASH ? `до5к: ${R.USDT_RUB_CASH.buy_upto5k} · ${R.USDT_RUB_CASH.sell_upto5k} / от5к: ${R.USDT_RUB_CASH.buy_from5k} · ${R.USDT_RUB_CASH.sell_from5k}` : '—'},
+    {code:'CNY→RUB (Alipay/WeChat/карты)', sub: Array.isArray(R.CNY_RUB)? R.CNY_RUB.join(' · ') : '—'},
+    {code:'BTC→RUB', sub:'по запросу'},
+    {code:'ETH→RUB', sub:'по запросу'},
+    {code:'XMR→RUB', sub:'по запросу'},
+  ];
+  list.forEach(x=>{
+    const d=document.createElement('div'); d.className='tile large';
+    d.innerHTML=`<div class="tt">${x.code}</div><div class="sub">${x.sub}</div>`;
+    g.appendChild(d);
+  });
+})();
+</script>
+</body>
+</html>

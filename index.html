@@ -3,228 +3,210 @@
 <head>
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Калькулятор</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <link rel="stylesheet" href="./styles.css?v=17" />
-  <!-- ВАЖНО: pricing.js должен лежать рядом с index.html -->
-  <script src="./pricing.js?v=17"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+  <link rel="stylesheet" href="./styles.css?v=34b" />
+  <script src="./pricing.js?v=34b"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    /* Лёгкая сетка на случай, если styles.css не подхватился */
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue','Noto Sans',sans-serif;background:#f7fbff;color:#0b1a2b}
-    header{padding:12px 16px;background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid #e7eef7}
-    main{padding:16px;max-width:720px;margin:0 auto}
-    h2{margin:16px 0 8px}
-    label{display:block;margin:12px 0 6px;font-weight:600}
-    select,input,textarea{width:100%;padding:12px;border:1px solid #d7e6f7;border-radius:12px;background:#fff;font-size:16px}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .result{margin:12px 0;padding:12px;border-radius:12px;background:#eaf4ff;border:1px solid #d7e6f7}
-    .btn{display:block;width:100%;padding:14px 16px;border:none;border-radius:12px;background:#cfe7ff;color:#053c7a;font-weight:700;font-size:16px}
-    .muted{color:#466}
-    footer{height:16px}
-    .banner{height:42px;display:flex;align-items:center;gap:12px;font-weight:700;color:#0b63c2}
-    .currency-strip{font-size:13px;color:#2a6fb2;opacity:.85}
-    .mode-box{display:none;gap:8px;margin-top:8px}
-    .btn-ghost{padding:10px 12px;border-radius:10px;border:1px solid #cfe0f5;background:#fff}
-    .badge{position:fixed;top:6px;right:8px;z-index:9999;padding:4px 8px;border-radius:8px;background:#e6f1ff;color:#0b63c2;font:600 12px/1.2 system-ui,Segoe UI,Roboto;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-  </style>
 </head>
 <body>
-  <!-- Бейдж версии: помогает увидеть, что страница реально обновилась -->
-  <div class="badge">build v17</div>
+  <div class="app">
+    <header class="app-header">
+      <div class="brand">Poiz Exchange</div>
+      <div class="strip">🇷🇺 ₽ · 🇨🇳 ¥ · 🇺🇸 $ · 💲 USDT · ₿ BTC · Ξ ETH · ɱ XMR</div>
+    </header>
 
-  <header>
-    <div class="banner">Poiz Exchange</div>
-    <div class="currency-strip">🇷🇺 ₽ · 🇨🇳 ¥ · 🇺🇸 $ · 💲 USDT · ₿ BTC · Ξ ETH · ɱ XMR</div>
-  </header>
+    <main class="app-main">
+      <h1 class="title">Калькулятор обмена</h1>
 
-  <main>
-    <h2 style="text-align:center;font-size:22px;margin-top:8px;">Калькулятор обмена</h2>
+      <section class="card">
+        <div class="section-title">Отдаю</div>
+        <div id="fromGrid" class="currency-grid"></div>
 
-    <label>Отдаю</label>
-    <select id="from"></select>
+        <div class="section-title">Получаю</div>
+        <div id="toGrid" class="currency-grid"></div>
 
-    <label>Получаю</label>
-    <select id="to"></select>
+        <!-- спец-режим только для RUB→CNY -->
+        <div id="rubcnyModeBox" class="mode-box" hidden>
+          <button id="modeByY" class="btn ghost">RUB→CNY по ¥</button>
+          <button id="modeFix10" class="btn ghost">RUB→CNY фикс 10</button>
+        </div>
 
-    <!-- Режим только для RUB→CNY -->
-    <div id="rubcnyModeBox" class="mode-box">
-      <button id="modeByY" class="btn-ghost">RUB→CNY по ¥</button>
-      <button id="modeFix10" class="btn-ghost">RUB→CNY фикс 10</button>
-    </div>
+        <div class="row gap">
+          <div class="col">
+            <label class="label">Сумма</label>
+            <input type="number" id="amount" class="input" placeholder="0.00" min="0" step="0.01"/>
+          </div>
+          <div class="col">
+            <label class="label">&nbsp;</label>
+            <button id="recalcBtn" class="btn primary w100">🔄 Пересчитать</button>
+          </div>
+        </div>
 
-    <div class="row">
-      <div>
-        <label>Сумма</label>
-        <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" />
+        <div id="result" class="result">
+          <div class="result-line">
+            <span>Курс</span><strong id="rateVal">—</strong>
+          </div>
+          <div class="result-line">
+            <span>К получению</span><strong id="totalVal">—</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">Заявка</div>
+
+        <label class="label">Контакт</label>
+        <input id="contact" class="input" placeholder="@username или телефон"/>
+
+        <label class="label">Реквизиты</label>
+        <textarea id="requisites" class="input textarea" placeholder="Номер карты/кошелька, банк, ФИО"></textarea>
+
+        <label class="label">Комментарий</label>
+        <textarea id="note" class="input textarea" placeholder="Город, банк, срочность…"></textarea>
+
+        <div id="qrRow" class="qr-row" hidden>
+          <label class="label">QR-файл (для Alipay/WeChat/банков Китая)</label>
+          <input type="file" id="qrfile" class="input" accept="image/*,.png,.jpg,.jpeg,.webp"/>
+        </div>
+
+        <button id="sendBtn" class="btn primary w100">📩 Отправить заявку</button>
+      </section>
+
+      <div class="links">
+        <a class="link" href="https://t.me/poizchat" target="_blank">💬 Чат</a>
+        <a class="link" href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
+        <a class="link" href="./rates.html?v=34b">📊 Табло курсов</a>
       </div>
-      <div>
-        <label>&nbsp;</label>
-        <button id="recalcBtn" class="btn" type="button">🔄 Пересчитать</button>
-      </div>
-    </div>
+    </main>
+  </div>
 
-    <div id="result" class="result">Курс: — | К получению: —</div>
-
-    <h2>Заявка</h2>
-    <label>Контакт</label>
-    <input id="contact" placeholder="@username или телефон" />
-
-    <label>Реквизиты</label>
-    <textarea id="requisites" placeholder="Номер карты/кошелька, банк, ФИО"></textarea>
-
-    <label>Комментарий</label>
-    <textarea id="note" placeholder="Город, банк, срочность…"></textarea>
-
-    <label>QR-файл (опционально)</label>
-    <input type="file" id="qrfile" accept="image/*,.png,.jpg,.jpeg,.webp" />
-
-    <div style="height:10px"></div>
-    <button id="sendBtn" class="btn" type="button">📩 Отправить заявку</button>
-  </main>
-
-  <footer></footer>
-
-  <!-- Диагностика загрузки JS -->
   <script>
-    (function(){
-      const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-      if (tg && tg.showPopup) {
-        tg.expand(); tg.ready();
-        tg.showPopup({title:"Poiz Exchange", message:"JS loaded (v17) ✅"});
-        console.log("[diag] Telegram WebApp detected, JS v17 loaded");
-      } else {
-        alert("JS loaded (v17) ✅ — открыто не в Telegram");
-        console.log("[diag] Not in Telegram, JS v17 loaded");
-      }
-    })();
-  </script>
+    const tg = window.Telegram?.WebApp || null;
+    if (tg) { tg.expand(); tg.ready(); }
 
-  <!-- Основная логика страницы -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+    const fromGrid = document.getElementById('fromGrid');
+    const toGrid   = document.getElementById('toGrid');
+    const amountEl = document.getElementById('amount');
+    const rateVal  = document.getElementById('rateVal');
+    const totalVal = document.getElementById('totalVal');
+    const modeBox  = document.getElementById('rubcnyModeBox');
+    const btnByY   = document.getElementById('modeByY');
+    const btnFix   = document.getElementById('modeFix10');
+    const qrRow    = document.getElementById('qrRow');
 
-      const selFrom = document.getElementById('from');
-      const selTo   = document.getElementById('to');
-      const amountInput = document.getElementById('amount');
-      const resultBox   = document.getElementById('result');
-      const btnRecalc   = document.getElementById('recalcBtn');
-      const btnSend     = document.getElementById('sendBtn');
+    let rubCnyMode = 'byy';
+    let fromCode = 'USDT';
+    let toCode   = 'RUB';
 
-      const modeBox = document.getElementById('rubcnyModeBox');
-      const btnByY  = document.getElementById('modeByY');
-      const btnFix  = document.getElementById('modeFix10');
-      let rubCnyMode = 'byy';
+    function buildItem(c) {
+      const b = document.createElement('button');
+      b.className = 'pill';
+      b.textContent = c.title;
+      b.dataset.code = c.code;
+      return b;
+    }
 
-      // --- Заполнение валют ---
-      function fillSelects() {
-        const list = (Array.isArray(window.CURRENCIES) && window.CURRENCIES.length)
-          ? window.CURRENCIES
-          : [
-              { code: "RUB",  title: "🇷🇺 RUB" },
-              { code: "USD",  title: "🇺🇸 USD" },
-              { code: "USDT", title: "💲 USDT" },
-              { code: "CNY",  title: "🇨🇳 CNY" },
-              { code: "BTC",  title: "₿ BTC" },
-              { code: "ETH",  title: "Ξ ETH" },
-              { code: "XMR",  title: "ɱ XMR" },
-            ];
-        [selFrom, selTo].forEach(sel => {
-          if (!sel) return;
-          sel.innerHTML = "";
-          for (const c of list) sel.add(new Option(c.title, c.code));
+    function renderGrid(grid, list, selected, onPick) {
+      grid.innerHTML = '';
+      list.forEach(c => {
+        const btn = buildItem(c);
+        if (c.code === selected) btn.classList.add('active');
+        btn.addEventListener('click', () => {
+          grid.querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
+          btn.classList.add('active');
+          onPick(c.code);
+          recalc();
         });
-        if (selFrom && !selFrom.value) selFrom.value = "USDT";
-        if (selTo && !selTo.value) selTo.value = "RUB";
-        console.log("[diag] selects filled:", selFrom?.value, "→", selTo?.value);
+        grid.appendChild(btn);
+      });
+    }
+
+    function currencies() {
+      return Array.isArray(window.CURRENCIES) && window.CURRENCIES.length
+        ? window.CURRENCIES
+        : [
+          { code: "USDT", title: "💲 USDT" },
+          { code: "USD",  title: "🇺🇸 USD" },
+          { code: "RUB",  title: "🇷🇺 RUB" },
+          { code: "CNY",  title: "🇨🇳 CNY" },
+          { code: "BTC",  title: "₿ BTC"  },
+          { code: "ETH",  title: "Ξ ETH"  },
+          { code: "XMR",  title: "ɱ XMR"  },
+        ];
+    }
+
+    function updateModeAndQR() {
+      // режим RUB→CNY
+      const rub2cny = fromCode === 'RUB' && toCode === 'CNY';
+      modeBox.hidden = !rub2cny;
+
+      // показ поля QR только если получаем китайские сервисы (логика для твоей будущей матрицы)
+      const cnReceive = (toCode === 'CNY');
+      qrRow.hidden = !cnReceive;
+    }
+
+    function buildDirectionLocal(from, to, mode) {
+      return (typeof window.buildDirection === 'function')
+        ? window.buildDirection(from, to, mode)
+        : `${from}>${to}`;
+    }
+
+    function recalc() {
+      updateModeAndQR();
+      const a = parseFloat(amountEl.value || '0');
+      const dir = buildDirectionLocal(fromCode, toCode, rubCnyMode);
+      const q = (typeof window.quote === 'function') ? window.quote(dir, a) : {rate: 0, total: 0};
+      rateVal.textContent  = q.rate ?? '—';
+      totalVal.textContent = (q.total != null) ? q.total : '—';
+      window._lastQuote = {dir, a, ...q};
+      return q;
+    }
+
+    // init
+    const list = currencies();
+    renderGrid(fromGrid, list, fromCode, (code)=> fromCode = code);
+    renderGrid(toGrid,   list, toCode,   (code)=> toCode   = code);
+    amountEl.addEventListener('input', recalc);
+    document.getElementById('recalcBtn').addEventListener('click', recalc);
+
+    btnByY.addEventListener('click', ()=>{ rubCnyMode='byy'; recalc(); });
+    btnFix.addEventListener('click', ()=>{ rubCnyMode='fix'; recalc(); });
+
+    recalc();
+
+    function sendRequest() {
+      const q = recalc();
+      const payload = {
+        action: 'request',
+        direction: window._lastQuote?.dir || (fromCode + '>' + toCode),
+        from_currency: fromCode,
+        to_currency: toCode,
+        amount: window._lastQuote?.a ?? 0,
+        rate: q?.rate ?? 0,
+        total: q?.total ?? 0,
+        contact: document.getElementById('contact').value.trim(),
+        requisites: document.getElementById('requisites').value.trim(),
+        note: document.getElementById('note').value.trim(),
+        has_qr: !!document.getElementById('qrfile').files?.length,
+        qr_filename: document.getElementById('qrfile').files?.[0]?.name || null
+      };
+      if (!tg) { alert('Откройте форму внутри Telegram'); return; }
+      try {
+        tg.HapticFeedback?.impactOccurred('medium');
+        tg.sendData(JSON.stringify(payload));
+        tg.close();
+      } catch (e) {
+        console.error(e);
+        alert('Не удалось отправить заявку. Напишите @poizmanager');
       }
-      fillSelects();
-      setTimeout(fillSelects, 400); // если pricing.js подтянется с задержкой
+    }
+    document.getElementById('sendBtn').addEventListener('click', sendRequest);
 
-      // --- Переключатель режима для RUB→CNY ---
-      function updateModeVisibility() {
-        if (selFrom?.value === 'RUB' && selTo?.value === 'CNY') {
-          modeBox.style.display = 'flex';
-        } else {
-          modeBox.style.display = 'none';
-        }
-      }
-
-      btnByY?.addEventListener('click', () => { rubCnyMode='byy'; recalc(); });
-      btnFix?.addEventListener('click', () => { rubCnyMode='fix'; recalc(); });
-
-      // --- Пересчёт ---
-      function buildDirectionLocal(from, to, mode) {
-        if (typeof window.buildDirection === 'function') return window.buildDirection(from, to, mode);
-        return `${from}>${to}`;
-      }
-      function recalc() {
-        updateModeVisibility();
-        const from = selFrom?.value || 'USDT';
-        const to   = selTo?.value   || 'RUB';
-        const amount = parseFloat(amountInput?.value || '0');
-        const dir = buildDirectionLocal(from, to, rubCnyMode);
-        const q = (typeof window.quote === 'function') ? window.quote(dir, amount) : { rate: 0, total: 0 };
-        window.currentDirection = dir;
-        window.currentQuote = q;
-        resultBox.textContent = `Курс: ${q.rate ?? '—'} | К получению: ${ (q.total!=null) ? q.total : '—' }`;
-        return q;
-      }
-
-      selFrom?.addEventListener('change', recalc);
-      selTo?.addEventListener('change', recalc);
-      amountInput?.addEventListener('input', recalc);
-      btnRecalc?.addEventListener('click', recalc);
-      recalc();
-
-      // --- Отправка заявки ---
-      function send() {
-        const q = recalc();
-        const payload = {
-          action: 'request',                                     // бот ждёт это поле
-          direction: window.currentDirection,
-          from_currency: selFrom?.value,
-          to_currency: selTo?.value,
-          amount: parseFloat(amountInput?.value || '0'),
-          rate: q?.rate ?? 0,
-          total: q?.total ?? 0,
-          contact: (document.getElementById('contact')?.value || '').trim(),
-          requisites: (document.getElementById('requisites')?.value || '').trim(),
-          note: (document.getElementById('note')?.value || '').trim(),
-          has_qr: !!document.getElementById('qrfile')?.files?.length,
-          qr_filename: document.getElementById('qrfile')?.files?.[0]?.name || null
-        };
-
-        if (!tg) { alert('Откройте форму внутри Telegram'); return; }
-
-        try {
-          tg.HapticFeedback && tg.HapticFeedback.impactOccurred('medium');
-          tg.sendData(JSON.stringify(payload));
-          tg.close();
-        } catch (e) {
-          console.error(e);
-          alert('Не удалось отправить заявку. Напишите @poizmanager');
-        }
-      }
-
-      btnSend?.addEventListener('click', send);
-
-      // Дополнительно — главная кнопка Telegram
-      if (tg && tg.MainButton) {
-        tg.MainButton.setText('📩 Отправить заявку');
-        tg.MainButton.onClick(send);
-        tg.MainButton.show();
-      }
-
-      // Ещё диагностика: проверим, что pricing.js есть
-      console.log("[diag] CURRENCIES typeof:", typeof window.CURRENCIES);
-      if (typeof window.CURRENCIES === 'undefined') {
-        const msg = "pricing.js не загрузился (нет CURRENCIES). Проверь путь/имя файла и 404 в Network.";
-        console.warn("[diag]", msg);
-        if (tg?.showPopup) tg.showPopup({title:"Внимание", message: msg});
-      }
-    });
+    if (tg?.MainButton) {
+      tg.MainButton.setText('📩 Отправить заявку');
+      tg.MainButton.show();
+      tg.onEvent('mainButtonClicked', sendRequest);
+    }
   </script>
 </body>
 </html>
-

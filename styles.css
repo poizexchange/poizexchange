@@ -1,73 +1,234 @@
-/* Clean white + azure accents (v34) */
 :root{
-  --bg:#ffffff; --ink:#0f1a2e; --muted:#5f6b85; --line:#e7ecf3;
-  --primary:#1aa3ff; --primary2:#0e78ff; --focus:#a6d2ff;
-  --chip-bg:#f3f9ff; --chip-border:#cfe6ff; --chip-shadow:0 6px 18px rgba(26,163,255,.18);
+  --bg:#ffffff;
+  --text:#0c2240;
+  --muted:#6b7a90;
+  --blue:#e7f1ff;          /* мягкий фон кнопок */
+  --blue-strong:#cfe3ff;   /* ховер/актив */
+  --accent:#1f4ea3;        /* заголовки */
+  --border:#e7ecf3;
+  --shadow:0 6px 24px rgba(17,44,88,.08);
+  --radius:16px;
 }
-*{ box-sizing:border-box } html,body{height:100%}
-body{ margin:0; font-family: Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink); background:var(--bg) }
-.wrap{ width:100%; max-width:420px; margin:0 auto; padding:16px }
-.main-safe{ padding-bottom: calc(12px + env(safe-area-inset-bottom)) }
-
-/* iOS zoom prevention */
-input, select, textarea, button{ font-size:16px }
-
-/* Header */
-.tg-header{ position:sticky; top:0; background:rgba(255,255,255,.95); backdrop-filter:saturate(160%) blur(8px); border-bottom:1px solid var(--line); z-index:10; box-shadow:0 8px 22px rgba(14,120,255,.10) }
-.title{ margin:10px 0; text-align:center; font-weight:1000; letter-spacing:.06em; color:#0b2c66; font-size:22px }
-.title.small{ font-size:18px }
-
-/* Card */
-.card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; margin:12px 0; box-shadow:0 8px 24px rgba(26,163,255,.12) }
-.card.compact{ padding:10px }
-.h2{ margin:6px 0 10px; font-size:16px; color:#0b2c66; font-weight:1000; letter-spacing:.02em }
-.label{ display:block; margin:8px 0 6px; font-size:12px; color:var(--muted); font-weight:700 }
-
-/* Inputs */
-.input{ width:100%; border:1px solid var(--line); background:#fff; color:var(--ink); padding:10px 12px; border-radius:12px; font-size:16px; outline:none; box-shadow:0 2px 8px rgba(14,120,255,.06) }
-.input:focus{ border-color:var(--focus); box-shadow:0 0 0 3px rgba(14,120,255,.12), 0 8px 24px rgba(14,120,255,.10) }
-.input-file{ width:100%; border:1px dashed var(--line); background:#f9fbff; padding:10px; border-radius:12px }
-
-/* Chips (azure) */
-.chips{ display:flex; gap:8px }
-.chips.wrap{ flex-wrap:wrap }
-.chip{
-  flex:1; display:flex; gap:8px; align-items:center; justify-content:center;
-  padding:10px 8px; border:1px solid var(--chip-border); border-radius:12px;
-  background:var(--chip-bg); color:#0b2c66; font-weight:1000; cursor:pointer;
-  box-shadow: var(--chip-shadow);
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,Inter,Segoe UI,Roboto,Arial}
+h1{margin:0;font-size:22px;letter-spacing:.6px}
+h2{margin:0 0 12px;font-size:18px}
+label{display:block;margin:0 0 8px;color:var(--muted);font-size:14px}
+input,select,textarea{
+  width:100%;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:#fff;color:var(--text);outline:none
 }
-.chip.full{ flex: 1 1 100% }
-.chip img{ width:18px; height:18px; object-fit:contain }
-.chip.active{ border-color:#7ec3ff; box-shadow:0 0 0 3px rgba(14,120,255,.12), 0 12px 26px rgba(14,120,255,.18) }
+textarea{resize:vertical}
 
-/* City box */
-.citybox{ margin:10px 0 6px; padding:10px; border:1px dashed var(--line); border-radius:12px; background:linear-gradient(180deg, #f3faff, #eef7ff) }
+.appbar{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--border)}
+.appbar h1{padding:16px;text-align:center;color:var(--accent)}
 
-/* Tiles */
-.tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px }
-.tile{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px; min-height:100px; border:1px solid var(--line); background:#fff; border-radius:14px; cursor:pointer; transition:.12s; box-shadow:0 2px 10px rgba(14,120,255,.10) }
-.tile:hover{ transform:translateY(-1px) } .tile.active{ border-color:#7ec3ff; box-shadow:0 0 0 3px rgba(14,120,255,.12), 0 14px 24px rgba(14,120,255,.16) }
-.ico{ width:40px; height:40px; display:flex; align-items:center; justify-content:center }
-.ico img{ width:40px; height:40px; object-fit:contain }
-.cap{ font-weight:1000; font-size:13px; letter-spacing:.2px; color:#0b2c66; text-align:center }
-.sub{ font-weight:800; color:#446 }
+.container{padding:12px;max-width:720px;margin:0 auto}
+.card{
+  background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px;margin:10px 0;box-shadow:var(--shadow)
+}
+.card--board .pair{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.card--board .pair img{width:36px;height:36px}
+.card--board .pair h3{margin:0;font-size:16px}
+.card--board .sub{color:var(--muted);font-size:13px}
+.card--board .rows .row{display:flex;justify-content:space-between;padding:6px 0;border-top:1px dashed var(--border)}
+.card--board .rows .row:first-child{border-top:none}
 
-/* Calculation block */
-.calc-grid{ display:grid; grid-template-columns:1fr; gap:12px } @media(min-width:380px){ .calc-grid{ grid-template-columns:1fr 1fr } }
-.result-card{ border:1px solid var(--line); border-radius:14px; padding:12px; background:linear-gradient(180deg, #fff, #f3faff); box-shadow:0 10px 24px rgba(26,163,255,.12) }
-.result-line{ display:flex; align-items:flex-end; justify-content:space-between; padding:6px 0; border-bottom:1px dashed #edf2fa }
-.result-line:last-child{ border-bottom:none }
-.r-cap{ font-size:12px; color:#6c7bad; font-weight:1000; letter-spacing:.02em }
-.r-val{ font-size:17px; font-weight:1000; color:#0e78ff }
-.r-big{ font-size:19px; font-weight:1000; color:#0a3ea1 }
+.pill-group{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.pill{
+  border:1px solid var(--border);background:var(--blue);color:var(--text);
+  padding:10px 12px;border-radius:14px;cursor:pointer
+}
+.pill.active,.pill:hover{background:var(--blue-strong)}
 
-/* Submit */
-.btn-primary{ width:100%; background:linear-gradient(180deg, var(--primary), var(--primary2)); color:#fff; border:none; border-radius:12px; padding:12px 14px; font-weight:1000; letter-spacing:.2px; cursor:pointer; transition:.15s; box-shadow:0 16px 36px rgba(14,120,255,.26) }
-.btn-primary:active,.btn-primary:hover{ transform:translateY(-1px); filter:saturate(110%) }
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (min-width:420px){.tiles{grid-template-columns:repeat(4,1fr)}}
+.tile{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  border:1px solid var(--border);background:var(--blue);border-radius:16px;padding:12px;cursor:pointer
+}
+.tile img{width:28px;height:28px}
+.tile span{font-size:13px}
+.tile.active,.tile:hover{background:var(--blue-strong)}
 
-/* Footer */
-.footlinks{ display:flex; gap:12px; justify-content:center; padding:8px 0 calc(12px + env(safe-area-inset-bottom)) }
-.footlinks a{ color:#0b2c66; text-decoration:none; font-weight:1000; padding:6px 10px; border-radius:10px; background:#f3f9ff; border:1px solid var(--line); box-shadow:0 4px 10px rgba(14,120,255,.08) }
+.city-row{margin-top:10px}
 
-.hint{ color:#a33; font-size:12px; margin:8px 0 0 }
+.grid-2{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:520px){.grid-2{grid-template-columns:1fr 1fr}}
+
+.quote{
+  display:grid;gap:10px;border:1px solid var(--border);border-radius:12px;background:#fff;padding:12px
+}
+.quote span{color:var(--muted);font-size:13px}
+.quote strong{font-size:18px}
+
+.btn-main{
+  width:100%;margin-top:12px;padding:14px;border:none;border-radius:14px;
+  background:var(--accent);color:#fff;font-weight:600;cursor:pointer
+}
+.btn-main:hover{filter:brightness(.97)}
+.footer{display:flex;gap:16px;justify-content:center;padding:16px 0;color:var(--muted)}
+.link{color:var(--accent);text-decoration:none}
+.link:hover{text-decoration:underline}
+
+.cards-grid{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:520px){.cards-grid{grid-template-columns:1fr 1fr}}
+pricing.js (иконки-плитки + логика котировок)
+javascript
+Копировать
+Редактировать
+/* === ИКОНКИ (положите SVG/PNG в корень или замените пути) === */
+const ICONS = {
+  RUB: './icons/rub.png',
+  USD: './icons/usd.png',
+  CNY: './icons/cny.png',
+  USDT: './icons/usdt.png',
+  BTC: './icons/btc.png',
+  ETH: './icons/eth.png',
+  XMR: './icons/xmr.png',
+  ALIPAY: './icons/alipay.png',
+  WECHAT: './icons/wechat.png',
+  CNBANK: './icons/cnbank.png',
+};
+
+/* === НАБОРЫ ДЛЯ ПЛИТОК ПО ТИПУ ОПЛАТ === */
+function getAssetsByPay(pay, side){
+  // side нужен на случай будущих ограничений — пока одинаково
+  if (pay === 'crypto') {
+    return [
+      {code:'USDT', title:'USDT', icon:ICONS.USDT},
+      {code:'BTC',  title:'BTC',  icon:ICONS.BTC },
+      {code:'ETH',  title:'ETH',  icon:ICONS.ETH },
+      {code:'XMR',  title:'XMR',  icon:ICONS.XMR },
+    ];
+  }
+  if (pay === 'bank') {
+    return [
+      {code:'SBP',    title:'СБП',        icon:ICONS.RUB},
+      {code:'SBER',   title:'Сбер',       icon:ICONS.RUB},
+      {code:'TINK',   title:'Т-Банк',     icon:ICONS.RUB},
+      {code:'VTB',    title:'ВТБ',        icon:ICONS.RUB},
+      {code:'ALFA',   title:'Альфа',      icon:ICONS.RUB},
+      {code:'OZON',   title:'Озон',       icon:ICONS.RUB},
+      {code:'RAIF',   title:'Райфф',      icon:ICONS.RUB},
+      {code:'USD',    title:'USD',        icon:ICONS.USD},
+      {code:'RUB',    title:'RUB',        icon:ICONS.RUB},
+    ];
+  }
+  if (pay === 'cn') {
+    return [
+      {code:'ALIPAY', title:'Alipay', icon:ICONS.ALIPAY},
+      {code:'WECHAT', title:'WeChat', icon:ICONS.WECHAT},
+      {code:'CNBANK', title:'Карта Китая', icon:ICONS.CNBANK},
+      {code:'CNY',    title:'CNY', icon:ICONS.CNY},
+    ];
+  }
+  // cash
+  return [
+    {code:'RUB', title:'RUB', icon:ICONS.RUB},
+    {code:'USD', title:'USD', icon:ICONS.USD},
+  ];
+}
+
+/* === ТЕКУЩИЕ КУРСЫ (по вашей сводке) === */
+// USD ↔ RUB (cash)
+const USD_RUB_BUY  = 79.30; // мы покупаем у клиента USD -> выдаём RUB (покупка USD)
+const USD_RUB_SELL_SMALL = 82.05; // мы продаём USD за RUB до 5k
+const USD_RUB_SELL_BIG   = 81.50; // от 5k
+
+// USDT ↔ RUB (cash)
+const USDT_RUB_BUY_SMALL = 77.00;
+const USDT_RUB_SELL_SMALL = 82.05;
+const USDT_RUB_BUY_BIG = 79.00;
+const USDT_RUB_SELL_BIG = 81.50;
+
+// RUB → CN сервисы (Alipay/WeChat/карты)
+const RUB_CNY_TIERS = [
+  {min:0,    rate:11.85},
+  {min:3000, rate:11.75},
+  {min:15000,rate:11.70},
+  {min:30000,rate:11.65},
+  {min:70000,rate:11.60},
+];
+
+// USDT → CNY (Alipay) фикс
+const USDT_CNY = 7.00;
+
+/* === ФОРМАТ === */
+function formatN(x){ return (x||0).toLocaleString('ru-RU', {maximumFractionDigits:2}); }
+
+/* === КОТИРОВЩИК === */
+function quote(state){
+  const a = Math.max(0, +state.amount || 0);
+
+  // удобно
+  const F = state.from, T = state.to;
+
+  // USDT -> RUB (cash)
+  if (F.pay==='crypto' && F.asset==='USDT' && T.pay==='cash' && T.asset==='RUB'){
+    const rate = a>=5000 ? USDT_RUB_BUY_BIG : USDT_RUB_BUY_SMALL; // выдаём RUB
+    return {rate, total: a*rate, rate_label: rate.toFixed(2)+' ₽'};
+  }
+
+  // RUB (cash/bank) -> CNY (Alipay/WeChat/Карта Китая)
+  if ((F.pay==='cash' || F.pay==='bank') && (F.asset==='RUB' || !F.asset) && T.pay==='cn' && ['ALIPAY','WECHAT','CNBANK','CNY'].includes(T.asset)){
+    let rate = RUB_CNY_TIERS[0].rate;
+    for (const t of RUB_CNY_TIERS){ if (a>=t.min) rate = t.rate; }
+    return {rate, total: (a / rate), rate_label: `1¥ = ${rate}`};
+  }
+
+  // USD (cash) -> RUB (cash)
+  if (F.pay==='cash' && F.asset==='USD' && T.pay==='cash' && T.asset==='RUB'){
+    const sell = a>=5000 ? USD_RUB_SELL_BIG : USD_RUB_SELL_SMALL; // клиент отдаёт USD, получает RUB
+    return {rate:sell, total: a*sell, rate_label: sell.toFixed(2)+' ₽'};
+  }
+
+  // RUB (cash) -> USD (cash) (мы покупаем у клиента RUB, отдаём USD по курсу покупки USD)
+  if (F.pay==='cash' && F.asset==='RUB' && T.pay==='cash' && T.asset==='USD'){
+    const usdPrice = USD_RUB_BUY; // сколько RUB за 1 USD (для клиента это "покупка USD"? обратное)
+    return {rate:usdPrice, total: a/usdPrice, rate_label: usdPrice.toFixed(2)+' ₽ за $'};
+  }
+
+  // USDT -> CNY (Alipay)
+  if (F.pay==='crypto' && F.asset==='USDT' && T.pay==='cn' && T.asset==='ALIPAY'){
+    return {rate:USDT_CNY, total: a*USDT_CNY, rate_label: `1 USDT = ${USDT_CNY}¥`};
+  }
+
+  // Остальное — по запросу
+  return null;
+}
+
+/* === ТАБЛО (карточки) === */
+function getBoardToday(){
+  return [
+    {
+      title:'USD → RUB (наличные)', icon:ICONS.USD,
+      rows:[
+        {l:'До 5 000 $ (продажа $ клиенту)', r:`${USD_RUB_SELL_SMALL.toFixed(2)} ₽`},
+        {l:'От 5 000 $', r:`${USD_RUB_SELL_BIG.toFixed(2)} ₽`},
+        {l:'Покупаем $ у клиента', r:`${USD_RUB_BUY.toFixed(2)} ₽`},
+      ]
+    },
+    {
+      title:'USDT → RUB (наличные)', icon:ICONS.USDT,
+      rows:[
+        {l:'До 5 000 USDT', r:`${USDT_RUB_BUY_SMALL.toFixed(2)} ₽`},
+        {l:'От 5 000 USDT', r:`${USDT_RUB_BUY_BIG.toFixed(2)} ₽`},
+        {l:'Обратная выдача', r:`до 5k ${USDT_RUB_SELL_SMALL.toFixed(2)} · от 5k ${USDT_RUB_SELL_BIG.toFixed(2)} ₽`},
+      ]
+    },
+    {
+      title:'RUB → CNY (Alipay/WeChat/карты Китая)', icon:ICONS.CNY,
+      subtitle:'Без комиссий',
+      rows:RUB_CNY_TIERS.map(t=>({l:`От ${t.min.toLocaleString('ru-RU')}¥`, r:`1¥ = ${t.rate}`}))
+    },
+    {
+      title:'USDT → CNY (Alipay)', icon:ICONS.ALIPAY,
+      rows:[{l:'Фикс', r:`1 USDT = ${USDT_CNY}¥`}]
+    },
+    {
+      title:'BTC/ETH/XMR → RUB', icon:ICONS.BTC,
+      rows:[{l:'Курс', r:'по запросу'}]
+    }
+  ];
+}

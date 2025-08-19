@@ -3,103 +3,213 @@
 <head>
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Калькулятор</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=34" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./styles.css?v=34b" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="./pricing.js?v=34"></script>
-  <script src="./index.js?v=34" defer></script>
+  <script defer src="./pricing.js?v=34b"></script>
 </head>
-<body class="tg-white">
-  <header class="tg-header">
-    <div class="wrap">
-      <h1 class="title">КАЛЬКУЛЯТОР ОБМЕНА</h1>
+<body>
+<header class="appbar">
+  <h1>КАЛЬКУЛЯТОР ОБМЕНА</h1>
+</header>
+
+<main class="container">
+
+  <!-- ОТДАЮ -->
+  <section class="card">
+    <h2>Отдаю</h2>
+
+    <div class="pill-group" id="fromPay">
+      <button class="pill active" data-pay="cash">💵 Наличные</button>
+      <button class="pill" data-pay="bank">🏦 Банк</button>
+      <button class="pill" data-pay="crypto">🪙 Крипто</button>
+      <button class="pill" data-pay="cn">🈶 Китайские сервисы</button>
     </div>
-  </header>
 
-  <main class="wrap main-safe">
-    <section class="card">
-      <h2 class="h2">Отдаю</h2>
-      <div class="chips" id="from-pay">
-        <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
-        <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
-        <button class="chip" data-type="crypto"><img src="./icons/crypto.svg" alt="">Крипто</button>
+    <div class="tiles" id="fromTiles">
+      <!-- наполняется из pricing.js -->
+    </div>
+
+    <div class="city-row" id="fromCityRow" hidden>
+      <label>Город</label>
+      <select id="fromCity">
+        <option value="moscow" selected>Москва</option>
+        <option value="gz">Гуанчжоу</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- ПОЛУЧАЮ -->
+  <section class="card">
+    <h2>Получаю</h2>
+
+    <div class="pill-group" id="toPay">
+      <button class="pill" data-pay="cash">💵 Наличные</button>
+      <button class="pill" data-pay="bank">🏦 Банк</button>
+      <button class="pill" data-pay="crypto">🪙 Крипто</button>
+      <button class="pill active" data-pay="cn">🈶 Китайские сервисы</button>
+    </div>
+
+    <div class="tiles" id="toTiles">
+      <!-- наполняется из pricing.js -->
+    </div>
+
+    <div class="city-row" id="toCityRow" hidden>
+      <label>Город</label>
+      <select id="toCity">
+        <option value="moscow" selected>Москва</option>
+        <option value="gz">Гуанчжоу</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- РАСЧЁТ -->
+  <section class="card">
+    <div class="grid-2">
+      <div>
+        <label>Сумма</label>
+        <input id="amount" type="number" min="0" step="0.01" placeholder="0.00" />
       </div>
-
-      <div id="from-citybox" class="citybox" hidden>
-        <label class="label" for="cityFrom">Город</label>
-        <select id="cityFrom" class="input">
-          <option value="moscow">Москва</option>
-          <option value="guangzhou">Гуанчжоу</option>
-        </select>
+      <div class="quote">
+        <div><span>Курс</span><strong id="rate">—</strong></div>
+        <div><span>К получению</span><strong id="total">—</strong></div>
       </div>
+    </div>
+  </section>
 
-      <div id="from-currencies" class="tiles"></div>
-    </section>
+  <!-- ЗАЯВКА -->
+  <section class="card">
+    <h2>Заявка</h2>
 
-    <section class="card">
-      <h2 class="h2">Получаю</h2>
-      <div class="chips wrap" id="to-pay">
-        <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
-        <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
-        <button class="chip" data-type="crypto"><img src="./icons/crypto.svg" alt="">Крипто</button>
-        <button class="chip full" data-type="cnpay"><img src="./icons/bankcn.svg" alt="">Китайские сервисы</button>
+    <div class="grid-2">
+      <div>
+        <label>Контакт</label>
+        <input id="contact" placeholder="@username или телефон" />
       </div>
-
-      <div id="to-citybox" class="citybox" hidden>
-        <label class="label" for="cityTo">Город</label>
-        <select id="cityTo" class="input">
-          <option value="moscow">Москва</option>
-          <option value="guangzhou">Гуанчжоу</option>
-        </select>
+      <div>
+        <label>Реквизиты</label>
+        <input id="requisites" placeholder="Карта/кошелёк, банк, ФИО" />
       </div>
+    </div>
 
-      <div id="to-currencies" class="tiles"></div>
-    </section>
+    <div>
+      <label>Комментарий</label>
+      <textarea id="note" rows="3" placeholder="Город, банк, срочность…"></textarea>
+    </div>
 
-    <section class="card">
-      <div class="calc-grid">
-        <div>
-          <label class="label" for="amount">Сумма</label>
-        <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
-        </div>
-        <div class="result-card">
-          <div class="result-line">
-            <div class="r-cap">Курс</div>
-            <div id="rateVal" class="r-val">—</div>
-          </div>
-          <div class="result-line">
-            <div class="r-cap">К получению</div>
-            <div id="totalVal" class="r-big">—</div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <div id="qrRow" hidden>
+      <label>QR-файл (только для Alipay/WeChat/карт Китая)</label>
+      <input type="file" id="qrfile" accept="image/*,.png,.jpg,.jpeg,.webp" />
+    </div>
 
-    <section class="card">
-      <h2 class="h2">Заявка</h2>
-      <label class="label" for="contact">Контакт</label>
-      <input id="contact" class="input" placeholder="@username или телефон" />
+    <button id="sendBtn" class="btn-main">📩 Отправить заявку</button>
+  </section>
 
-      <label class="label" for="requisites">Реквизиты</label>
-      <textarea id="requisites" class="input" rows="3" placeholder="Номер карты/кошелька, банк, ФИО"></textarea>
+  <footer class="footer">
+    <a href="./rates.html?v=34b" class="link">📊 Табло курсов</a>
+    <a href="https://t.me/poizchat" target="_blank" class="link">💬 Чат</a>
+    <a href="https://t.me/poizmanager" target="_blank" class="link">📞 Админ</a>
+  </footer>
+</main>
 
-      <label class="label" for="note">Комментарий</label>
-      <textarea id="note" class="input" rows="3" placeholder="Детали, срочность…"></textarea>
+<script>
+  const tg = window.Telegram?.WebApp; tg && tg.expand();
 
-      <div id="qrbox" class="qrbox" hidden>
-        <label class="label" for="qrfile">Пришлите QR-код (для Alipay / WeChat / карта Китая)</label>
-        <input type="file" id="qrfile" accept="image/*,.png,.jpg,.jpeg,.webp" class="input-file">
-      </div>
+  // элементы
+  const fromPay = document.getElementById('fromPay');
+  const toPay   = document.getElementById('toPay');
+  const fromTiles = document.getElementById('fromTiles');
+  const toTiles   = document.getElementById('toTiles');
+  const fromCityRow = document.getElementById('fromCityRow');
+  const toCityRow   = document.getElementById('toCityRow');
+  const amount = document.getElementById('amount');
+  const rateEl = document.getElementById('rate');
+  const totalEl = document.getElementById('total');
+  const qrRow = document.getElementById('qrRow');
 
-      <button id="sendBtn" class="btn-primary">📩 Отправить заявку</button>
-      <p id="hint" class="hint" hidden>Откройте форму из бота в Telegram, чтобы отправить напрямую.</p>
-    </section>
+  // состояние
+  const state = {
+    from: { pay:'cash', asset:null, city:'moscow' },
+    to:   { pay:'cn',   asset:null, city:'moscow' },
+    amount: 0
+  };
 
-    <nav class="footlinks">
-      <a href="./rates.html?v=34">📊 Табло</a>
-      <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
-      <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
-    </nav>
-  </main>
+  // отрисовка плиток
+  function drawTiles(side){
+    const box = side==='from' ? fromTiles : toTiles;
+    const pay = state[side].pay;
+    const list = getAssetsByPay(pay, side);
+    box.innerHTML = '';
+    list.forEach(a=>{
+      const b = document.createElement('button');
+      b.className = 'tile' + (state[side].asset===a.code ? ' active':'');
+      b.innerHTML = `<img src="${a.icon}" alt=""><span>${a.title}</span>`;
+      b.onclick = ()=>{ state[side].asset = a.code; onChange(); drawTiles(side); };
+      box.appendChild(b);
+    });
+    // города только для наличных
+    (side==='from'?fromCityRow:toCityRow).hidden = (pay!=='cash');
+    // QR — только если получение в CN сервисы
+    qrRow.hidden = !(state.to.pay==='cn');
+  }
+
+  // клики по типам оплат
+  function bindPayGroup(node, side){
+    node.querySelectorAll('.pill').forEach(p=>{
+      p.onclick = ()=>{
+        node.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+        p.classList.add('active');
+        state[side].pay = p.dataset.pay;
+        state[side].asset = null;
+        drawTiles(side);
+        onChange();
+      };
+    });
+  }
+  bindPayGroup(fromPay,'from');
+  bindPayGroup(toPay,'to');
+
+  // ввод суммы
+  amount.oninput = ()=>{ state.amount = parseFloat(amount.value||'0'); onChange(); };
+
+  // старт
+  drawTiles('from'); drawTiles('to'); onChange();
+
+  // пересчёт
+  function onChange(){
+    const q = quote(state);
+    if(!q || !isFinite(q.rate) || !isFinite(q.total)){
+      rateEl.textContent = '—';
+      totalEl.textContent = '—';
+    }else{
+      rateEl.textContent = q.rate_label || q.rate.toString();
+      totalEl.textContent = formatN(q.total);
+    }
+  }
+
+  // отправка заявки
+  document.getElementById('sendBtn').onclick = ()=>{
+    const payload = {
+      action: 'request', // ВАЖНО: так ждёт бот
+      from: state.from,
+      to: state.to,
+      amount: state.amount,
+      rate: rateEl.textContent,
+      total: totalEl.textContent,
+      contact: document.getElementById('contact').value.trim(),
+      requisites: document.getElementById('requisites').value.trim(),
+      note: document.getElementById('note').value.trim(),
+      has_qr: !!document.getElementById('qrfile').files?.length,
+      qr_filename: document.getElementById('qrfile').files?.[0]?.name || null
+    };
+    if(window.Telegram?.WebApp){
+      tg.sendData(JSON.stringify(payload));
+      tg.close();
+    }else{
+      alert('Откройте через Telegram, чтобы отправить заявку.');
+    }
+  };
+</script>
 </body>
 </html>
+

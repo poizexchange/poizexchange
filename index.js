@@ -1,188 +1,199 @@
-// Telegram helpers
-const tg=(window.Telegram&&window.Telegram.WebApp)?window.Telegram.WebApp:null; if(tg){tg.expand(); tg.ready();}
-const ICON = n => `./icons/${n}.svg`;
+// index.js v36 — отрисовка плиток валют и расчёт
 
-// Данные (валюты — с классическими иконками)
-const CURRENCIES=[
-  {code:'RUB',title:'RUB',icon:ICON('rub')},
-  {code:'USD',title:'USD',icon:ICON('usd')},
-  {code:'CNY',title:'CNY',icon:ICON('cny')},
-  {code:'USDT',title:'USDT',icon:ICON('usdt')},
-  {code:'BTC',title:'BTC',icon:ICON('btc')},
-  {code:'ETH',title:'ETH',icon:ICON('eth')},
-  {code:'XMR',title:'XMR',icon:ICON('xmr')},
-];
-const BANKS=[
-  {code:'SBP',title:'СБП',icon:ICON('sbp')},
-  {code:'SBER',title:'Сбер',icon:ICON('sber')},
-  {code:'TBANK',title:'Т-Банк',icon:ICON('tbank')},
-  {code:'VTB',title:'ВТБ',icon:ICON('vtb')},
-  {code:'ALFA',title:'Альфа',icon:ICON('alfa')},
-  {code:'OZON',title:'Ozon',icon:ICON('ozon')},
-  {code:'RAIFFEISEN',title:'Райф',icon:ICON('raif')},
-];
-const CNPAY=[
-  {code:'ALIPAY',title:'Alipay',icon:ICON('alipay')},
-  {code:'WECHAT',title:'WeChat',icon:ICON('wechat')},
-  {code:'BANKCN',title:'Bank CN',icon:ICON('bankcn')},
-];
+(function () {
+  const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+  if (tg) { try { tg.expand(); tg.ready(); tg.sendData(JSON.stringify({action:"webapp_open"})); } catch(e){} }
 
-// Элементы
-const fromRow=document.getElementById('from-pay');
-const toRow  =document.getElementById('to-pay');
-const fromCityBox=document.getElementById('from-citybox');
-const toCityBox  =document.getElementById('to-citybox');
-const cityFromEl =document.getElementById('cityFrom');
-const cityToEl   =document.getElementById('cityTo');
-const tilesFrom  =document.getElementById('from-currencies');
-const tilesTo    =document.getElementById('to-currencies');
-const amountEl   =document.getElementById('amount');
-const rateEl     =document.getElementById('rateVal');
-const totalEl    =document.getElementById('totalVal');
-const qrBox      =document.getElementById('qrbox');
-const qrFile     =document.getElementById('qrfile');
+  // DOM
+  const elFromPay = document.getElementById('from-pay');
+  const elToPay   = document.getElementById('to-pay');
+  const boxFrom   = document.getElementById('from-currencies');
+  const boxTo     = document.getElementById('to-currencies');
 
-// Состояние
-let pFrom=null, pTo=null; // cash | bank | crypto | (только для to) cnpay
-let cityFrom='moscow', cityTo='moscow';
-let kindFrom='currency', kindTo='currency';
-let codeFrom=null, codeTo=null;
+  const amountInput = document.getElementById('amount');
+  const rateVal     = document.getElementById('rateVal');
+  const totalVal    = document.getElementById('totalVal');
 
-function toggleCityBoxes(){ fromCityBox.hidden = pFrom!=='cash'; toCityBox.hidden = pTo!=='cash'; }
-function toggleQr(){ qrBox.hidden = !(kindTo==='cnpay'); }
+  const contactInp   = document.getElementById('contact');
+  const requisitesTa = document.getElementById('requisites');
+  const noteTa       = document.getElementById('note');
 
-function applyGuangzhou(list, side){
-  if (side==='from' && pFrom==='cash' && cityFrom==='guangzhou') return list.filter(x=>x.code==='USD');
-  if (side==='to'   && pTo==='cash'   && cityTo==='guangzhou')   return list.filter(x=>x.code==='USD'||x.code==='CNY');
-  return list;
-}
+  const sendBtn = document.getElementById('sendBtn');
+  const hint    = document.getElementById('hint');
+  const qrbox   = document.getElementById('qrbox');
+  const qrfile  = document.getElementById('qrfile');
 
-// Разрешённые списки
-function allowedList(side){
-  const isFrom = side==='from';
-
-  if (!isFrom){ // куда получаем
-    if (pTo==='cnpay'){ kindTo='cnpay'; return CNPAY.slice(); }
-    if (pTo==='bank'){ kindTo='bank'; return BANKS.slice(); }
-    if (pTo==='crypto'){ kindTo='currency'; return CURRENCIES.filter(x=>['USDT','BTC','ETH','XMR'].includes(x.code)); }
-    if (pTo==='cash'){
-      kindTo='currency';
-      let list=CURRENCIES.filter(x=>['RUB','USD','CNY'].includes(x.code));
-      list=applyGuangzhou(list,'to');
-      return list;
-    }
-    kindTo='currency'; return CURRENCIES.slice();
-  }
-
-  // откуда отдаём
-  let list=[];
-  if (pFrom==='bank'){ kindFrom='bank'; list=BANKS.slice(); }
-  else if (pFrom==='crypto'){ kindFrom='currency'; list=CURRENCIES.filter(x=>['USDT','BTC','ETH','XMR'].includes(x.code)); }
-  else if (pFrom==='cash'){ kindFrom='currency'; list=CURRENCIES.filter(x=>['RUB','USD','CNY'].includes(x.code)); list=applyGuangzhou(list,'from'); if (cityFrom!=='guangzhou'){ list=list.filter(x=>x.code!=='CNY'); } }
-  else { kindFrom='currency'; list=CURRENCIES.slice(); }
-
-  // Ограничения, если получаем через китайские сервисы
-  if (kindTo==='cnpay'){
-    list = list.filter(x=>
-      (pFrom==='bank') ||
-      (pFrom==='cash' && x.code==='RUB') ||
-      (pFrom==='crypto' && x.code==='USDT')
-    );
-  }
-  return list;
-}
-
-function renderTiles(root, list, activeCode, onPick){
-  root.innerHTML='';
-  list.forEach(item=>{
-    const btn=document.createElement('button');
-    btn.type='button'; btn.className='tile'+(item.code===activeCode?' active':'');
-    btn.innerHTML=`<span class="ico"><img src="${item.icon}" alt=""></span><span class="cap">${item.title||item.code}</span>`;
-    btn.onclick=()=>onPick(item.code);
-    root.appendChild(btn);
-  });
-}
-
-function recalc(){
-  const a=parseFloat(amountEl.value||'0');
-  if (typeof quotePair==='function' && kindFrom==='currency' && kindTo==='currency'){
-    const q=quotePair(codeFrom||'USDT', codeTo||'RUB', a||0);
-    if (q){ rateEl.textContent=q.rate.toFixed(6); totalEl.textContent=q.total.toLocaleString('ru-RU'); return; }
-  }
-  rateEl.textContent='—'; totalEl.textContent=(a>0&&codeFrom&&codeTo)?a.toLocaleString('ru-RU'):'—';
-}
-
-function rerender(){
-  toggleCityBoxes(); toggleQr();
-  const lf=allowedList('from'); if(!codeFrom || !lf.find(x=>x.code===codeFrom)) codeFrom=lf[0]?.code;
-  const lt=allowedList('to');   if(!codeTo   || !lt.find(x=>x.code===codeTo))   codeTo  =lt[0]?.code;
-
-  // нельзя одинаковые (для валют)
-  if (kindFrom==='currency' && kindTo==='currency' && codeFrom===codeTo){
-    const alt=lt.find(x=>x.code!==codeFrom); if(alt) codeTo=alt.code;
-  }
-
-  renderTiles(tilesFrom, lf, codeFrom, c=>{ codeFrom=c; rerender(); recalc(); });
-  renderTiles(tilesTo,   lt, codeTo,   c=>{ codeTo  =c; rerender(); recalc(); }); // <-- FIX: codeTo (не опечатка)
-  recalc();
-}
-
-function bindRow(root, setter){
-  root.querySelectorAll('.chip').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      root.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      setter(btn.dataset.type);
-      rerender();
-    });
-  });
-}
-bindRow(fromRow, v=>pFrom=v);
-bindRow(toRow,   v=>pTo=v);
-
-// Город
-cityFromEl.addEventListener('change', ()=>{ cityFrom=cityFromEl.value; rerender(); });
-cityToEl  .addEventListener('change', ()=>{ cityTo  =cityToEl.value;   rerender(); });
-
-// Init
-(function init(){
-  fromRow.querySelector('[data-type="crypto"]').click();
-  toRow  .querySelector('[data-type="cash"]').click();
-  cityFrom=cityFromEl.value='moscow';
-  cityTo  =cityToEl.value  ='moscow';
-  rerender();
-})();
-
-// Отправка заявки
-document.getElementById('sendBtn').addEventListener('click', ()=>{
-  const amount=parseFloat(amountEl.value||'0');
-  if (!pFrom||!pTo){ alert('Выберите тип оплаты (отдаю/получаю).'); return; }
-  if (pFrom==='cash' && !cityFrom){ alert('Выберите город для «Отдаю (наличные)».'); return; }
-  if (pTo==='cash'   && !cityTo){   alert('Выберите город для «Получаю (наличные)».'); return; }
-  if (!codeFrom||!codeTo){ alert('Выберите валюты/банки.'); return; }
-  if (!(amount>0)){ alert('Введите сумму больше нуля.'); return; }
-
-  const payload={
-    action:'request',
-    payment_from:pFrom, payment_to:pTo,
-    city_from: pFrom==='cash'?cityFrom:null,
-    city_to:   pTo==='cash'?cityTo:null,
-    from_kind:(pFrom==='bank'?'bank':'currency'),
-    to_kind:(pTo==='bank'?'bank': (pTo==='cnpay'?'cnpay':'currency')),
-    from_code:codeFrom, to_code:codeTo,
-    direction:`${(pFrom==='bank'?'bank':'currency')}:${codeFrom}>${(pTo==='bank'?'bank':(pTo==='cnpay'?'cnpay':'currency'))}:${codeTo}`,
-    amount,
-    contact:(document.getElementById('contact').value||'').trim(),
-    requisites:(document.getElementById('requisites').value||'').trim(),
-    note:(document.getElementById('note').value||'').trim(),
-    has_qr: (pTo==='cnpay' && qrFile && qrFile.files && qrFile.files.length>0) ? true : false,
-    qr_filename: (pTo==='cnpay' && qrFile && qrFile.files && qrFile.files[0]) ? qrFile.files[0].name : null
+  // Состояние
+  const state = {
+    fromPay: 'cash',
+    toPay: 'cash',
+    from: null,
+    to:   null,
+    amount: 0,
+    quote:  { rate:null, total:null, rateText:'—', totalText:'—' }
   };
 
-  if (tg){
-    try{ tg.sendData(JSON.stringify(payload)); tg.close(); }
-    catch(e){ console.error(e); alert('Не удалось отправить заявку. Попробуйте ещё раз или напишите @poizmanager'); }
-  } else {
-    alert('Откройте форму из кнопки бота в Telegram.');
+  function isCnPay(kind) {
+    return kind === 'cnpay';
   }
-});
+
+  function setActiveChip(container, type) {
+    container.querySelectorAll('.chip').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.type === type);
+    });
+  }
+
+  function renderTiles(container, kind, side) {
+    container.innerHTML = ''; // очистить
+    const list = (window.PRICING && typeof window.PRICING.currencies === 'function')
+      ? window.PRICING.currencies(kind)
+      : [];
+
+    if (!list || !list.length) {
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = 'Нет валют для этого способа';
+      container.appendChild(empty);
+      return;
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'tiles-grid'; // стилизуется через .tiles .tiles-grid в твоём CSS
+
+    list.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'tile';
+      btn.setAttribute('type', 'button');
+      btn.dataset.code = item.code;
+
+      btn.innerHTML = `
+        <img class="tile-ico" src="${item.icon}" alt="${item.code}">
+        <div class="tile-code">${item.code}</div>
+        <div class="tile-name">${item.name || ''}</div>
+      `;
+
+      btn.addEventListener('click', () => {
+        // отметить активную плитку
+        grid.querySelectorAll('.tile').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        if (side === 'from') state.from = item.code;
+        if (side === 'to')   state.to   = item.code;
+
+        recalc();
+      });
+
+      grid.appendChild(btn);
+    });
+
+    container.appendChild(grid);
+
+    // авто-выбор первой валюты, если ещё не выбрана
+    const first = grid.querySelector('.tile');
+    if (first) {
+      first.classList.add('active');
+      const code = first.dataset.code;
+      if (side === 'from') state.from = code;
+      if (side === 'to')   state.to   = code;
+    }
+  }
+
+  function applyCnPayVisibility() {
+    // показываем QR-блок, только если ТО — китайские сервисы
+    if (isCnPay(state.toPay)) {
+      qrbox.hidden = false;
+    } else {
+      qrbox.hidden = true;
+      if (qrfile) qrfile.value = '';
+    }
+  }
+
+  function recalc() {
+    // прочитать amount
+    const a = parseFloat(amountInput.value || '0');
+    state.amount = isFinite(a) && a > 0 ? a : 0;
+
+    // запросить котировку
+    if (window.PRICING && typeof window.PRICING.quote === 'function' && state.from && state.to) {
+      const q = window.PRICING.quote({
+        fromPay: state.fromPay,
+        toPay:   state.toPay,
+        from:    state.from,
+        to:      state.to,
+        amount:  state.amount
+      });
+      state.quote = q || { rate:null, total:null, rateText:'—', totalText:'—' };
+    } else {
+      state.quote = { rate:null, total:null, rateText:'—', totalText:'—' };
+    }
+
+    // обновить UI
+    rateVal.textContent  = state.quote.rateText || '—';
+    totalVal.textContent = state.quote.totalText || '—';
+  }
+
+  // Обработчики чипсов
+  elFromPay.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip');
+    if (!btn) return;
+    const type = btn.dataset.type;
+    state.fromPay = type;
+    setActiveChip(elFromPay, type);
+    renderTiles(boxFrom, type, 'from');
+    recalc();
+  });
+
+  elToPay.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip');
+    if (!btn) return;
+    const type = btn.dataset.type;
+    state.toPay = type;
+    setActiveChip(elToPay, type);
+    renderTiles(boxTo, type, 'to');
+    applyCnPayVisibility();
+    recalc();
+  });
+
+  // Изменение суммы
+  amountInput.addEventListener('input', recalc);
+
+  // Первая инициализация (выставим активные чипы и сразу нарисуем плитки)
+  setActiveChip(elFromPay, state.fromPay);
+  setActiveChip(elToPay,   state.toPay);
+  renderTiles(boxFrom, state.fromPay, 'from');
+  renderTiles(boxTo,   state.toPay,   'to');
+  applyCnPayVisibility();
+  recalc();
+
+  // Отправка заявки
+  sendBtn.addEventListener('click', async () => {
+    const payload = {
+      type: 'order',
+      from_pay: state.fromPay,
+      to_pay:   state.toPay,
+      from_currency: state.from,
+      to_currency:   state.to,
+      amount: state.amount,
+      rate:   state.quote.rate,
+      total:  state.quote.total,
+      contact:    (contactInp.value || '').trim(),
+      requisites: (requisitesTa.value || '').trim(),
+      note:       (noteTa.value || '').trim(),
+      has_qr: !!(qrfile && qrfile.files && qrfile.files.length > 0),
+    };
+
+    if (tg) {
+      try {
+        tg.sendData(JSON.stringify(payload));
+        // Закрываем WebApp — это норм. Сообщение «заявка принята» должен прислать бот.
+        tg.close();
+      } catch (e) {
+        console.error(e);
+        alert('Не удалось отправить через Telegram WebApp. Попробуйте ещё раз.');
+      }
+    } else {
+      hint.hidden = false;
+      alert('Откройте форму из бота в Telegram, чтобы отправить заявку напрямую.');
+    }
+  });
+})();

@@ -1,12 +1,79 @@
-window.RATES = {
-  USD_RUB: { buy:79.30, sell:82.05, buy5k:79.30, sell5k:81.50 },
+// pricing.js v34 — глобальный объект PRICING (без export)
 
-  USDT_RUB_CASH: {               // покупка/продажа к рублю за кэш (до/от 5к)
-    buy_upto5k: 77.00,  sell_upto5k: 82.05,
-    buy_from5k: 79.00,  sell_from5k: 81.50
-  },
+(function () {
+  const ICON = (code) => `./icons/${code.toLowerCase()}.svg`;
 
-  CNY_RUB: [11.85, 11.75, 11.70, 11.65, 11.60], // берём минимум
-  CNY_CHECKS: 12.9,
-  USDT_CNY: 7.00
-};
+  const registry = {
+    CASH: [
+      { code: 'USD',  name: 'Доллар',     icon: ICON('usd')  },
+      { code: 'RUB',  name: 'Рубли',      icon: ICON('rub')  },
+      { code: 'USDT', name: 'Tether',     icon: ICON('usdt') },
+      { code: 'CNY',  name: 'Юани',       icon: ICON('cny')  },
+    ],
+    BANK: [
+      { code: 'RUB',  name: 'Рубли (банк РФ)', icon: ICON('rub')  },
+      { code: 'USD',  name: 'Доллар (банк)',   icon: ICON('usd')  },
+      { code: 'USDT', name: 'Tether',          icon: ICON('usdt') },
+    ],
+    CRYPTO: [
+      { code: 'USDT', name: 'Tether',   icon: ICON('usdt') },
+      { code: 'BTC',  name: 'Bitcoin',  icon: ICON('btc')  },
+      { code: 'ETH',  name: 'Ethereum', icon: ICON('eth')  },
+    ],
+    CNPAY: [
+      { code: 'ALIPAY', name: 'Alipay',      icon: ICON('alipay') },
+      { code: 'WECHAT', name: 'WeChat Pay',  icon: ICON('wechat') },
+      { code: 'CNCARD', name: 'Карта Китая', icon: ICON('bankcn') },
+    ],
+  };
+
+  // Твои курсы — примеры, подставь актуальные
+  const RULES = {
+    'USDT->ALIPAY': { rate: 7,     fmt: (r) => `1 USDT = ${r} ¥` },
+    'USD->RUB':     { rate: 81.5,  fmt: (r) => `1 USD = ${r.toFixed(2)} ₽` },
+    'RUB->USD':     { rate: 1/81.5,fmt: (r) => `1 ₽ = ${(1/r).toFixed(4)} USD` },
+    'USDT->RUB':    { rate: 79.0,  fmt: (r) => `1 USDT = ${r.toFixed(2)} ₽` },
+    'RUB->USDT':    { rate: 1/82.05, fmt: (r)=> `1 ₽ = ${(1/r).toFixed(4)} USDT` },
+  };
+
+  function payKey(kind) {
+    if (kind === 'cash')   return 'CASH';
+    if (kind === 'bank')   return 'BANK';
+    if (kind === 'crypto') return 'CRYPTO';
+    if (kind === 'cnpay')  return 'CNPAY';
+    return 'CASH';
+  }
+
+  const PRICING = {
+    currencies(kind) {
+      return registry[payKey(kind)] || [];
+    },
+    quote({ fromPay, toPay, from, to, amount }) {
+      let rule = RULES[`${from}->${to}`];
+
+      if (!rule && to === 'ALIPAY' && from === 'USDT') rule = RULES['USDT->ALIPAY'];
+      if (!rule && from === 'ALIPAY' && to === 'USDT') rule = { rate: 1/7, fmt:(r)=>`1 ¥ = ${(1/r).toFixed(4)} USDT` };
+
+      if (!rule) {
+        if (from === 'USD'  && to === 'RUB') rule = RULES['USD->RUB'];
+        if (from === 'RUB'  && to === 'USD') rule = RULES['RUB->USD'];
+        if (from === 'USDT' && to === 'RUB') rule = RULES['USDT->RUB'];
+        if (from === 'RUB'  && to === 'USDT') rule = RULES['RUB->USDT'];
+      }
+
+      if (!rule) return { rate: null, rateText: 'нет котировки', totalText: '—', total: null };
+
+      const rate  = rule.rate;
+      const total = amount * rate;
+      return {
+        rate,
+        total,
+        rateText: typeof rule.fmt === 'function' ? rule.fmt(rate) : String(rate),
+        totalText: isFinite(total) ? total.toFixed(2) : '—'
+      };
+    }
+  };
+
+  // Делаем глобальным
+  window.PRICING = PRICING;
+})();

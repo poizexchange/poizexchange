@@ -1,4 +1,3 @@
-// index.js v36 — под верстку v34 (плитки .tile с .ico/.cap/.sub)
 (function () {
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
   if (tg) { try { tg.expand(); tg.ready(); tg.sendData(JSON.stringify({action:"webapp_open"})); } catch(e){} }
@@ -6,8 +5,14 @@
   // DOM
   const elFromPay = document.getElementById('from-pay');
   const elToPay   = document.getElementById('to-pay');
+
   const boxFrom   = document.getElementById('from-currencies');
   const boxTo     = document.getElementById('to-currencies');
+
+  const cityBoxFrom = document.getElementById('from-citybox');
+  const cityBoxTo   = document.getElementById('to-citybox');
+  const cityFromSel = document.getElementById('cityFrom');
+  const cityToSel   = document.getElementById('cityTo');
 
   const amountInput = document.getElementById('amount');
   const rateVal     = document.getElementById('rateVal');
@@ -26,13 +31,16 @@
   const state = {
     fromPay: 'cash',
     toPay: 'cash',
+    fromCity: 'moscow',
+    toCity: 'moscow',
     from: null,
     to:   null,
     amount: 0,
     quote:  { rate:null, total:null, rateText:'—', totalText:'—' }
   };
 
-  function isCnPay(kind) { return kind === 'cnpay'; }
+  const needsCity = (kind) => (kind === 'cash' || kind === 'bank');
+  const isCnPay   = (kind) => kind === 'cnpay';
 
   function setActiveChip(container, type) {
     container.querySelectorAll('.chip').forEach(btn => {
@@ -40,10 +48,15 @@
     });
   }
 
-  function renderTiles(container, kind, side) {
-    container.innerHTML = ''; // очистка
+  function toggleCityBoxes() {
+    cityBoxFrom.hidden = !needsCity(state.fromPay);
+    cityBoxTo.hidden   = !needsCity(state.toPay);
+  }
+
+  function renderTiles(container, kind, side, city) {
+    container.innerHTML = '';
     const list = (window.PRICING && typeof window.PRICING.currencies === 'function')
-      ? window.PRICING.currencies(kind)
+      ? window.PRICING.currencies(kind, city)
       : [];
 
     if (!list || !list.length) {
@@ -51,12 +64,11 @@
       empty.className = 'sub';
       empty.style.textAlign = 'center';
       empty.style.gridColumn = '1 / -1';
-      empty.textContent = 'Нет валют для этого способа';
+      empty.textContent = 'Нет доступных вариантов';
       container.appendChild(empty);
       return;
     }
 
-    // .tiles уже grid из CSS -> просто кладём кнопки
     list.forEach(item => {
       const btn = document.createElement('button');
       btn.className = 'tile';
@@ -80,7 +92,6 @@
       container.appendChild(btn);
     });
 
-    // автоселект первой
     const first = container.querySelector('.tile');
     if (first) {
       first.classList.add('active');
@@ -116,12 +127,13 @@
     totalVal.textContent = state.quote.totalText || '—';
   }
 
-  // Чипсы
+  // Слушатели — тип оплаты
   elFromPay.addEventListener('click', (e) => {
     const btn = e.target.closest('.chip'); if (!btn) return;
     state.fromPay = btn.dataset.type;
     setActiveChip(elFromPay, state.fromPay);
-    renderTiles(boxFrom, state.fromPay, 'from');
+    toggleCityBoxes();
+    renderTiles(boxFrom, state.fromPay, 'from', state.fromCity);
     recalc();
   });
 
@@ -129,8 +141,21 @@
     const btn = e.target.closest('.chip'); if (!btn) return;
     state.toPay = btn.dataset.type;
     setActiveChip(elToPay, state.toPay);
-    renderTiles(boxTo, state.toPay, 'to');
+    toggleCityBoxes();
+    renderTiles(boxTo, state.toPay, 'to', state.toCity);
     applyCnPayVisibility();
+    recalc();
+  });
+
+  // Слушатели — город
+  cityFromSel.addEventListener('change', () => {
+    state.fromCity = cityFromSel.value;
+    renderTiles(boxFrom, state.fromPay, 'from', state.fromCity);
+    recalc();
+  });
+  cityToSel.addEventListener('change', () => {
+    state.toCity = cityToSel.value;
+    renderTiles(boxTo, state.toPay, 'to', state.toCity);
     recalc();
   });
 
@@ -140,17 +165,20 @@
   // Инициализация
   setActiveChip(elFromPay, state.fromPay);
   setActiveChip(elToPay,   state.toPay);
-  renderTiles(boxFrom, state.fromPay, 'from');
-  renderTiles(boxTo,   state.toPay,   'to');
+  toggleCityBoxes();
+  renderTiles(boxFrom, state.fromPay, 'from', state.fromCity);
+  renderTiles(boxTo,   state.toPay,   'to',   state.toCity);
   applyCnPayVisibility();
   recalc();
 
   // Отправка заявки
-  sendBtn.addEventListener('click', () => {
+  document.getElementById('sendBtn').addEventListener('click', () => {
     const payload = {
       type: 'order',
       from_pay: state.fromPay,
       to_pay:   state.toPay,
+      from_city: state.fromCity,
+      to_city:   state.toCity,
       from_currency: state.from,
       to_currency:   state.to,
       amount: state.amount,
@@ -165,7 +193,7 @@
     if (tg) {
       try {
         tg.sendData(JSON.stringify(payload));
-        tg.close(); // нормальное поведение — бот должен ответить в чате
+        tg.close();
       } catch (e) {
         console.error(e);
         alert('Не удалось отправить через Telegram WebApp. Попробуйте ещё раз.');

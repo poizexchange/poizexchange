@@ -1,4 +1,4 @@
-// index.js v38 — фильтрация по городу, отправка заявки с фиксацией курса
+// index.js v39 — городские правила, банки РФ, crypto, Китайские сервисы (receive-only), фиксация курса
 (function () {
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
   if (tg) { try { tg.expand(); tg.ready(); tg.sendData(JSON.stringify({action:'webapp_open'})); } catch(e){} }
@@ -33,7 +33,7 @@
     quote:{ rate:null, total:null, rateText:'—', totalText:'—' }
   };
 
-  const needsCity = (k)=> (k==='cash'||k==='bank');
+  const needsCity = (k)=> (k==='cash'||k==='bank'); // для cnpay город не нужен
 
   function setActiveChip(container, type){
     container.querySelectorAll('.chip').forEach(b=>b.classList.toggle('active', b.dataset.type===type));
@@ -116,7 +116,7 @@
   renderTiles(boxTo,state.toPay,'to',state.toCity);
   recalc();
 
-  // Отправка заявки + фиксация курса на 30 минут
+  // Отправка заявки (фикс курса на 30 минут)
   sendBtn.addEventListener('click', ()=>{
     const now = Date.now();
     const payload = {

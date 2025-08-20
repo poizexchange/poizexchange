@@ -1,5 +1,4 @@
-// index.js v36 — отрисовка плиток валют и расчёт
-
+// index.js v36 — под верстку v34 (плитки .tile с .ico/.cap/.sub)
 (function () {
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
   if (tg) { try { tg.expand(); tg.ready(); tg.sendData(JSON.stringify({action:"webapp_open"})); } catch(e){} }
@@ -33,9 +32,7 @@
     quote:  { rate:null, total:null, rateText:'—', totalText:'—' }
   };
 
-  function isCnPay(kind) {
-    return kind === 'cnpay';
-  }
+  function isCnPay(kind) { return kind === 'cnpay'; }
 
   function setActiveChip(container, type) {
     container.querySelectorAll('.chip').forEach(btn => {
@@ -44,52 +41,47 @@
   }
 
   function renderTiles(container, kind, side) {
-    container.innerHTML = ''; // очистить
+    container.innerHTML = ''; // очистка
     const list = (window.PRICING && typeof window.PRICING.currencies === 'function')
       ? window.PRICING.currencies(kind)
       : [];
 
     if (!list || !list.length) {
       const empty = document.createElement('div');
-      empty.className = 'empty';
+      empty.className = 'sub';
+      empty.style.textAlign = 'center';
+      empty.style.gridColumn = '1 / -1';
       empty.textContent = 'Нет валют для этого способа';
       container.appendChild(empty);
       return;
     }
 
-    const grid = document.createElement('div');
-    grid.className = 'tiles-grid'; // стилизуется через .tiles .tiles-grid в твоём CSS
-
+    // .tiles уже grid из CSS -> просто кладём кнопки
     list.forEach(item => {
       const btn = document.createElement('button');
       btn.className = 'tile';
-      btn.setAttribute('type', 'button');
+      btn.type = 'button';
       btn.dataset.code = item.code;
 
       btn.innerHTML = `
-        <img class="tile-ico" src="${item.icon}" alt="${item.code}">
-        <div class="tile-code">${item.code}</div>
-        <div class="tile-name">${item.name || ''}</div>
+        <div class="ico"><img src="${item.icon}" alt="${item.code}"></div>
+        <div class="cap">${item.code}</div>
+        <div class="sub">${item.name || ''}</div>
       `;
 
       btn.addEventListener('click', () => {
-        // отметить активную плитку
-        grid.querySelectorAll('.tile').forEach(b => b.classList.remove('active'));
+        container.querySelectorAll('.tile').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-
         if (side === 'from') state.from = item.code;
         if (side === 'to')   state.to   = item.code;
-
         recalc();
       });
 
-      grid.appendChild(btn);
+      container.appendChild(btn);
     });
 
-    container.appendChild(grid);
-
-    // авто-выбор первой валюты, если ещё не выбрана
-    const first = grid.querySelector('.tile');
+    // автоселект первой
+    const first = container.querySelector('.tile');
     if (first) {
       first.classList.add('active');
       const code = first.dataset.code;
@@ -99,21 +91,14 @@
   }
 
   function applyCnPayVisibility() {
-    // показываем QR-блок, только если ТО — китайские сервисы
-    if (isCnPay(state.toPay)) {
-      qrbox.hidden = false;
-    } else {
-      qrbox.hidden = true;
-      if (qrfile) qrfile.value = '';
-    }
+    qrbox.hidden = !isCnPay(state.toPay);
+    if (qrbox.hidden && qrfile) qrfile.value = '';
   }
 
   function recalc() {
-    // прочитать amount
     const a = parseFloat(amountInput.value || '0');
     state.amount = isFinite(a) && a > 0 ? a : 0;
 
-    // запросить котировку
     if (window.PRICING && typeof window.PRICING.quote === 'function' && state.from && state.to) {
       const q = window.PRICING.quote({
         fromPay: state.fromPay,
@@ -127,37 +112,32 @@
       state.quote = { rate:null, total:null, rateText:'—', totalText:'—' };
     }
 
-    // обновить UI
     rateVal.textContent  = state.quote.rateText || '—';
     totalVal.textContent = state.quote.totalText || '—';
   }
 
-  // Обработчики чипсов
+  // Чипсы
   elFromPay.addEventListener('click', (e) => {
-    const btn = e.target.closest('.chip');
-    if (!btn) return;
-    const type = btn.dataset.type;
-    state.fromPay = type;
-    setActiveChip(elFromPay, type);
-    renderTiles(boxFrom, type, 'from');
+    const btn = e.target.closest('.chip'); if (!btn) return;
+    state.fromPay = btn.dataset.type;
+    setActiveChip(elFromPay, state.fromPay);
+    renderTiles(boxFrom, state.fromPay, 'from');
     recalc();
   });
 
   elToPay.addEventListener('click', (e) => {
-    const btn = e.target.closest('.chip');
-    if (!btn) return;
-    const type = btn.dataset.type;
-    state.toPay = type;
-    setActiveChip(elToPay, type);
-    renderTiles(boxTo, type, 'to');
+    const btn = e.target.closest('.chip'); if (!btn) return;
+    state.toPay = btn.dataset.type;
+    setActiveChip(elToPay, state.toPay);
+    renderTiles(boxTo, state.toPay, 'to');
     applyCnPayVisibility();
     recalc();
   });
 
-  // Изменение суммы
+  // Сумма
   amountInput.addEventListener('input', recalc);
 
-  // Первая инициализация (выставим активные чипы и сразу нарисуем плитки)
+  // Инициализация
   setActiveChip(elFromPay, state.fromPay);
   setActiveChip(elToPay,   state.toPay);
   renderTiles(boxFrom, state.fromPay, 'from');
@@ -166,7 +146,7 @@
   recalc();
 
   // Отправка заявки
-  sendBtn.addEventListener('click', async () => {
+  sendBtn.addEventListener('click', () => {
     const payload = {
       type: 'order',
       from_pay: state.fromPay,
@@ -185,8 +165,7 @@
     if (tg) {
       try {
         tg.sendData(JSON.stringify(payload));
-        // Закрываем WebApp — это норм. Сообщение «заявка принята» должен прислать бот.
-        tg.close();
+        tg.close(); // нормальное поведение — бот должен ответить в чате
       } catch (e) {
         console.error(e);
         alert('Не удалось отправить через Telegram WebApp. Попробуйте ещё раз.');

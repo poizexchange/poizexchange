@@ -9,8 +9,13 @@
   <script src="./pricing.js?v=34"></script>
   <script src="./index.js?v=34" defer></script>
  </head>
-<script> // СООБЩАЕМ БОТУ, ЧТО WebApp ОТКРЫЛИ (только если реально внутри Telegram) const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null; if (tg) { tg.expand(); tg.ready(); // одноразовый ping — бот добавит пользователя в базу и «увидит» его try { tg.sendData(JSON.stringify({ action: "webapp_open" })); } catch (e) {} } </script>
-<body class="tg-white">
+<script>
+  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  if (tg) {
+    tg.expand(); tg.ready();
+    try { tg.sendData(JSON.stringify({ action: "webapp_open" })); } catch (e) {}
+  }
+</script>
   <header class="tg-header">
     <div class="wrap">
       <h1 class="title">КАЛЬКУЛЯТОР ОБМЕНА</h1>

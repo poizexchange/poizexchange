@@ -9,13 +9,6 @@
   <script src="./pricing.js?v=34"></script>
   <script src="./index.js?v=34" defer></script>
  </head>
-<script>
-  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-  if (tg) {
-    tg.expand(); tg.ready();
-    try { tg.sendData(JSON.stringify({ action: "webapp_open" })); } catch (e) {}
-  }
-</script>
   <header class="tg-header">
     <div class="wrap">
       <h1 class="title">КАЛЬКУЛЯТОР ОБМЕНА</h1>

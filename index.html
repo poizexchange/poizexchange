@@ -8,7 +8,9 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="./pricing.js?v=34"></script>
   <script src="./index.js?v=34" defer></script>
- </head>
+</head>
+
+<body>
   <header class="tg-header">
     <div class="wrap">
       <h1 class="title">КАЛЬКУЛЯТОР ОБМЕНА</h1>
@@ -59,7 +61,7 @@
       <div class="calc-grid">
         <div>
           <label class="label" for="amount">Сумма</label>
-        <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
+          <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
         </div>
         <div class="result-card">
           <div class="result-line">
@@ -100,6 +102,23 @@
       <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
     </nav>
   </main>
+
+  <!-- ВАЖНО: ping WebApp, чтобы бот «увидел» пользователя -->
+  <script>
+    const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+    if (tg) {
+      tg.expand();
+      tg.ready();
+      try {
+        tg.sendData(JSON.stringify({ action: "webapp_open" }));
+      } catch (e) {}
+    } else {
+      // Если открыли вне Telegram — показываем подсказку под кнопкой
+      document.addEventListener('DOMContentLoaded', () => {
+        const hint = document.getElementById('hint');
+        if (hint) hint.hidden = false;
+      });
+    }
+  </script>
 </body>
- 
 </html>

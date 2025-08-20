@@ -101,13 +101,5 @@
     </nav>
   </main>
 </body>
-  <script>
-  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-  if (tg) {
-    tg.expand();
-    tg.ready();
-    try { tg.sendData(JSON.stringify({ action: "webapp_open" })); } catch (e) {}
-  }
-</script>
-
+ 
 </html>

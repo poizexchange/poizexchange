@@ -1,5 +1,3 @@
-// pricing.js v34 — глобальный объект PRICING (без export)
-
 (function () {
   const ICON = (code) => `./icons/${code.toLowerCase()}.svg`;
 
@@ -27,13 +25,12 @@
     ],
   };
 
-  // Твои курсы — примеры, подставь актуальные
   const RULES = {
-    'USDT->ALIPAY': { rate: 7,     fmt: (r) => `1 USDT = ${r} ¥` },
-    'USD->RUB':     { rate: 81.5,  fmt: (r) => `1 USD = ${r.toFixed(2)} ₽` },
-    'RUB->USD':     { rate: 1/81.5,fmt: (r) => `1 ₽ = ${(1/r).toFixed(4)} USD` },
-    'USDT->RUB':    { rate: 79.0,  fmt: (r) => `1 USDT = ${r.toFixed(2)} ₽` },
-    'RUB->USDT':    { rate: 1/82.05, fmt: (r)=> `1 ₽ = ${(1/r).toFixed(4)} USDT` },
+    'USDT->ALIPAY': { rate: 7, fmt: (r) => `1 USDT = ${r} ¥` },
+    'USD->RUB':     { rate: 81.5, fmt: (r) => `1 USD = ${r.toFixed(2)} ₽` },
+    'RUB->USD':     { rate: 1/81.5, fmt: (r) => `1 ₽ = ${(1/r).toFixed(4)} USD` },
+    'USDT->RUB':    { rate: 79.0, fmt: (r) => `1 USDT = ${r.toFixed(2)} ₽` },
+    'RUB->USDT':    { rate: 1/82.05, fmt:(r)=> `1 ₽ = ${(1/r).toFixed(4)} USDT` },
   };
 
   function payKey(kind) {
@@ -74,6 +71,5 @@
     }
   };
 
-  // Делаем глобальным
   window.PRICING = PRICING;
 })();

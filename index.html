@@ -100,5 +100,13 @@
       <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
     </nav>
   </main>
-</body>
+</body> <script>
+  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  if (tg) {
+    tg.expand();
+    tg.ready();
+    try { tg.sendData(JSON.stringify({ action: "webapp_open" })); } catch (e) {}
+  }
+</script>
+
 </html>

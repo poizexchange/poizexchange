@@ -1,4 +1,4 @@
-// index.js v41 — рендер плиток (одна строка текста), логика городов, отправка заявки
+// index.js v42 — селектор города только для наличных; плитки с рус. названиями; отправка заявки
 (function () {
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 
@@ -45,57 +45,51 @@
   function tile(item, side){
     const btn = document.createElement('button');
     btn.className = 'tile';
+    btn.setAttribute('data-code', item.code);
     btn.innerHTML = `
       <div class="ico"><img src="${item.icon}" alt=""></div>
-      <div class="cap">${item.name}</div>
+      <div class="cap">${item.nameRu}</div>
     `;
     btn.addEventListener('click', () => {
       if (side === 'from') { selFrom = item.code; markActive(fromWrap, item.code); }
       else { selTo = item.code; markActive(toWrap, item.code); }
       recalc();
-      // Показываем QR-блок только если получаем китайские сервисы
+      // QR только если ПОЛУЧАЮ китайские сервисы
       const cnpay = ['ALIPAY','WECHAT','CN_CARD'];
-      qrBox.hidden = !(side==='to' && cnpay.includes(item.code));
+      qrBox.hidden = !(toPayType==='cnpay' && side==='to' && selTo && cnpay.includes(selTo));
     });
     return btn;
   }
 
   function markActive(container, code){
-    container.querySelectorAll('.tile').forEach(t=>{
-      const is = t.querySelector('.cap')?.textContent?.trim();
-      // сравниваем по тексту? Лучше по data-code:
-    });
     container.querySelectorAll('.tile').forEach(t=>t.classList.remove('active'));
-    // назначим active по совпадению кода — добавим data-code при создании
     container.querySelectorAll(`[data-code="${code}"]`).forEach(t=>t.classList.add('active'));
   }
 
   function renderTiles(container, list, side){
     clear(container);
-    list.forEach(item=>{
-      const btn = tile(item, side);
-      btn.setAttribute('data-code', item.code);
-      container.appendChild(btn);
-    });
+    list.forEach(item=> container.appendChild(tile(item, side)));
   }
 
   function refreshFrom(){
-    // показываем выбор города только для кэша (логично для наличных)
+    // селектор города показываем ТОЛЬКО для наличных
     fromCityBox.hidden = (fromPayType !== 'cash');
     const list = window.PRICING.currencies(fromPayType, cityFrom, 'from');
     renderTiles(fromWrap, list, 'from');
-    // авто-выбор первого элемента
     selFrom = list[0]?.code || null;
     if (selFrom) markActive(fromWrap, selFrom);
   }
 
   function refreshTo(){
-    // показываем город для кэша и китайских сервисов (на всякий)
-    toCityBox.hidden = !(toPayType === 'cash' || toPayType === 'cnpay');
+    // селектор города показываем ТОЛЬКО для наличных
+    toCityBox.hidden = (toPayType !== 'cash');
     const list = window.PRICING.currencies(toPayType, cityTo, 'to');
     renderTiles(toWrap, list, 'to');
     selTo = list[0]?.code || null;
     if (selTo) markActive(toWrap, selTo);
+    // QR блок — показывать, если выбраны китайские сервисы
+    const cnpay = ['ALIPAY','WECHAT','CN_CARD'];
+    qrBox.hidden = !(toPayType==='cnpay' && selTo && cnpay.includes(selTo));
   }
 
   function recalc(){
@@ -129,7 +123,7 @@
   wireChips(fromPayBox, (type)=>{ fromPayType = type; refreshFrom(); recalc(); });
   wireChips(toPayBox,   (type)=>{ toPayType   = type; refreshTo();  recalc(); });
 
-  // init selects
+  // init selects (будут видимы только при cash)
   cityFromSel?.addEventListener('change', ()=>{ cityFrom = cityFromSel.value; refreshFrom(); recalc(); });
   cityToSel?.addEventListener('change',   ()=>{ cityTo   = cityToSel.value;   refreshTo();  recalc(); });
 
@@ -138,7 +132,7 @@
   refreshTo();
   recalc();
 
-  // ОТПРАВКА ЗАЯВКИ
+  // ОТПРАВКА ЗАЯВКИ (WebApp)
   sendBtn?.addEventListener('click', async ()=>{
     const payload = {
       type: 'order',
@@ -156,15 +150,13 @@
       note: (noteInput.value || '').trim(),
       fix_minutes: 30
     };
-
-    // файл QR — прикрепим название, содержимое отдельно загрузишь после
     const file = qrFile?.files?.[0];
     if (file) payload.qr_filename = file.name;
 
     if (tg) {
       try {
-        tg.sendData(JSON.stringify(payload)); // бот ловит web_app_data и шлёт админу
-        tg.close();                           // можно закрыть сразу (как раньше)
+        tg.sendData(JSON.stringify(payload)); // бот ловит web_app_data
+        tg.close();
       } catch (e) {
         alert('Ошибка отправки в Telegram. Попробуйте ещё раз.');
       }

@@ -4,13 +4,11 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Калькулятор</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
-<link rel="stylesheet" href="./styles.css?v=46" />
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="./pricing.js?v=46"></script>
-<script src="./index.js?v=46" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=50" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="./pricing.js?v=50"></script>
+  <script src="./index.js?v=50" defer></script>
 </head>
-
-
 <body>
   <header class="tg-header">
     <div class="wrap">
@@ -19,6 +17,7 @@
   </header>
 
   <main class="wrap main-safe">
+    <!-- ОТДАЮ -->
     <section class="card">
       <h2 class="h2">Отдаю</h2>
       <div class="chips" id="from-pay">
@@ -27,6 +26,7 @@
         <button class="chip" data-type="crypto"><img src="./icons/crypto.svg" alt="">Крипто</button>
       </div>
 
+      <!-- город: показываем только при наличных -->
       <div id="from-citybox" class="citybox" hidden>
         <label class="label" for="cityFrom">Город</label>
         <select id="cityFrom" class="input">
@@ -38,6 +38,7 @@
       <div id="from-currencies" class="tiles"></div>
     </section>
 
+    <!-- ПОЛУЧАЮ -->
     <section class="card">
       <h2 class="h2">Получаю</h2>
       <div class="chips wrap" id="to-pay">
@@ -47,6 +48,7 @@
         <button class="chip full" data-type="cnpay"><img src="./icons/bankcn.svg" alt="">Китайские сервисы</button>
       </div>
 
+      <!-- город: показываем только при наличных -->
       <div id="to-citybox" class="citybox" hidden>
         <label class="label" for="cityTo">Город</label>
         <select id="cityTo" class="input">
@@ -58,6 +60,7 @@
       <div id="to-currencies" class="tiles"></div>
     </section>
 
+    <!-- КАЛЬКУЛЯТОР -->
     <section class="card">
       <div class="calc-grid">
         <div>
@@ -77,6 +80,7 @@
       </div>
     </section>
 
+    <!-- ЗАЯВКА -->
     <section class="card">
       <h2 class="h2">Заявка</h2>
       <label class="label" for="contact">Контакт</label>
@@ -89,7 +93,7 @@
       <textarea id="note" class="input" rows="3" placeholder="Детали, срочность…"></textarea>
 
       <div id="qrbox" class="qrbox" hidden>
-        <label class="label" for="qrfile">Пришлите QR-код (для Alipay / WeChat / карта Китая)</label>
+        <label class="label" for="qrfile">Пришлите QR-код (Alipay / WeChat / карта Китая)</label>
         <input type="file" id="qrfile" accept="image/*,.png,.jpg,.jpeg,.webp" class="input-file">
       </div>
 
@@ -98,24 +102,24 @@
     </section>
 
     <nav class="footlinks">
-      <a href="./rates.html?v=34">📊 Табло</a>
+      <a href="./rates.html?v=50">📊 Табло</a>
       <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
       <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
     </nav>
   </main>
 
-  <!-- ВАЖНО: ping WebApp, чтобы бот «увидел» пользователя -->
-<script>
-  const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-  if (tg) {
-    tg.expand();
-    tg.ready();
-  } else {
-    document.addEventListener('DOMContentLoaded', () => {
-      const hint = document.getElementById('hint');
-      if (hint) hint.hidden = false;
-    });
-  }
-</script>
+  <script>
+    // ping WebApp — чтобы бот видел пользователя
+    const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+    if (tg) {
+      tg.expand(); tg.ready();
+      try { tg.sendData(JSON.stringify({ action: "webapp_open" })); } catch(e){}
+    } else {
+      document.addEventListener('DOMContentLoaded', () => {
+        const hint = document.getElementById('hint');
+        if (hint) hint.hidden = false;
+      });
+    }
+  </script>
 </body>
 </html>

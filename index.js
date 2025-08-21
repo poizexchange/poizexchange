@@ -137,23 +137,41 @@
   refreshTo();
 
   // Отправка заявки
-  sendBtn?.addEventListener('click', async ()=>{
-    const payload = {
-      type: 'order',
-      from_currency: selFrom,
-      to_currency: selTo,
-      from_kind: fromPayType,
-      to_kind: toPayType,
-      city_from: cityFrom,
-      city_to: cityTo,
-      amount: Number(amountInput.value || 0),
-      rate: currentQuote.rate,
-      total: currentQuote.total,
-      contact: (contactInput.value || '').trim(),
-      requisites: (reqsInput.value || '').trim(),
-      note: (noteInput.value || '').trim(),
-      fix_minutes: 30               // фикс курса на 30 минут
-    };
+  sendBtn?.addEventListener('click', async () => {
+  const payload = {
+    type: 'order',
+    from_currency: selFrom,
+    to_currency: selTo,
+    from_kind: fromPayType,
+    to_kind: toPayType,
+    city_from: cityFrom,
+    city_to: cityTo,
+    amount: Number(amountInput.value || 0),
+    rate: currentQuote.rate,
+    total: currentQuote.total,
+    contact: (contactInput.value || '').trim(),
+    requisites: (reqsInput.value || '').trim(),
+    note: (noteInput.value || '').trim(),
+    fix_minutes: 30
+  };
+
+  if (!tg) {
+    alert('Откройте форму через Telegram WebApp, чтобы отправить заявку.');
+    return;
+  }
+  try {
+    // отправляем в бот
+    tg.sendData(JSON.stringify(payload));
+    // НЕ закрываем сразу — дадим Телеге точно доставить
+    setTimeout(() => {
+      try { tg.close(); } catch (e) {}
+    }, 800);
+    alert('Заявка отправлена 📩');
+  } catch (e) {
+    console.error('tg.sendData error', e);
+    alert('Ошибка отправки в Telegram. Попробуйте ещё раз.');
+  }
+});
     const file = qrFile?.files?.[0];
     if (file) payload.qr_filename = file.name;
 

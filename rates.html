@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Табло</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=38" />
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="./pricing.js?v=38"></script>
+  <link rel="stylesheet" href="./styles.css?v=50" />
+  <script src="./pricing.js?v=50"></script>
+  <script src="./rates.js?v=50" defer></script>
 </head>
 <body>
   <header class="tg-header">
@@ -17,42 +17,22 @@
 
   <main class="wrap main-safe">
     <section class="card">
-      <div id="grid" class="tiles"></div>
+      <div class="chips" id="rt-city">
+        <button class="chip" data-city="moscow">Москва</button>
+        <button class="chip" data-city="guangzhou">Гуанчжоу</button>
+      </div>
+      <div class="tile-grid tile-3" id="rt-grid"></div>
     </section>
 
     <section class="card compact">
-      <button id="goCalc" class="btn-primary">🧮 Перейти в калькулятор</button>
+      <a class="btn-primary" href="./index.html?v=50" style="display:block;text-align:center;text-decoration:none">🔁 Перейти в калькулятор</a>
     </section>
 
     <nav class="footlinks">
-      <a href="./index.html?v=38">🧮 Калькулятор</a>
+      <a href="./index.html?v=50">🔙 Калькулятор</a>
       <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
       <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
     </nav>
   </main>
-
-  <script>
-    const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-    if (tg) { try { tg.expand(); tg.ready(); } catch(e){} }
-
-    const grid = document.getElementById('grid');
-    const board = (window.PRICING && window.PRICING.board) ? window.PRICING.board : [];
-
-    function tile(t){ return `
-      <div class="tile square">
-        <div class="tile-title">${t.title}</div>
-        <div class="tile-main">${t.value}</div>
-        <div class="sub">${t.note||''}</div>
-      </div>
-    `;}
-
-    grid.classList.add('tile-grid','tile-3');
-    grid.innerHTML = board.map(tile).join('');
-
-    document.getElementById('goCalc').addEventListener('click',()=>{
-      // просто открываем index.html (внутри того же WebApp)
-      window.location.href = './index.html?v=38';
-    });
-  </script>
 </body>
 </html>

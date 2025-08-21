@@ -184,65 +184,56 @@
   recalc();
 
   // ---------- SEND ORDER ----------
-  sendBtn && sendBtn.addEventListener('click', async () => {
-    const amount = Number(amountInput?.value || 0);
-    if (!selFrom || !selTo) {
-      const msg = 'Выберите валюты отправки и получения.';
-      console.warn('DEBUG validation', msg);
-      isTG ? tg.showAlert?.(msg) : alert(msg);
-      return;
-    }
-    if (!amount || amount <= 0) {
-      const msg = 'Введите корректную сумму.';
-      console.warn('DEBUG validation', msg);
-      isTG ? tg.showAlert?.(msg) : alert(msg);
-      return;
-    }
-    if (!currentQuote?.rate || !currentQuote?.total) {
-      const msg = 'Нет актуального курса. Попробуйте изменить параметры.';
-      console.warn('DEBUG validation', msg);
-      isTG ? tg.showAlert?.(msg) : alert(msg);
-      return;
-    }
+ sendBtn && sendBtn.addEventListener('click', async () => {
+  const amount = Number(amountInput?.value || 0);
+  if (!selFrom || !selTo) { return isTG ? tg.showAlert?.('Выберите валюты') : alert('Выберите валюты'); }
+  if (!amount || amount <= 0) { return isTG ? tg.showAlert?.('Введите сумму') : alert('Введите сумму'); }
+  if (!currentQuote?.rate || !currentQuote?.total) {
+    return isTG ? tg.showAlert?.('Нет актуального курса') : alert('Нет актуального курса');
+  }
 
-    const payload = {
-      type: 'order',
-      from_currency: selFrom,
-      to_currency: selTo,
-      from_kind: fromPayType,
-      to_kind: toPayType,
-      city_from: cityFrom,
-      city_to: cityTo,
-      amount: amount,
-      rate: currentQuote.rate,
-      total: currentQuote.total,
-      contact: (contactInput?.value || '').trim(),
-      requisites: (reqsInput?.value || '').trim(),
-      note: (noteInput?.value || '').trim(),
-      fix_minutes: 30
-    };
+  const payload = {
+    type: 'order',
+    from_currency: selFrom,
+    to_currency: selTo,
+    from_kind: fromPayType,
+    to_kind: toPayType,
+    city_from: cityFrom,
+    city_to: cityTo,
+    amount: amount,
+    rate: currentQuote.rate,
+    total: currentQuote.total,
+    contact: (contactInput?.value || '').trim(),
+    requisites: (reqsInput?.value || '').trim(),
+    note: (noteInput?.value || '').trim(),
+    fix_minutes: 30
+  };
 
-    // файл QR — только имя добавляем (сам файл через WebApp SDK не шлётся)
-    const file = qrFile?.files?.[0];
-    if (file) payload.qr_filename = file.name;
+  const file = qrFile?.files?.[0];
+  if (file) payload.qr_filename = file.name;
 
-    console.log('DEBUG SEND PAYLOAD ->', payload);
-
-    if (!isTG) {
-      alert('Откройте форму через Telegram (WebApp), чтобы отправить заявку.');
-      return;
-    }
-
-    try {
+  try {
+    if (isTG) {
+      // вариант 1: внутри Telegram
       tg.sendData(JSON.stringify(payload));
       tg.showAlert?.('Заявка отправлена 📩');
-      setTimeout(() => tg.close(), 500);
-    } catch (e) {
-      console.error('tg.sendData error', e);
-      tg.showAlert?.('Ошибка отправки в Telegram. Попробуйте ещё раз.');
+      setTimeout(()=>tg.close(), 500);
+    } else {
+      // вариант 2: сайт
+      const res = await fetch('/api/order', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const j = await res.json().catch(()=>({}));
+      if (res.ok && j.ok) {
+        alert('Заявка отправлена 📩');
+      } else {
+        alert('Ошибка отправки. Попробуйте ещё раз.');
+      }
     }
-  });
-
-  // на всякий случай — пересчёт при вводе суммы
-  amountInput && amountInput.addEventListener('input', recalc);
-})();
+  } catch (e) {
+    console.error('Send error', e);
+    isTG ? tg.showAlert?.('Ошибка отправки') : alert('Ошибка отправки');
+  }
+});

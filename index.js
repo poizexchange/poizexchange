@@ -137,7 +137,7 @@
   refreshTo();
 
   // Отправка заявки
-  sendBtn?.addEventListener('click', async () => {
+sendBtn?.addEventListener('click', async () => {
   const payload = {
     type: 'order',
     from_currency: selFrom,
@@ -159,32 +159,9 @@
     alert('Откройте форму через Telegram WebApp, чтобы отправить заявку.');
     return;
   }
-  try {
-    // отправляем в бот
-    tg.sendData(JSON.stringify(payload));
-    // НЕ закрываем сразу — дадим Телеге точно доставить
-    setTimeout(() => {
-      try { tg.close(); } catch (e) {}
-    }, 800);
-    alert('Заявка отправлена 📩');
-  } catch (e) {
-    console.error('tg.sendData error', e);
-    alert('Ошибка отправки в Telegram. Попробуйте ещё раз.');
-  }
+  tg.sendData(JSON.stringify(payload));
+  alert('Заявка отправлена 📩');
+  setTimeout(() => tg.close(), 800);
 });
-    const file = qrFile?.files?.[0];
-    if (file) payload.qr_filename = file.name;
-
-    if (tg) {
-      try {
-        tg.sendData(JSON.stringify(payload));   // бот ловит F.web_app_data
-        try { tg.showAlert('Заявка отправлена'); } catch(e){}
-        setTimeout(()=>{ try{ tg.close(); }catch(e){} }, 300);
-      } catch (e) {
-        alert('Ошибка отправки в Telegram. Попробуйте ещё раз.');
-      }
-    } else {
-      alert('Откройте форму через Telegram WebApp, чтобы отправить заявку.');
-    }
-  });
+  
 })();

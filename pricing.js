@@ -1,4 +1,4 @@
-// pricing.js v42 — русские названия на плитках + логика городов
+// pricing.js — доступные валюты + котировки + расчёт
 (function () {
   const ICON = (name) => `./icons/${name}.svg`;
 
@@ -16,30 +16,30 @@
     VTB:{code:'VTB',  nameRu:'ВТБ',        icon:ICON('vtb')},
     RAIFF:{code:'RAIFF',nameRu:'Райфф',    icon:ICON('raif')},
     OZON:{code:'OZON',nameRu:'Озон',       icon:ICON('ozon')},
-    OTP:{code:'OTP',  nameRu:'ОТП',        icon:ICON('bank')}, // нет otp.svg — временно
+    OTP:{code:'OTP',  nameRu:'ОТП',        icon:ICON('bank')},
 
     // Крипто
     USDT:{code:'USDT',nameRu:'USDT',icon:ICON('usdt')},
     BTC:{code:'BTC',  nameRu:'BTC', icon:ICON('btc')},
     ETH:{code:'ETH',  nameRu:'ETH', icon:ICON('eth')},
-    SOL:{code:'SOL',  nameRu:'SOL', icon:ICON('bank')}, // нет sol.svg — временно
+    SOL:{code:'SOL',  nameRu:'SOL', icon:ICON('bank')},
     XMR:{code:'XMR',  nameRu:'XMR', icon:ICON('xmr')},
-    XRP:{code:'XRP',  nameRu:'XRP', icon:ICON('bank')}, // нет xrp.svg
-    LTC:{code:'LTC',  nameRu:'LTC', icon:ICON('bank')}, // нет ltc.svg
-    TON:{code:'TON',  nameRu:'TON', icon:ICON('bank')}, // нет ton.svg
+    XRP:{code:'XRP',  nameRu:'XRP', icon:ICON('bank')},
+    LTC:{code:'LTC',  nameRu:'LTC', icon:ICON('bank')},
+    TON:{code:'TON',  nameRu:'TON', icon:ICON('bank')},
 
-    // Китайские сервисы (только ПОЛУЧАЮ)
+    // Китайские сервисы (получаю)
     ALIPAY:{code:'ALIPAY',nameRu:'Alipay',     icon:ICON('alipay')},
     WECHAT:{code:'WECHAT',nameRu:'WeChat',     icon:ICON('wechat')},
     CN_CARD:{code:'CN_CARD',nameRu:'Карта Китая',icon:ICON('bankcn')}
   };
 
-  // доступность по типу платежа и городу
+  // Матрица доступности
   const MATRIX = {
     // ОТДАЮ
     cash: {
-      moscow:   ['RUB','USD'],           // в Москве нельзя ОТДАТЬ CNY наличными
-      guangzhou:['RUB','USD']            // отдача CNY наличными запрещена
+      moscow:   ['RUB','USD'],      // CNY наличными отдавать нельзя
+      guangzhou:['RUB','USD']
     },
     bank: {
       moscow:   ['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP'],
@@ -52,7 +52,7 @@
 
     // ПОЛУЧАЮ
     cash_to: {
-      moscow:   ['RUB','USD'],           // CNY наличными — только Гуанчжоу
+      moscow:   ['RUB','USD'],      // CNY наличными — только Гуанчжоу
       guangzhou:['RUB','USD','CNY']
     },
     bank_to: {
@@ -69,11 +69,11 @@
     }
   };
 
-  // Котировки (минимально нужные)
+  // Котировки (простые фиксированные связки)
   const R = {
     // USD <> RUB
     'USD->RUB': 81.5, 'RUB->USD': 1/81.5,
-    // CNY <> RUB (минимальные)
+    // CNY <> RUB
     'CNY->RUB': 11.75,'RUB->CNY': 1/11.75,
     // USDT <> RUB
     'USDT->RUB': 81.0,'RUB->USDT': 1/81.0,
@@ -94,19 +94,19 @@
   const mapCodes = (codes)=> codes.map(code => ensureIcon(C[code])).filter(Boolean);
 
   function currencies(kind, city, side){
-    if(side === 'from') {
-      const key = (kind === 'cash' || kind === 'bank' || kind === 'crypto') ? kind : 'cash';
-      return mapCodes((MATRIX[key][city]) || []);
+    if (side === 'from') {
+      const ok = (kind==='cash' || kind==='bank' || kind==='crypto') ? kind : 'cash';
+      return mapCodes((MATRIX[ok][city]) || []);
     } else {
       let key = 'cash_to';
-      if (kind === 'bank') key = 'bank_to';
-      else if (kind === 'crypto') key = 'crypto_to';
-      else if (kind === 'cnpay') key = 'cnpay_to';
+      if (kind==='bank') key='bank_to';
+      else if (kind==='crypto') key='crypto_to';
+      else if (kind==='cnpay') key='cnpay_to';
       return mapCodes((MATRIX[key][city]) || []);
     }
   }
 
-  const fmt = (n, d=2)=> (n==null||isNaN(n)) ? '—' : Number(n).toLocaleString('ru-RU',{maximumFractionDigits:d});
+  const fmt = (n,d=2)=> (n==null||isNaN(n)) ? '—' : Number(n).toLocaleString('ru-RU',{maximumFractionDigits:d});
 
   function quote({from,to,amount}){
     const a=Number(amount||0);
@@ -125,3 +125,4 @@
 
   window.PRICING = { currencies, quote };
 })();
+

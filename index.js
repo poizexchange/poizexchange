@@ -1,66 +1,62 @@
-// index.js — порядок: подключать после pricing.js
+// index.js — UI + отправка заявки; работает в Telegram WebApp.
+// При открытии не из Telegram показывает кнопку "Открыть в Telegram".
 (function () {
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+
+  // если не в Telegram — показать кнопку "Открыть в Telegram"
+  const notInTg = document.getElementById('notInTg');
+  const openLink = document.getElementById('openInTgLink');
+  if (!tg) {
+    if (notInTg) notInTg.classList.remove('hidden');
+    if (openLink) {
+      const payload = encodeURIComponent(JSON.stringify({action:'open'}));
+      // deep link в bot, веб-апп откроется как menu button (нужно настроить в @BotFather) или через startapp
+      openLink.href = `https://t.me/${window.BOT_USERNAME}?startapp=${payload}`;
+      openLink.target = "_blank";
+    }
+  } else {
+    try { tg.expand(); tg.ready(); tg.sendData(JSON.stringify({ action:'webapp_open' })); } catch(e){}
+  }
 
   // элементы
   const fromPayBox = document.getElementById('from-pay');
   const toPayBox   = document.getElementById('to-pay');
-
   const fromCityBox = document.getElementById('from-citybox');
   const toCityBox   = document.getElementById('to-citybox');
-
   const cityFromSel = document.getElementById('cityFrom');
   const cityToSel   = document.getElementById('cityTo');
-
   const fromWrap = document.getElementById('from-currencies');
   const toWrap   = document.getElementById('to-currencies');
-  const fromEmpty = document.getElementById('from-empty');
-  const toEmpty   = document.getElementById('to-empty');
-
   const amountInput = document.getElementById('amount');
   const rateVal = document.getElementById('rateVal');
   const totalVal = document.getElementById('totalVal');
-
   const contactInput = document.getElementById('contact');
   const reqsInput = document.getElementById('requisites');
   const noteInput = document.getElementById('note');
+  const fixMinutesInput = document.getElementById('fixMinutes');
   const qrBox = document.getElementById('qrbox');
   const qrFile = document.getElementById('qrfile');
   const sendBtn = document.getElementById('sendBtn');
-  const hint = document.getElementById('hint');
-
-  // проверка наличия PRICING
-  if (!window.PRICING || typeof window.PRICING.currencies !== 'function') {
-    console.error('PRICING не найден. Убедись, что pricing.js подключён перед index.js');
-    if (fromEmpty) { fromEmpty.textContent = 'Ошибка: pricing.js не подключён'; fromEmpty.classList.remove('hidden'); }
-    if (toEmpty)   { toEmpty.textContent   = 'Ошибка: pricing.js не подключён'; toEmpty.classList.remove('hidden'); }
-    return;
-  }
 
   // state
-  let fromPayType = 'cash';     // cash | bank | crypto
-  let toPayType   = 'cash';     // cash | bank | crypto | cnpay
+  let fromPayType = 'cash';
+  let toPayType   = 'cash';
   let cityFrom    = 'moscow';
   let cityTo      = 'moscow';
-  let selFrom     = null;       // code
-  let selTo       = null;       // code
+  let selFrom     = null;
+  let selTo       = null;
   let currentQuote = { rate:null,total:null };
-
-  // ping webapp
-  try {
-    if (tg) { tg.expand(); tg.ready(); tg.sendData(JSON.stringify({ action:'webapp_open' })); }
-    else if (hint) { hint.classList.remove('hidden'); }
-  } catch(e){}
 
   function clear(node){ while(node.firstChild) node.removeChild(node.firstChild); }
 
   function tile(item, side){
     const btn = document.createElement('button');
+    btn.type = 'button';
     btn.className = 'tile';
     btn.setAttribute('data-code', item.code);
     btn.innerHTML = `
       <div class="ico"><img src="${item.icon}" alt=""></div>
-      <div class="cap">${item.nameRu || item.code}</div>
+      <div class="cap">${item.nameRu}</div>
     `;
     btn.addEventListener('click', () => {
       if (side === 'from') { selFrom = item.code; markActive(fromWrap, item.code); }
@@ -77,28 +73,29 @@
     container.querySelectorAll(`[data-code="${code}"]`).forEach(t=>t.classList.add('active'));
   }
 
-  function renderTiles(container, list, side, emptyEl){
+  function renderTiles(container, list, side){
     clear(container);
-    if (!list || list.length === 0) {
-      if (emptyEl) emptyEl.classList.remove('hidden');
+    if (!list || !list.length){
+      const p = document.createElement('div');
+      p.textContent = 'Нет доступных вариантов для текущих настроек.';
+      container.appendChild(p);
       return;
     }
-    if (emptyEl) emptyEl.classList.add('hidden');
     list.forEach(item=> container.appendChild(tile(item, side)));
   }
 
   function refreshFrom(){
-    fromCityBox.classList.toggle('hidden', (fromPayType !== 'cash'));
+    fromCityBox.classList.toggle('hidden', fromPayType !== 'cash');
     const list = window.PRICING.currencies(fromPayType, cityFrom, 'from');
-    renderTiles(fromWrap, list, 'from', fromEmpty);
+    renderTiles(fromWrap, list, 'from');
     selFrom = list?.[0]?.code || null;
     if (selFrom) markActive(fromWrap, selFrom);
   }
 
   function refreshTo(){
-    toCityBox.classList.toggle('hidden', (toPayType !== 'cash'));
+    toCityBox.classList.toggle('hidden', toPayType !== 'cash');
     const list = window.PRICING.currencies(toPayType, cityTo, 'to');
-    renderTiles(toWrap, list, 'to', toEmpty);
+    renderTiles(toWrap, list, 'to');
     selTo = list?.[0]?.code || null;
     if (selTo) markActive(toWrap, selTo);
     const cnpay = ['ALIPAY','WECHAT','CN_CARD'];
@@ -106,42 +103,40 @@
   }
 
   function recalc(){
-    const amount = Number(amountInput?.value || 0);
+    const amount = Number(amountInput.value || 0);
     if (!selFrom || !selTo || !amount || amount <= 0){
-      rateVal.textContent = '—';
-      totalVal.textContent = '—';
+      rateVal.value = '—';
+      totalVal.value = '—';
       currentQuote = {rate:null,total:null};
       return;
     }
     const q = window.PRICING.quote({ from:selFrom, to:selTo, amount });
     currentQuote = q;
-    rateVal.textContent  = q.rateText;
-    totalVal.textContent = q.totalText;
+    rateVal.value  = q.rateText;
+    totalVal.value = q.totalText;
   }
 
-  // chips handlers
   function wireChips(box, cb){
-    if (!box) return;
-    box.querySelectorAll('.chip').forEach(btn=>{
+    const buttons = Array.from(box.querySelectorAll('.chip'));
+    buttons.forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        box.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
+        buttons.forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
         cb(btn.dataset.type);
       });
     });
-    // activate first (важно!)
-    const first = box.querySelector('.chip');
-    if (first){ first.classList.add('active'); cb(first.dataset.type); }
+    // активируем первую
+    if (buttons[0]) { buttons[0].classList.add('active'); cb(buttons[0].dataset.type); }
   }
 
   wireChips(fromPayBox, (type)=>{ fromPayType = type; refreshFrom(); recalc(); });
-  wireChips(toPayBox,   (type)=>{ toPayType   = type; refreshTo();  recalc(); });
+  wireChips(toPayBox,   (type)=>{ toPayType   = type; refreshTo();  recalc();  });
 
-  // selects
   cityFromSel?.addEventListener('change', ()=>{ cityFrom = cityFromSel.value; refreshFrom(); recalc(); });
   cityToSel?.addEventListener('change',   ()=>{ cityTo   = cityToSel.value;   refreshTo();  recalc(); });
+  amountInput?.addEventListener('input', recalc);
 
-  // первичный рендер
+  // первичная инициализация
   refreshFrom();
   refreshTo();
   recalc();
@@ -162,11 +157,14 @@
       contact: (contactInput.value || '').trim(),
       requisites: (reqsInput.value || '').trim(),
       note: (noteInput.value || '').trim(),
-      fix_minutes: 30
+      fix_minutes: Math.max(5, Math.min(120, Number(fixMinutesInput.value||30))),
     };
-    const file = qrFile?.files?.[0];
-    if (file) payload.qr_filename = file.name;
 
+    const file = qrFile?.files?.[0];
+    if (file) payload.qr_filename = file.name; // только имя (сам файл фронт не шлёт в бот)
+
+    // безопасность: отправлять напрямую в Bot API из браузера нельзя (токен утечёт),
+    // поэтому либо Telegram WebApp (sendData), либо ваш серверный API.
     if (tg) {
       try {
         tg.sendData(JSON.stringify(payload));
@@ -175,11 +173,9 @@
         alert('Ошибка отправки в Telegram. Попробуйте ещё раз.');
       }
     } else {
-      alert('Откройте форму через Telegram WebApp, чтобы отправить заявку.');
+      // не в Telegram: даём ссылку открыть форму в Telegram
+      alert('Чтобы отправить заявку, откройте эту форму внутри Telegram.');
+      if (openLink) openLink.click();
     }
   });
-
-  // Доп. диагностика в консоль
-  console.log('from cash/moscow:', window.PRICING.currencies('cash','moscow','from'));
-  console.log('to cash/moscow:',   window.PRICING.currencies('cash','moscow','to'));
 })();

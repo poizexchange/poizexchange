@@ -105,21 +105,17 @@
   </main>
 
   <!-- ВАЖНО: ping WebApp, чтобы бот «увидел» пользователя -->
-  <script>
-    const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-    if (tg) {
-      tg.expand();
-      tg.ready();
-      try {
-        tg.sendData(JSON.stringify({ action: "webapp_open" }));
-      } catch (e) {}
-    } else {
-      // Если открыли вне Telegram — показываем подсказку под кнопкой
-      document.addEventListener('DOMContentLoaded', () => {
-        const hint = document.getElementById('hint');
-        if (hint) hint.hidden = false;
-      });
-    }
-  </script>
+<script>
+  const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+  if (tg) {
+    tg.expand();
+    tg.ready();
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      const hint = document.getElementById('hint');
+      if (hint) hint.hidden = false;
+    });
+  }
+</script>
 </body>
 </html>

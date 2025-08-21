@@ -149,29 +149,42 @@
   }
 
   // ОТПРАВКА ЗАЯВКИ (WebApp)
-  sendBtn?.addEventListener('click', async ()=>{
-    const amountNum = Number(amountInput.value || 0);
-    if (!selFrom || !selTo) { alert('Выберите валюты/сервис «Отдаю» и «Получаю».'); return; }
-    if (!(amountNum > 0))   { alert('Введите сумму.'); return; }
-    if (!currentQuote.rate) { alert('Не удалось рассчитать курс. Попробуйте ещё раз.'); return; }
-    if (!validateBusinessRules()) return;
+sendBtn?.addEventListener('click', async () => {
+  const payload = {
+    type: 'order',
+    from_currency: selFrom,
+    to_currency: selTo,
+    from_kind: fromPayType,
+    to_kind: toPayType,
+    city_from: cityFrom,
+    city_to: cityTo,
+    amount: Number(amountInput.value || 0),
+    rate: currentQuote.rate,
+    total: currentQuote.total,
+    contact: (contactInput.value || '').trim(),
+    requisites: (reqsInput.value || '').trim(),
+    note: (noteInput.value || '').trim(),
+    fix_minutes: 30
+  };
+  const file = qrFile?.files?.[0];
+  if (file) payload.qr_filename = file.name;
 
-    const payload = {
-      type: 'order',
-      from_currency: selFrom,
-      to_currency: selTo,
-      from_kind: fromPayType,
-      to_kind: toPayType,
-      city_from: cityFrom,
-      city_to: cityTo,
-      amount: amountNum,
-      rate: currentQuote.rate,
-      total: currentQuote.total,
-      contact: (contactInput.value || '').trim(),
-      requisites: (reqsInput.value || '').trim(),
-      note: (noteInput.value || '').trim(),
-      fix_minutes: 30
-    };
+  if (tg) {
+    try {
+      tg.sendData(JSON.stringify(payload));
+      // небольшая пауза — иначе некоторые клиенты закрывают webview раньше отправки
+      setTimeout(() => {
+        try { tg.close(); } catch(e) {}
+      }, 150);
+      try { tg.showAlert('Заявка отправлена'); } catch(e) {}
+    } catch (e) {
+      alert('Ошибка отправки в Telegram. Откройте форму из бота и попробуйте ещё раз.');
+    }
+  } else {
+    alert('Откройте форму через Telegram WebApp, чтобы отправить заявку.');
+  }
+});
+
 
     // Файл через sendData не отправить — передадим только имя, менеджер запросит QR в чате
     const file = qrFile?.files?.[0];

@@ -1,125 +1,112 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Poiz Exchange — Калькулятор</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=50" />
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="./pricing.js?v=50"></script>
-  <script src="./index.js?v=50" defer></script>
+  <meta charset="utf-8">
+  <title>Poiz Exchange</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 0; padding: 16px; }
+    .row { margin-bottom: 12px; }
+    .chips { display:flex; gap:8px; flex-wrap: wrap; margin: 8px 0; }
+    .chip { padding:8px 12px; border:1px solid #ccc; border-radius:12px; background:#fff; cursor:pointer; }
+    .chip.active { border-color:#000; font-weight:600; }
+    .tiles { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:8px; min-height: 80px; }
+    .tile { display:flex; gap:8px; align-items:center; border:1px solid #eee; border-radius:10px; padding:8px; background:#fafafa; cursor:pointer; }
+    .tile.active { outline:2px solid #333; background:#fff; }
+    .tile .ico { width:24px; height:24px; display:flex; align-items:center; justify-content:center; }
+    .tile .ico img { max-width:24px; max-height:24px; }
+    .muted { color:#666; font-size: 14px; }
+    .box { border:1px solid #eee; border-radius:12px; padding:12px; }
+    .hidden { display:none; }
+    label { display:block; font-size: 14px; margin-bottom: 6px; color:#333; }
+    input, select, textarea, button { width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; box-sizing:border-box; }
+    button.primary { background:#111; color:#fff; border-color:#111; }
+  </style>
 </head>
 <body>
-  <header class="tg-header">
-    <div class="wrap">
-      <h1 class="title">КАЛЬКУЛЯТОР ОБМЕНА</h1>
+
+  <h2>Обмен</h2>
+
+  <!-- ОТДАЮ -->
+  <div class="row box">
+    <label>Отдаю</label>
+    <div id="from-pay" class="chips">
+      <button class="chip" data-type="cash">Наличные</button>
+      <button class="chip" data-type="bank">Банк РФ</button>
+      <button class="chip" data-type="crypto">Крипто</button>
     </div>
-  </header>
 
-  <main class="wrap main-safe">
-    <!-- ОТДАЮ -->
-    <section class="card">
-      <h2 class="h2">Отдаю</h2>
-      <div class="chips" id="from-pay">
-        <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
-        <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
-        <button class="chip" data-type="crypto"><img src="./icons/crypto.svg" alt="">Крипто</button>
-      </div>
+    <div id="from-citybox" class="row">
+      <label for="cityFrom">Город (наличные):</label>
+      <select id="cityFrom">
+        <option value="moscow">Москва</option>
+        <option value="guangzhou">Гуанчжоу</option>
+      </select>
+    </div>
 
-      <!-- город: показываем только при наличных -->
-      <div id="from-citybox" class="citybox" hidden>
-        <label class="label" for="cityFrom">Город</label>
-        <select id="cityFrom" class="input">
-          <option value="moscow">Москва</option>
-          <option value="guangzhou">Гуанчжоу</option>
-        </select>
-      </div>
+    <div id="from-currencies" class="tiles"></div>
+    <div id="from-empty" class="muted hidden">Нет доступных вариантов</div>
+  </div>
 
-      <div id="from-currencies" class="tiles"></div>
-    </section>
+  <!-- ПОЛУЧАЮ -->
+  <div class="row box">
+    <label>Получаю</label>
+    <div id="to-pay" class="chips">
+      <button class="chip" data-type="cash">Наличные</button>
+      <button class="chip" data-type="bank">Банк РФ</button>
+      <button class="chip" data-type="crypto">Крипто</button>
+      <button class="chip" data-type="cnpay">Китай</button>
+    </div>
 
-    <!-- ПОЛУЧАЮ -->
-    <section class="card">
-      <h2 class="h2">Получаю</h2>
-      <div class="chips wrap" id="to-pay">
-        <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
-        <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
-        <button class="chip" data-type="crypto"><img src="./icons/crypto.svg" alt="">Крипто</button>
-        <button class="chip full" data-type="cnpay"><img src="./icons/bankcn.svg" alt="">Китайские сервисы</button>
-      </div>
+    <div id="to-citybox" class="row">
+      <label for="cityTo">Город (наличные):</label>
+      <select id="cityTo">
+        <option value="moscow">Москва</option>
+        <option value="guangzhou">Гуанчжоу</option>
+      </select>
+    </div>
 
-      <!-- город: показываем только при наличных -->
-      <div id="to-citybox" class="citybox" hidden>
-        <label class="label" for="cityTo">Город</label>
-        <select id="cityTo" class="input">
-          <option value="moscow">Москва</option>
-          <option value="guangzhou">Гуанчжоу</option>
-        </select>
-      </div>
+    <div id="to-currencies" class="tiles"></div>
+    <div id="to-empty" class="muted hidden">Нет доступных вариантов</div>
+  </div>
 
-      <div id="to-currencies" class="tiles"></div>
-    </section>
+  <!-- Суммы -->
+  <div class="row box">
+    <div class="row">
+      <label for="amount">Сумма</label>
+      <input id="amount" type="number" min="0" step="0.01" placeholder="0.00">
+    </div>
+    <div class="row">
+      <div class="muted">Курс: <span id="rateVal">—</span></div>
+      <div class="muted">К получению: <span id="totalVal">—</span></div>
+    </div>
+  </div>
 
-    <!-- КАЛЬКУЛЯТОР -->
-    <section class="card">
-      <div class="calc-grid">
-        <div>
-          <label class="label" for="amount">Сумма</label>
-          <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
-        </div>
-        <div class="result-card">
-          <div class="result-line">
-            <div class="r-cap">Курс</div>
-            <div id="rateVal" class="r-val">—</div>
-          </div>
-          <div class="result-line">
-            <div class="r-cap">К получению</div>
-            <div id="totalVal" class="r-big">—</div>
-          </div>
-        </div>
-      </div>
-    </section>
+  <!-- Контакты -->
+  <div class="row box">
+    <div class="row">
+      <label for="contact">Контакт (телеграм/телефон)</label>
+      <input id="contact" type="text" placeholder="@username или телефон">
+    </div>
+    <div class="row">
+      <label for="requisites">Реквизиты для получения</label>
+      <textarea id="requisites" rows="2" placeholder="Карта/кошелёк/данные..."></textarea>
+    </div>
+    <div class="row">
+      <label for="note">Комментарий</label>
+      <textarea id="note" rows="2" placeholder="Примечания..."></textarea>
+    </div>
+    <div id="qrbox" class="row hidden">
+      <label for="qrfile">QR (для Alipay/WeChat/Карта Китая)</label>
+      <input id="qrfile" type="file" accept="image/*">
+    </div>
+    <button id="sendBtn" class="primary">Отправить заявку</button>
+  </div>
 
-    <!-- ЗАЯВКА -->
-    <section class="card">
-      <h2 class="h2">Заявка</h2>
-      <label class="label" for="contact">Контакт</label>
-      <input id="contact" class="input" placeholder="@username или телефон" />
+  <div id="hint" class="muted hidden">Откройте через Telegram, чтобы отправить заявку.</div>
 
-      <label class="label" for="requisites">Реквизиты</label>
-      <textarea id="requisites" class="input" rows="3" placeholder="Номер карты/кошелька, банк, ФИО"></textarea>
-
-      <label class="label" for="note">Комментарий</label>
-      <textarea id="note" class="input" rows="3" placeholder="Детали, срочность…"></textarea>
-
-      <div id="qrbox" class="qrbox" hidden>
-        <label class="label" for="qrfile">Пришлите QR-код (Alipay / WeChat / карта Китая)</label>
-        <input type="file" id="qrfile" accept="image/*,.png,.jpg,.jpeg,.webp" class="input-file">
-      </div>
-
-      <button id="sendBtn" class="btn-primary">📩 Отправить заявку</button>
-      <p id="hint" class="hint" hidden>Откройте форму из бота в Telegram, чтобы отправить напрямую.</p>
-    </section>
-
-    <nav class="footlinks">
-      <a href="./rates.html?v=50">📊 Табло</a>
-      <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
-      <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
-    </nav>
-  </main>
-
-  <script>
-    // ping WebApp — чтобы бот видел пользователя
-    const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-    if (tg) {
-      tg.expand(); tg.ready();
-      try { tg.sendData(JSON.stringify({ action: "webapp_open" })); } catch(e){}
-    } else {
-      document.addEventListener('DOMContentLoaded', () => {
-        const hint = document.getElementById('hint');
-        if (hint) hint.hidden = false;
-      });
-    }
-  </script>
+  <!-- ВАЖНО: сначала pricing.js, потом index.js -->
+  <script src="./pricing.js"></script>
+  <script src="./index.js"></script>
 </body>
 </html>

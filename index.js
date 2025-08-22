@@ -202,43 +202,37 @@
 
   // ОТПРАВКА ЗАЯВКИ (WebApp)
   sendBtn?.addEventListener('click', async ()=>{
-    const amountNum = Number(amountInput?.value || 0);
-    if (!selFrom || !selTo) { safeAlert('Выберите валюты/сервис «Отдаю» и «Получаю».'); return; }
-    if (!(amountNum > 0))   { safeAlert('Введите сумму.'); return; }
-    if (!currentQuote.rate) { safeAlert('Не удалось рассчитать курс. Попробуйте ещё раз.'); return; }
-    if (!validateBusinessRules()) return;
+  const payload = {
+    type: 'order',
+    from_currency: selFrom,
+    to_currency: selTo,
+    from_kind: fromPayType,
+    to_kind: toPayType,
+    city_from: cityFrom,
+    city_to: cityTo,
+    amount: Number(amountInput.value || 0),
+    rate: currentQuote.rate,
+    total: currentQuote.total,
+    contact: (contactInput.value || '').trim(),
+    requisites: (reqsInput.value || '').trim(),
+    note: (noteInput.value || '').trim(),
+    fix_minutes: 30
+  };
 
-    const payload = {
-      type: 'order',
-      from_currency: selFrom,
-      to_currency: selTo,
-      from_kind: fromPayType,
-      to_kind: toPayType,
-      city_from: cityFrom,
-      city_to: cityTo,
-      amount: amountNum,
-      rate: currentQuote.rate,
-      total: currentQuote.total,
-      contact: (contactInput?.value || '').trim(),
-      requisites: (reqsInput?.value || '').trim(),
-      note: (noteInput?.value || '').trim(),
-      fix_minutes: 30
-    };
-
-    // Файл через sendData не передашь — только имя
-    const file = qrFile?.files?.[0];
-    if (file) payload.qr_filename = file.name || 'qr.png';
-
-    if (!tg) { safeAlert('Откройте форму через Telegram WebApp, чтобы отправить заявку.'); return; }
-
-    try {
-      tg.sendData(JSON.stringify(payload)); // бот ловит web_app_data
-      // уведомление (без падения на старых клиентах)
-      safeAlert('✅ Заявка отправлена! Менеджер скоро свяжется с вами.');
-      // tg.close(); // если хочешь закрывать — раскомментируй
-    } catch (e) {
-      console.error(e);
-      safeAlert('Ошибка отправки в Telegram. Попробуйте ещё раз.');
+  try {
+    const resp = await fetch("/api/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      alert("✅ Заявка отправлена! Менеджер скоро свяжется с вами.");
+    } else {
+      alert("Ошибка: " + (data.error || "не удалось отправить заявку"));
     }
-  });
+  } catch (e) {
+    alert("Ошибка сети: " + e.message);
+  }
+});
 })();

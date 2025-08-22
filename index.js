@@ -155,13 +155,16 @@
 
     if (tg) {
       try {
-        tg.sendData(JSON.stringify(payload)); // бот ловит web_app_data
-        tg.close();
-      } catch (e) {
-        alert('Ошибка отправки в Telegram. Попробуйте ещё раз.');
-      }
-    } else {
-      alert('Откройте форму через Telegram WebApp, чтобы отправить заявку.');
-    }
+  const resp = await fetch('https://<ТВОЙ_ДОМЕН_ИЛИ_IP>/api/order', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (!resp.ok) throw new Error('Bad status');
+  alert('Заявка отправлена! Менеджер свяжется с вами.');
+} catch (e) {
+  alert('Не удалось отправить заявку. Попробуйте позже.');
+}
+
   });
 })();

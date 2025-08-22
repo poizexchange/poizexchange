@@ -201,7 +201,13 @@
   }
 
   // ОТПРАВКА ЗАЯВКИ (WebApp)
-  sendBtn?.addEventListener('click', async ()=>{
+  // === ОТПРАВКА ЗАЯВКИ ===
+sendBtn?.addEventListener('click', async () => {
+  const amountNum = Number(amountInput.value || 0);
+  if (!selFrom || !selTo) { alert('Выберите валюты/сервис «Отдаю» и «Получаю».'); return; }
+  if (!(amountNum > 0))   { alert('Введите сумму.'); return; }
+  if (!currentQuote?.rate) { alert('Не удалось рассчитать курс.'); return; }
+
   const payload = {
     type: 'order',
     from_currency: selFrom,
@@ -210,7 +216,7 @@
     to_kind: toPayType,
     city_from: cityFrom,
     city_to: cityTo,
-    amount: Number(amountInput.value || 0),
+    amount: amountNum,
     rate: currentQuote.rate,
     total: currentQuote.total,
     contact: (contactInput.value || '').trim(),
@@ -219,20 +225,67 @@
     fix_minutes: 30
   };
 
+  // 1) Внутри Telegram WebApp — используем sendData (бот ловит web_app_data)
+  if (tg) {
+    try {
+      tg.sendData(JSON.stringify(payload));
+      // можно не закрывать, чтобы показать подтверждение
+      if (tg.showPopup) {
+        tg.showPopup({ title: 'Заявка отправлена', message: 'Мы скоро свяжемся с вами.' });
+      } else {
+        alert('✅ Заявка отправлена! Мы скоро свяжемся с вами.');
+      }
+      return;
+    } catch (e) {
+      console.error('sendData error', e);
+      // если вдруг не получилось — попробуем через API
+    }
+  }
+
+  // 2) Открыто как САЙТ — шлём в API
+  // ВАРИАНТ A (если сайт и API на ОДНОМ домене под Nginx):
+  let API_BASE = '/api';
+  // ВАРИАНТ B (если сайт на GitHub Pages, а API на вашем сервере с доменом/айпи):
+  // УКАЖИ ТУТ СВОЙ ДОМЕН/АЙПИ С HTTPS!!!
+  // API_BASE = 'https://ВАШ_ДОМЕН_СЕРВЕРА/api';
+
   try {
-    const resp = await fetch("/api/order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+    const resp = await fetch(`${API_BASE}/order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      credentials: 'omit'
     });
-    const data = await resp.json();
-    if (data.ok) {
-      alert("✅ Заявка отправлена! Менеджер скоро свяжется с вами.");
+
+    // аккуратно читаем: если не JSON, покажем текст/HTML ошибки
+    const ct = resp.headers.get('content-type') || '';
+    if (!resp.ok) {
+      let message = `HTTP ${resp.status}`;
+      if (ct.includes('application/json')) {
+        const j = await resp.json().catch(()=>null);
+        if (j && (j.error || j.detail)) message += `: ${j.error || j.detail}`;
+      } else {
+        const t = await resp.text().catch(()=>null);
+        if (t) message += `\n\n${t.slice(0,300)}`;
+      }
+      alert('Ошибка отправки заявки: ' + message);
+      return;
+    }
+
+    let data;
+    if (ct.includes('application/json')) {
+      data = await resp.json().catch(()=>null);
     } else {
-      alert("Ошибка: " + (data.error || "не удалось отправить заявку"));
+      const t = await resp.text().catch(()=>null);
+      throw new Error('API вернул не JSON:\n' + t);
+    }
+
+    if (data?.ok) {
+      alert('✅ Заявка отправлена! Менеджер скоро свяжется с вами.');
+    } else {
+      alert('Ошибка: ' + (data?.error || 'не удалось отправить заявку'));
     }
   } catch (e) {
-    alert("Ошибка сети: " + e.message);
+    alert('Ошибка сети: ' + (e?.message || e));
   }
 });
-})();

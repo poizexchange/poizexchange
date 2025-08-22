@@ -166,49 +166,48 @@ async function sendOrderToApi(payload) {
   }
 
   // ОТПРАВКА ЗАЯВКИ (WebApp)
-  sendBtn?.addEventListener('click', async ()=>{
-    const amountNum = Number(amountInput.value || 0);
-    if (!selFrom || !selTo) { alert('Выберите валюты/сервис «Отдаю» и «Получаю».'); return; }
-    if (!(amountNum > 0))   { alert('Введите сумму.'); return; }
-    if (!currentQuote.rate) { alert('Не удалось рассчитать курс. Попробуйте ещё раз.'); return; }
-    if (!validateBusinessRules()) return;
+ sendBtn?.addEventListener('click', async ()=>{
+  const payload = {
+    type: 'order',
+    from_currency: selFrom,
+    to_currency: selTo,
+    from_kind: fromPayType,
+    to_kind: toPayType,
+    city_from: cityFrom,
+    city_to: cityTo,
+    amount: Number(amountInput.value || 0),
+    rate: currentQuote.rate,
+    total: currentQuote.total,
+    contact: (contactInput.value || '').trim(),
+    requisites: (reqsInput.value || '').trim(),
+    note: (noteInput.value || '').trim(),
+    fix_minutes: 30
+  };
 
-    const payload = {
-      type: 'order',
-      from_currency: selFrom,
-      to_currency: selTo,
-      from_kind: fromPayType,
-      to_kind: toPayType,
-      city_from: cityFrom,
-      city_to: cityTo,
-      amount: amountNum,
-      rate: currentQuote.rate,
-      total: currentQuote.total,
-      contact: (contactInput.value || '').trim(),
-      requisites: (reqsInput.value || '').trim(),
-      note: (noteInput.value || '').trim(),
-      fix_minutes: 30
-    };
+  // простая проверка
+  if (!payload.from_currency || !payload.to_currency || !payload.amount || payload.amount <= 0) {
+    alert('Заполните валюты и сумму.');
+    return;
+  }
 
-    // Файл через sendData не отправить — передадим только имя, менеджер запросит QR в чате
-    const file = qrFile?.files?.[0];
-    if (file) payload.qr_filename = file.name || 'qr.png';
-
-    if (tg) {
-      try {
-        tg.sendData(JSON.stringify(payload)); // бот ловит web_app_data
-        // НЕ закрываем webview — покажем попап
-        if (tg.showPopup) {
-          tg.showPopup({ title: 'Заявка отправлена', message: 'Мы скоро свяжемся с вами.' });
-        } else {
-          alert('Заявка отправлена. Мы скоро свяжемся с вами.');
-        }
-      } catch (e) {
-        console.error(e);
-        alert('Ошибка отправки в Telegram. Попробуйте ещё раз.');
-      }
-    } else {
-      alert('Откройте форму через Telegram WebApp, чтобы отправить заявку.');
+  // 1) Если открыт Telegram WebApp
+  if (tg) {
+    try {
+      tg.sendData(JSON.stringify(payload));
+      tg.close();
+      return;
+    } catch (e) {
+      console.warn('tg.sendData failed, пробуем API', e);
     }
-  });
+  }
+
+  // 2) Если открыт сайт (или fallback)
+  const ok = await sendOrderToApi(payload);
+  if (ok) {
+    alert('✅ Заявка отправлена! Менеджер скоро свяжется с вами.');
+  } else {
+    alert('❌ Не удалось отправить заявку. Попробуйте ещё раз.');
+  }
+});
+
 })();

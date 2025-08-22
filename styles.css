@@ -1,111 +1,43 @@
-/* Clean white + azure accents (v34) */
 :root{
-  --bg:#ffffff; --ink:#0f1a2e; --muted:#5f6b85; --line:#e7ecf3;
-  --primary:#1aa3ff; --primary2:#0e78ff; --focus:#a6d2ff;
-  --chip-bg:#f3f9ff; --chip-border:#cfe6ff; --chip-shadow:0 6px 18px rgba(26,163,255,.18);
-}
-*{ box-sizing:border-box } html,body{height:100%}
-body{ margin:0; font-family: Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink); background:var(--bg) }
-.wrap{ width:100%; max-width:420px; margin:0 auto; padding:16px }
-.main-safe{ padding-bottom: calc(12px + env(safe-area-inset-bottom)) }
-
-/* iOS zoom prevention */
-input, select, textarea, button{ font-size:16px }
-
-/* Header */
-.tg-header{ position:sticky; top:0; background:rgba(255,255,255,.95); backdrop-filter:saturate(160%) blur(8px); border-bottom:1px solid var(--line); z-index:10; box-shadow:0 8px 22px rgba(14,120,255,.10) }
-.title{ margin:10px 0; text-align:center; font-weight:1000; letter-spacing:.06em; color:#0b2c66; font-size:22px }
-.title.small{ font-size:18px }
-
-/* Card */
-.card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; margin:12px 0; box-shadow:0 8px 24px rgba(26,163,255,.12) }
-.card.compact{ padding:10px }
-.h2{ margin:6px 0 10px; font-size:16px; color:#0b2c66; font-weight:1000; letter-spacing:.02em }
-.label{ display:block; margin:8px 0 6px; font-size:12px; color:var(--muted); font-weight:700 }
-
-/* Inputs */
-.input{ width:100%; border:1px solid var(--line); background:#fff; color:var(--ink); padding:10px 12px; border-radius:12px; font-size:16px; outline:none; box-shadow:0 2px 8px rgba(14,120,255,.06) }
-.input:focus{ border-color:var(--focus); box-shadow:0 0 0 3px rgba(14,120,255,.12), 0 8px 24px rgba(14,120,255,.10) }
-.input-file{ width:100%; border:1px dashed var(--line); background:#f9fbff; padding:10px; border-radius:12px }
-
-/* Chips (azure) */
-.chips{ display:flex; gap:8px }
-.chips.wrap{ flex-wrap:wrap }
-.chip{
-  flex:1; display:flex; gap:8px; align-items:center; justify-content:center;
-  padding:10px 8px; border:1px solid var(--chip-border); border-radius:12px;
-  background:var(--chip-bg); color:#0b2c66; font-weight:1000; cursor:pointer;
-  box-shadow: var(--chip-shadow);
-}
-.chip.full{ flex: 1 1 100% }
-.chip img{ width:18px; height:18px; object-fit:contain }
-.chip.active{ border-color:#7ec3ff; box-shadow:0 0 0 3px rgba(14,120,255,.12), 0 12px 26px rgba(14,120,255,.18) }
-
-/* City box */
-.citybox{ margin:10px 0 6px; padding:10px; border:1px dashed var(--line); border-radius:12px; background:linear-gradient(180deg, #f3faff, #eef7ff) }
-
-/* Tiles */
-.tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px }
-.tile{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px; min-height:100px; border:1px solid var(--line); background:#fff; border-radius:14px; cursor:pointer; transition:.12s; box-shadow:0 2px 10px rgba(14,120,255,.10) }
-.tile:hover{ transform:translateY(-1px) } .tile.active{ border-color:#7ec3ff; box-shadow:0 0 0 3px rgba(14,120,255,.12), 0 14px 24px rgba(14,120,255,.16) }
-.ico{ width:40px; height:40px; display:flex; align-items:center; justify-content:center }
-.ico img{ width:40px; height:40px; object-fit:contain }
-.cap{ font-weight:1000; font-size:13px; letter-spacing:.2px; color:#0b2c66; text-align:center }
-.sub{ font-weight:800; color:#446 }
-
-/* Calculation block */
-.calc-grid{ display:grid; grid-template-columns:1fr; gap:12px } @media(min-width:380px){ .calc-grid{ grid-template-columns:1fr 1fr } }
-.result-card{ border:1px solid var(--line); border-radius:14px; padding:12px; background:linear-gradient(180deg, #fff, #f3faff); box-shadow:0 10px 24px rgba(26,163,255,.12) }
-.result-line{ display:flex; align-items:flex-end; justify-content:space-between; padding:6px 0; border-bottom:1px dashed #edf2fa }
-.result-line:last-child{ border-bottom:none }
-.r-cap{ font-size:12px; color:#6c7bad; font-weight:1000; letter-spacing:.02em }
-.r-val{ font-size:17px; font-weight:1000; color:#0e78ff }
-.r-big{ font-size:19px; font-weight:1000; color:#0a3ea1 }
-
-/* Submit */
-.btn-primary{ width:100%; background:linear-gradient(180deg, var(--primary), var(--primary2)); color:#fff; border:none; border-radius:12px; padding:12px 14px; font-weight:1000; letter-spacing:.2px; cursor:pointer; transition:.15s; box-shadow:0 16px 36px rgba(14,120,255,.26) }
-.btn-primary:active,.btn-primary:hover{ transform:translateY(-1px); filter:saturate(110%) }
-
-/* Footer */
-.footlinks{ display:flex; gap:12px; justify-content:center; padding:8px 0 calc(12px + env(safe-area-inset-bottom)) }
-.footlinks a{ color:#0b2c66; text-decoration:none; font-weight:1000; padding:6px 10px; border-radius:10px; background:#f3f9ff; border:1px solid var(--line); box-shadow:0 4px 10px rgba(14,120,255,.08) }
-
-.hint{ color:#a33; font-size:12px; margin:8px 0 0 }
-/* Сетка табло: 3 в ряд на телефоне — как просил */
-.tile-grid.tile-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  --bg:#f6f9ff;
+  --card:#ffffff;
+  --text:#0a2a4a;
+  --muted:#6a88a8;
+  --blue:#3f8cff;
+  --blue-ghost:#e8f1ff;
+  --border:#e6edf7;
+  --shadow: 0 6px 18px rgba(22, 73, 158, .08);
 }
 
-/* Карточка-квадрат */
-.tile.square {
-  aspect-ratio: 1 / 1;          /* делает квадрат */
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 6px 20px rgba(32, 93, 216, 0.08);
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border: 1px solid rgba(36, 103, 214, 0.10);
-}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg)}
+.container{max-width:900px;margin:0 auto;padding:16px}
 
-.tile-title{
-  font-weight: 600;
-  font-size: 12px;
-  color: #1f3b75;
-}
-.tile-main{
-  font-size: 18px;
-  font-weight: 700;
-  color: #0f3fb2;
-}
+h1{font-size:28px;margin:8px 0 20px}
+h2{font-size:18px;margin:0 0 12px}
 
-/* Адаптив — когда тесно, делаем 2 или 1 в ряд */
-@media (max-width: 380px){
-  .tile-grid.tile-3 { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 300px){
-  .tile-grid.tile-3 { grid-template-columns: 1fr; }
-}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin:14px 0;box-shadow:var(--shadow)}
+
+.chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.chip{background:var(--blue-ghost);border:1px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer}
+.chip.active{background:#fff;border-color:var(--blue);box-shadow:0 0 0 3px rgba(63,140,255,.15)}
+
+.row{display:flex;align-items:center;gap:10px;margin:10px 0}
+label{font-size:13px;color:var(--muted)}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff}
+
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:560px){.tiles{grid-template-columns:repeat(3,1fr)}}
+.tile{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px;border:1px solid var(--border);border-radius:14px;background:#fff;box-shadow:var(--shadow);cursor:pointer}
+.tile.active{outline:2px solid var(--blue)}
+.tile .ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--blue-ghost)}
+.tile .ico img{width:24px;height:24px;display:block}
+.tile .cap{font-weight:700;font-size:12px;letter-spacing:.3px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat{display:flex;justify-content:space-between;background:var(--blue-ghost);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:8px 0}
+
+.primary{display:block;width:100%;padding:14px;border:0;border-radius:12px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer}
+.primary:active{opacity:.9}
+
+.hint{color:var(--muted);font-size:13px;margin-top:10px}

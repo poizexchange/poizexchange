@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <!-- важно для Telegram WebApp -->
   <meta name="telegram-web-app" content="on" />
   <title>Poiz Exchange</title>
   <style>
@@ -17,7 +16,8 @@
     .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
     .tile{display:flex;align-items:center;gap:8px;border:1px solid #2a3347;background:#161d2a;border-radius:10px;padding:10px;cursor:pointer}
     .tile.active{border-color:#4b8cff;background:#1e2a42}
-    .ico img{width:24px;height:24px}
+    .ico{width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+    .ico span{font-size:18px}
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     input,select,textarea{width:100%;background:#0f1420;border:1px solid #2a3347;border-radius:8px;color:#e6e6e6;padding:10px;box-sizing:border-box}
     textarea{min-height:80px}
@@ -29,7 +29,7 @@
 </head>
 <body>
   <div id="notInTg" class="hint hidden">
-    Эта форма должна открываться внутри Telegram.  
+    Эта форма должна открываться внутри Telegram.
     <a id="openInTgLink" href="#" style="color:#8ab4ff;font-weight:700;">Открыть в Telegram</a>
   </div>
 
@@ -120,14 +120,229 @@
 
   <button id="sendBtn">Отправить заявку</button>
 
-  <!-- Иконки разместите в /icons/*.svg или поменяйте путь в pricing.js -->
   <script>
-    // домен WebApp — чтобы генерировать deep-link при заходе не из Telegram
-    window.WEBAPP_URL = "https://poizexchange.github.io/poizexchange";
-    window.BOT_USERNAME = "PoizExchangeBot"; // имя вашего бота (без @)
+    // ===== Телеграм окружение / Deep link =====
+    const BOT_USERNAME = "PoizExchangeBot";
+    const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+    const notInTg = document.getElementById('notInTg');
+    const openLink = document.getElementById('openInTgLink');
+    if (!tg) {
+      notInTg.classList.remove('hidden');
+      const payload = encodeURIComponent(JSON.stringify({action:'open'}));
+      openLink.href = `https://t.me/${BOT_USERNAME}?startapp=${payload}`;
+      openLink.target = "_blank";
+    } else {
+      try { tg.expand(); tg.ready(); tg.sendData(JSON.stringify({ action:'webapp_open' })); } catch(e){}
+    }
+
+    // ===== ДАННЫЕ (матрица + котировки) ВСТРОЕНЫ =====
+    const C = {
+      RUB:{code:'RUB',nameRu:'Рубль', icon:'💸'},
+      USD:{code:'USD',nameRu:'Доллар',icon:'💵'},
+      CNY:{code:'CNY',nameRu:'Юань',  icon:'🀄️'},
+      SBP:{code:'SBP',nameRu:'СБП',        icon:'🏦'},
+      SBER:{code:'SBER',nameRu:'Сбер',     icon:'🏦'},
+      TCS:{code:'TCS',  nameRu:'Т-Банк',   icon:'🏦'},
+      ALFA:{code:'ALFA',nameRu:'Альфа',    icon:'🏦'},
+      VTB:{code:'VTB',  nameRu:'ВТБ',      icon:'🏦'},
+      RAIFF:{code:'RAIFF',nameRu:'Райфф',  icon:'🏦'},
+      OZON:{code:'OZON',nameRu:'Озон',     icon:'🏦'},
+      OTP:{code:'OTP',  nameRu:'ОТП',      icon:'🏦'},
+      USDT:{code:'USDT',nameRu:'USDT',icon:'🪙'},
+      BTC:{code:'BTC',  nameRu:'BTC', icon:'🪙'},
+      ETH:{code:'ETH',  nameRu:'ETH', icon:'🪙'},
+      SOL:{code:'SOL',  nameRu:'SOL', icon:'🪙'},
+      XMR:{code:'XMR',  nameRu:'XMR', icon:'🪙'},
+      XRP:{code:'XRP',  nameRu:'XRP', icon:'🪙'},
+      LTC:{code:'LTC',  nameRu:'LTC', icon:'🪙'},
+      TON:{code:'TON',  nameRu:'TON', icon:'🪙'},
+      ALIPAY:{code:'ALIPAY',nameRu:'Alipay', icon:'🉐'},
+      WECHAT:{code:'WECHAT',nameRu:'WeChat', icon:'🟩'},
+      CN_CARD:{code:'CN_CARD',nameRu:'Карта Китая',icon:'💳'}
+    };
+
+    const MATRIX = {
+      cash: {
+        moscow:   ['RUB','USD'],
+        guangzhou:['RUB','USD']
+      },
+      bank: {
+        moscow:   ['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP'],
+        guangzhou:['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP']
+      },
+      crypto: {
+        moscow:   ['USDT','BTC','ETH','SOL','XMR','XRP','LTC','TON'],
+        guangzhou:['USDT','BTC','ETH','SOL','XMR','XRP','LTC','TON']
+      },
+      cash_to: {
+        moscow:   ['RUB','USD'],
+        guangzhou:['RUB','USD','CNY']
+      },
+      bank_to: {
+        moscow:   ['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP'],
+        guangzhou:['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP']
+      },
+      crypto_to: {
+        moscow:   ['USDT','BTC','ETH','SOL','XMR','XRP','LTC','TON'],
+        guangzhou:['USDT','BTC','ETH','SOL','XMR','XRP','LTC','TON']
+      },
+      cnpay_to: {
+        moscow:   ['ALIPAY','WECHAT','CN_CARD'],
+        guangzhou:['ALIPAY','WECHAT','CN_CARD']
+      }
+    };
+
+    const R = {
+      'USD->RUB': 81.5, 'RUB->USD': 1/81.5,
+      'CNY->RUB': 11.75,'RUB->CNY': 1/11.75,
+      'USDT->RUB': 81.0,'RUB->USDT': 1/81.0,
+      'RUB->SBP':1,'SBP->RUB':1,'RUB->SBER':1,'SBER->RUB':1,
+      'RUB->TCS':1,'TCS->RUB':1,'RUB->ALFA':1,'ALFA->RUB':1,
+      'RUB->VTB':1,'VTB->RUB':1,'RUB->RAIFF':1,'RAIFF->RUB':1,
+      'RUB->OZON':1,'OZON->RUB':1,'RUB->OTP':1,'OTP->RUB':1,
+      'USDT->ALIPAY': 7.0,'USDT->WECHAT': 7.0,'USDT->CN_CARD': 7.0,
+      'RUB->ALIPAY': 1/11.75,'RUB->WECHAT': 1/11.75,'RUB->CN_CARD': 1/11.75
+    };
+
+    function currencies(kind, city, side){
+      if (side === 'from') {
+        const ok = (kind==='cash'||kind==='bank'||kind==='crypto') ? kind : 'cash';
+        return (MATRIX[ok][city]||[]).map(code=>C[code]).filter(Boolean);
+      } else {
+        let key = 'cash_to';
+        if (kind==='bank') key='bank_to';
+        else if (kind==='crypto') key='crypto_to';
+        else if (kind==='cnpay') key='cnpay_to';
+        return (MATRIX[key][city]||[]).map(code=>C[code]).filter(Boolean);
+      }
+    }
+
+    const fmt = (n,d=2)=> (n==null||isNaN(n)) ? '—' : Number(n).toLocaleString('ru-RU',{maximumFractionDigits:d});
+    function quote({from,to,amount}){
+      const a=Number(amount||0);
+      if(!from||!to||!a||a<=0) return {rate:null,total:null,rateText:'—',totalText:'—'};
+      let direct=R[`${from}->${to}`];
+      if(direct){const total=a*direct; return {rate:direct,total,rateText:`${fmt(direct,4)} ${to} за 1 ${from}`,totalText:`${fmt(total,2)} ${to}`};}
+      const r1=R[`${from}->RUB`], r2=R[`RUB->${to}`];
+      if(r1&&r2){const rate=r1*r2,total=a*rate;return {rate,total,rateText:`${fmt(rate,4)} ${to} за 1 ${from}`,totalText:`${fmt(total,2)} ${to}`};}
+      const u1=R[`${from}->USDT`], u2=R[`USDT->${to}`];
+      if(u1&&u2){const rate=u1*u2,total=a*rate;return {rate,total,rateText:`${fmt(rate,4)} ${to} за 1 ${from}`,totalText:`${fmt(total,2)} ${to}`};}
+      return {rate:null,total:null,rateText:'—',totalText:'—'};
+    }
+
+    // ===== UI =====
+    const $ = (id)=>document.getElementById(id);
+    const fromPayBox=$('from-pay'), toPayBox=$('to-pay');
+    const fromCityBox=$('from-citybox'), toCityBox=$('to-citybox');
+    const cityFromSel=$('cityFrom'), cityToSel=$('cityTo');
+    const fromWrap=$('from-currencies'), toWrap=$('to-currencies');
+    const amountInput=$('amount'), rateVal=$('rateVal'), totalVal=$('totalVal');
+    const contactInput=$('contact'), reqsInput=$('requisites'), noteInput=$('note');
+    const fixMinutesInput=$('fixMinutes');
+    const qrBox=$('qrbox'), qrFile=$('qrfile');
+    const sendBtn=$('sendBtn');
+
+    let fromPayType='cash', toPayType='cash';
+    let cityFrom='moscow', cityTo='moscow';
+    let selFrom=null, selTo=null, currentQuote={rate:null,total:null};
+
+    function clearNode(n){ while(n.firstChild) n.removeChild(n.firstChild); }
+    function tile(item, side){
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className='tile';
+      btn.setAttribute('data-code', item.code);
+      btn.innerHTML = `<div class="ico"><span>${item.icon||'💱'}</span></div><div class="cap">${item.nameRu}</div>`;
+      btn.addEventListener('click', ()=>{
+        if(side==='from'){ selFrom=item.code; markActive(fromWrap,item.code); }
+        else { selTo=item.code; markActive(toWrap,item.code); }
+        recalc();
+        const cnpay=['ALIPAY','WECHAT','CN_CARD'];
+        qrBox.classList.toggle('hidden', !(toPayType==='cnpay' && side==='to' && selTo && cnpay.includes(selTo)));
+      });
+      return btn;
+    }
+    function markActive(container, code){
+      container.querySelectorAll('.tile').forEach(t=>t.classList.remove('active'));
+      container.querySelectorAll(`[data-code="${code}"]`).forEach(t=>t.classList.add('active'));
+    }
+    function renderTiles(container, list, side){
+      clearNode(container);
+      if(!list || !list.length){
+        const p=document.createElement('div');
+        p.textContent='Нет доступных вариантов для текущих настроек.';
+        container.appendChild(p);
+        return;
+      }
+      list.forEach(item=>container.appendChild(tile(item, side)));
+    }
+    function refreshFrom(){
+      fromCityBox.classList.toggle('hidden', fromPayType!=='cash');
+      const list=currencies(fromPayType, cityFrom, 'from');
+      renderTiles(fromWrap,list,'from');
+      selFrom=list?.[0]?.code||null;
+      if(selFrom) markActive(fromWrap, selFrom);
+    }
+    function refreshTo(){
+      toCityBox.classList.toggle('hidden', toPayType!=='cash');
+      const list=currencies(toPayType, cityTo, 'to');
+      renderTiles(toWrap,list,'to');
+      selTo=list?.[0]?.code||null;
+      if(selTo) markActive(toWrap, selTo);
+      const cnpay=['ALIPAY','WECHAT','CN_CARD'];
+      qrBox.classList.toggle('hidden', !(toPayType==='cnpay' && selTo && cnpay.includes(selTo)));
+    }
+    function recalc(){
+      const amount=Number(amountInput.value||0);
+      if(!selFrom||!selTo||!amount||amount<=0){
+        rateVal.value='—'; totalVal.value='—'; currentQuote={rate:null,total:null}; return;
+      }
+      const q=quote({from:selFrom,to:selTo,amount});
+      currentQuote=q; rateVal.value=q.rateText; totalVal.value=q.totalText;
+    }
+    function wireChips(box, cb){
+      const btns=[...box.querySelectorAll('.chip')];
+      btns.forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          btns.forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active'); cb(btn.dataset.type);
+        });
+      });
+      if(btns[0]){ btns[0].classList.add('active'); cb(btns[0].dataset.type); }
+    }
+
+    wireChips(fromPayBox, (t)=>{ fromPayType=t; refreshFrom(); recalc(); });
+    wireChips(toPayBox,   (t)=>{ toPayType=t;   refreshTo();  recalc(); });
+
+    cityFromSel.addEventListener('change', ()=>{ cityFrom=cityFromSel.value; refreshFrom(); recalc(); });
+    cityToSel.addEventListener('change',   ()=>{ cityTo=cityToSel.value;   refreshTo();  recalc();  });
+    amountInput.addEventListener('input', recalc);
+
+    // первичный рендер
+    refreshFrom(); refreshTo(); recalc();
+
+    // отправка заявки
+    sendBtn.addEventListener('click', ()=>{
+      const payload = {
+        type:'order',
+        from_currency: selFrom, to_currency: selTo,
+        from_kind: fromPayType, to_kind: toPayType,
+        city_from: cityFrom, city_to: cityTo,
+        amount: Number(amountInput.value||0),
+        rate: currentQuote.rate, total: currentQuote.total,
+        contact: (contactInput.value||'').trim(),
+        requisites: (reqsInput.value||'').trim(),
+        note: (noteInput.value||'').trim(),
+        fix_minutes: Math.max(5,Math.min(120, Number(fixMinutesInput.value||30))),
+      };
+      if (tg) {
+        try { tg.sendData(JSON.stringify(payload)); tg.close(); }
+        catch(e){ alert('Ошибка отправки в Telegram. Попробуйте ещё раз.'); }
+      } else {
+        alert('Чтобы отправить заявку, откройте форму внутри Telegram. Нажмите «Открыть в Telegram».');
+        openLink.click();
+      }
+    });
   </script>
-  <script src="./pricing.js"></script>
-  <script src="./index.js"></script>
 </body>
 </html>
-

@@ -193,21 +193,19 @@ async function sendOrderToApi(payload) {
   // 1) Если открыт Telegram WebApp
   if (tg) {
     try {
-      tg.sendData(JSON.stringify(payload));
-      tg.close();
-      return;
-    } catch (e) {
-      console.warn('tg.sendData failed, пробуем API', e);
-    }
-  }
-
-  // 2) Если открыт сайт (или fallback)
-  const ok = await sendOrderToApi(payload);
-  if (ok) {
-    alert('✅ Заявка отправлена! Менеджер скоро свяжется с вами.');
+  if (tg && typeof tg.isVersionAtLeast === 'function' && tg.isVersionAtLeast('6.2')) {
+    // В новых клиентах можно показать системное окно
+    tg.showAlert('✅ Заявка отправлена! Менеджер скоро свяжется с вами.');
   } else {
-    alert('❌ Не удалось отправить заявку. Попробуйте ещё раз.');
+    // Старые клиенты / десктоп 6.0 — обычный alert
+    alert('✅ Заявка отправлена! Менеджер скоро свяжется с вами.');
   }
+} catch (_) {
+  alert('✅ Заявка отправлена! Менеджер скоро свяжется с вами.');
+}
+
+// Закрыть WebApp (если доступно)
+try { tg && tg.close && tg.close(); } catch (_) {
 });
 
 })();

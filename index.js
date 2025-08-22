@@ -1,6 +1,23 @@
 // index.js v43 — cash-город только для наличных; русские подписи; отправка заявки без автозакрытия
 (function () {
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+const API_BASE = '/api';
+
+async function sendOrderToApi(payload) {
+  try {
+    const resp = await fetch(`${API_BASE}/order`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    return data?.ok === true;
+  } catch (e) {
+    console.error('API order error:', e);
+    return false;
+  }
+}
 
   // элементы
   const fromPayBox = document.getElementById('from-pay');

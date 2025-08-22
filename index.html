@@ -1,29 +1,29 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Калькулятор обмена — Poiz Exchange</title>
-  <link rel="stylesheet" href="./styles.css?v=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Poiz Exchange — калькулятор</title>
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <header class="container">
-    <h1>КАЛЬКУЛЯТОР ОБМЕНА</h1>
-  </header>
+  <div class="wrap">
+    <header class="hdr">
+      <div class="brand">КАЛЬКУЛЯТОР ОБМЕНА</div>
+    </header>
 
-  <main class="container">
-    <!-- Отдаю -->
     <section class="card">
-      <h2>Отдаю</h2>
-      <div id="from-pay" class="chips">
-        <button class="chip" data-type="cash">💵 Наличные</button>
-        <button class="chip" data-type="bank">🏦 Банк</button>
-        <button class="chip" data-type="crypto">🪙 Крипто</button>
+      <div class="row">
+        <label class="lbl">Отдаю</label>
+        <div id="from-pay" class="chips">
+          <button class="chip" data-type="cash"><span class="ico banknote"></span>Наличные</button>
+          <button class="chip" data-type="bank"><span class="ico bank"></span>Банк</button>
+          <button class="chip" data-type="crypto"><span class="ico crypto"></span>Крипто</button>
+        </div>
       </div>
 
-      <div id="from-citybox" class="row" hidden>
-        <label for="cityFrom">Город</label>
-        <select id="cityFrom">
+      <div id="from-citybox" class="row city-row">
+        <select id="cityFrom" class="select">
           <option value="moscow">Москва</option>
           <option value="guangzhou">Гуанчжоу</option>
         </select>
@@ -32,75 +32,70 @@
       <div id="from-currencies" class="tiles"></div>
     </section>
 
-    <!-- Получаю -->
     <section class="card">
-      <h2>Получаю</h2>
-      <div id="to-pay" class="chips">
-        <button class="chip" data-type="cash">💵 Наличные</button>
-        <button class="chip" data-type="bank">🏦 Банк</button>
-        <button class="chip" data-type="crypto">🪙 Крипто</button>
-        <button class="chip" data-type="cnpay">🇨🇳 Китайские сервисы</button>
+      <div class="row">
+        <label class="lbl">Получаю</label>
+        <div id="to-pay" class="chips">
+          <button class="chip" data-type="cash"><span class="ico banknote"></span>Наличные</button>
+          <button class="chip" data-type="bank"><span class="ico bank"></span>Банк</button>
+          <button class="chip" data-type="crypto"><span class="ico crypto"></span>Крипто</button>
+          <button class="chip" data-type="cnpay"><span class="ico cn"></span>Китайские сервисы</button>
+        </div>
       </div>
 
-      <div id="to-citybox" class="row" hidden>
-        <label for="cityTo">Город</label>
-        <select id="cityTo">
+      <div id="to-citybox" class="row city-row">
+        <select id="cityTo" class="select">
           <option value="moscow">Москва</option>
           <option value="guangzhou">Гуанчжоу</option>
         </select>
       </div>
 
       <div id="to-currencies" class="tiles"></div>
-
-      <!-- QR для китайских сервисов (показывается логикой JS) -->
-      <div id="qrbox" class="row" hidden>
-        <label for="qrfile">QR/скрин получателя (необязательно)</label>
-        <input type="file" id="qrfile" accept="image/*" />
-      </div>
     </section>
 
-    <!-- Расчёт -->
     <section class="card">
       <div class="grid2">
         <div>
-          <label for="amount">Сумма</label>
-          <input id="amount" type="number" step="0.01" inputmode="decimal" placeholder="0.00" />
+          <label class="lbl">Сумма</label>
+          <input id="amount" class="input" type="number" min="0" step="any" placeholder="0.00">
         </div>
         <div>
-          <div class="stat">
-            <div>Курс</div>
-            <div id="rateVal">—</div>
-          </div>
-          <div class="stat">
-            <div>К получению</div>
-            <div id="totalVal">—</div>
-          </div>
+          <label class="lbl">Курс</label>
+          <div class="calc-val" id="rateVal">—</div>
+          <label class="lbl mt">К получению</label>
+          <div class="calc-val" id="totalVal">—</div>
         </div>
       </div>
     </section>
 
-    <!-- Заявка -->
     <section class="card">
-      <h2>Заявка</h2>
-      <label>Контакт</label>
-      <input id="contact" placeholder="@username или телефон" />
-      <label>Реквизиты (если нужны)</label>
-      <input id="requisites" placeholder="Номер карты / кошелька и т.д." />
-      <label>Комментарий</label>
-      <textarea id="note" rows="3" placeholder="Опционально"></textarea>
+      <h3 class="h3">Заявка</h3>
+      <div class="row">
+        <label class="lbl">Контакт</label>
+        <input id="contact" class="input" placeholder="@username или телефон">
+      </div>
+      <div class="row">
+        <label class="lbl">Реквизиты</label>
+        <input id="requisites" class="input" placeholder="Номер карты/кошелька и т.п.">
+      </div>
+      <div class="row">
+        <label class="lbl">Комментарий</label>
+        <input id="note" class="input" placeholder="Опционально">
+      </div>
 
-      <button id="sendBtn" class="primary">Отправить заявку</button>
+      <div id="qrbox" class="row" hidden>
+        <label class="lbl">QR (для Alipay/WeChat/Карта Китая)</label>
+        <input id="qrfile" type="file" accept="image/*" class="file">
+      </div>
 
-      <!-- Подсказка, если открыто не в Telegram -->
-      <p id="hint" class="hint" hidden>
-        Чтобы отправить через Telegram WebApp, откройте страницу из бота.
-        <a href="https://t.me/PoizExchangeBot?startapp=%7B%22action%22%3A%22open%22%7D">Открыть в Telegram</a>
-      </p>
+      <button id="sendBtn" class="btn">Отправить заявку</button>
+      <div id="hint" class="hint" hidden>
+        Откройте эту страницу внутри Telegram, чтобы отправить заявку.
+      </div>
     </section>
-  </main>
+  </div>
 
-  <script src="./pricing.js?v=42"></script>
-  <script src="./index.js?v=42"></script>
+  <script src="./pricing.js"></script>
+  <script src="./index.js"></script>
 </body>
 </html>
-

@@ -1,57 +1,60 @@
-// index.js — UI + отправка заявки; работает в Telegram WebApp.
-// При открытии не из Telegram показывает кнопку "Открыть в Telegram".
+// index.js — фикс рендера плиток и гарантированная отправка
 (function () {
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 
-  // если не в Telegram — показать кнопку "Открыть в Telegram"
-  const notInTg = document.getElementById('notInTg');
-  const openLink = document.getElementById('openInTgLink');
-  if (!tg) {
-    if (notInTg) notInTg.classList.remove('hidden');
-    if (openLink) {
-      const payload = encodeURIComponent(JSON.stringify({action:'open'}));
-      // deep link в bot, веб-апп откроется как menu button (нужно настроить в @BotFather) или через startapp
-      openLink.href = `https://t.me/${window.BOT_USERNAME}?startapp=${payload}`;
-      openLink.target = "_blank";
-    }
-  } else {
-    try { tg.expand(); tg.ready(); tg.sendData(JSON.stringify({ action:'webapp_open' })); } catch(e){}
-  }
-
-  // элементы
+  // элементы (как у тебя)
   const fromPayBox = document.getElementById('from-pay');
   const toPayBox   = document.getElementById('to-pay');
+
   const fromCityBox = document.getElementById('from-citybox');
   const toCityBox   = document.getElementById('to-citybox');
+
   const cityFromSel = document.getElementById('cityFrom');
   const cityToSel   = document.getElementById('cityTo');
+
   const fromWrap = document.getElementById('from-currencies');
   const toWrap   = document.getElementById('to-currencies');
-  const amountInput = document.getElementById('amount');
-  const rateVal = document.getElementById('rateVal');
-  const totalVal = document.getElementById('totalVal');
-  const contactInput = document.getElementById('contact');
-  const reqsInput = document.getElementById('requisites');
-  const noteInput = document.getElementById('note');
-  const fixMinutesInput = document.getElementById('fixMinutes');
-  const qrBox = document.getElementById('qrbox');
-  const qrFile = document.getElementById('qrfile');
-  const sendBtn = document.getElementById('sendBtn');
 
-  // state
+  const amountInput = document.getElementById('amount');
+  const rateVal  = document.getElementById('rateVal');
+  const totalVal = document.getElementById('totalVal');
+
+  const contactInput = document.getElementById('contact');
+  const reqsInput    = document.getElementById('requisites');
+  const noteInput    = document.getElementById('note');
+  const qrBox  = document.getElementById('qrbox');
+  const qrFile = document.getElementById('qrfile');
+  const sendBtn= document.getElementById('sendBtn');
+
+  // стейт
   let fromPayType = 'cash';
   let toPayType   = 'cash';
   let cityFrom    = 'moscow';
   let cityTo      = 'moscow';
   let selFrom     = null;
   let selTo       = null;
-  let currentQuote = { rate:null,total:null };
+  let currentQuote = { rate:null, total:null };
 
-  function clear(node){ while(node.firstChild) node.removeChild(node.firstChild); }
+  // Telegram WebApp init
+  if (tg) {
+    try {
+      tg.expand();
+      tg.ready();
+      tg.sendData(JSON.stringify({ action:'webapp_open' }));
+    } catch (e) {}
+  }
+
+  // Утилиты
+  function clear(node){ while(node && node.firstChild) node.removeChild(node.firstChild); }
+
+  function markActive(container, code){
+    container.querySelectorAll('.tile').forEach(t=>t.classList.remove('active'));
+    container.querySelectorAll(`[data-code="${code}"]`).forEach(t=>t.classList.add('active'));
+  }
 
   function tile(item, side){
+    // ТВОЙ ДИЗАЙН: кнопка-плитка (тут только логика — разметка и классы остаются твоими)
     const btn = document.createElement('button');
-    btn.type = 'button';
     btn.className = 'tile';
     btn.setAttribute('data-code', item.code);
     btn.innerHTML = `
@@ -62,21 +65,18 @@
       if (side === 'from') { selFrom = item.code; markActive(fromWrap, item.code); }
       else { selTo = item.code; markActive(toWrap, item.code); }
       recalc();
+      // QR показываем только когда ПОЛУЧАЮ через китайские сервисы
       const cnpay = ['ALIPAY','WECHAT','CN_CARD'];
-      qrBox.classList.toggle('hidden', !(toPayType==='cnpay' && side==='to' && selTo && cnpay.includes(selTo)));
+      qrBox.hidden = !(toPayType==='cnpay' && side==='to' && selTo && cnpay.includes(selTo));
     });
     return btn;
-  }
-
-  function markActive(container, code){
-    container.querySelectorAll('.tile').forEach(t=>t.classList.remove('active'));
-    container.querySelectorAll(`[data-code="${code}"]`).forEach(t=>t.classList.add('active'));
   }
 
   function renderTiles(container, list, side){
     clear(container);
     if (!list || !list.length){
       const p = document.createElement('div');
+      p.className = 'tiles-empty';
       p.textContent = 'Нет доступных вариантов для текущих настроек.';
       container.appendChild(p);
       return;
@@ -85,7 +85,8 @@
   }
 
   function refreshFrom(){
-    fromCityBox.classList.toggle('hidden', fromPayType !== 'cash');
+    // город только для наличных
+    fromCityBox.hidden = (fromPayType !== 'cash');
     const list = window.PRICING.currencies(fromPayType, cityFrom, 'from');
     renderTiles(fromWrap, list, 'from');
     selFrom = list?.[0]?.code || null;
@@ -93,55 +94,55 @@
   }
 
   function refreshTo(){
-    toCityBox.classList.toggle('hidden', toPayType !== 'cash');
+    toCityBox.hidden = (toPayType !== 'cash');
     const list = window.PRICING.currencies(toPayType, cityTo, 'to');
     renderTiles(toWrap, list, 'to');
     selTo = list?.[0]?.code || null;
     if (selTo) markActive(toWrap, selTo);
     const cnpay = ['ALIPAY','WECHAT','CN_CARD'];
-    qrBox.classList.toggle('hidden', !(toPayType==='cnpay' && selTo && cnpay.includes(selTo)));
+    qrBox.hidden = !(toPayType==='cnpay' && selTo && cnpay.includes(selTo));
   }
 
   function recalc(){
     const amount = Number(amountInput.value || 0);
     if (!selFrom || !selTo || !amount || amount <= 0){
-      rateVal.value = '—';
-      totalVal.value = '—';
+      rateVal.textContent  = '—';
+      totalVal.textContent = '—';
       currentQuote = {rate:null,total:null};
       return;
     }
     const q = window.PRICING.quote({ from:selFrom, to:selTo, amount });
     currentQuote = q;
-    rateVal.value  = q.rateText;
-    totalVal.value = q.totalText;
+    rateVal.textContent  = q.rateText;
+    totalVal.textContent = q.totalText;
   }
 
   function wireChips(box, cb){
-    const buttons = Array.from(box.querySelectorAll('.chip'));
-    buttons.forEach(btn=>{
+    const btns = [...box.querySelectorAll('.chip')];
+    btns.forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        buttons.forEach(b=>b.classList.remove('active'));
+        btns.forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
         cb(btn.dataset.type);
       });
     });
-    // активируем первую
-    if (buttons[0]) { buttons[0].classList.add('active'); cb(buttons[0].dataset.type); }
+    if (btns[0]) { btns[0].classList.add('active'); cb(btns[0].dataset.type); }
   }
 
+  // Подключение чипов
   wireChips(fromPayBox, (type)=>{ fromPayType = type; refreshFrom(); recalc(); });
-  wireChips(toPayBox,   (type)=>{ toPayType   = type; refreshTo();  recalc();  });
+  wireChips(toPayBox,   (type)=>{ toPayType   = type; refreshTo();  recalc(); });
 
+  // Селекты города
   cityFromSel?.addEventListener('change', ()=>{ cityFrom = cityFromSel.value; refreshFrom(); recalc(); });
   cityToSel?.addEventListener('change',   ()=>{ cityTo   = cityToSel.value;   refreshTo();  recalc(); });
-  amountInput?.addEventListener('input', recalc);
 
-  // первичная инициализация
+  // Первичный рендер
   refreshFrom();
   refreshTo();
   recalc();
 
-  // отправка заявки
+  // Отправка заявки
   sendBtn?.addEventListener('click', async ()=>{
     const payload = {
       type: 'order',
@@ -157,25 +158,28 @@
       contact: (contactInput.value || '').trim(),
       requisites: (reqsInput.value || '').trim(),
       note: (noteInput.value || '').trim(),
-      fix_minutes: Math.max(5, Math.min(120, Number(fixMinutesInput.value||30))),
+      fix_minutes: 30
     };
 
-    const file = qrFile?.files?.[0];
-    if (file) payload.qr_filename = file.name; // только имя (сам файл фронт не шлёт в бот)
-
-    // безопасность: отправлять напрямую в Bot API из браузера нельзя (токен утечёт),
-    // поэтому либо Telegram WebApp (sendData), либо ваш серверный API.
+    // Пробуем через Telegram WebApp (внутри Telegram)
     if (tg) {
       try {
         tg.sendData(JSON.stringify(payload));
-        tg.close();
+        // не закрываем моментально — даём Телеге доставить
+        setTimeout(() => { try { tg.close(); } catch(e){} }, 600);
+        return;
       } catch (e) {
         alert('Ошибка отправки в Telegram. Попробуйте ещё раз.');
+        return;
       }
-    } else {
-      // не в Telegram: даём ссылку открыть форму в Telegram
-      alert('Чтобы отправить заявку, откройте эту форму внутри Telegram.');
-      if (openLink) openLink.click();
+    }
+
+    // Если НЕ внутри Telegram — даём понятный алерт
+    alert('Откройте форму через Telegram WebApp из меню бота @PoizExchangeBot, чтобы отправить заявку.');
+    // здесь альтернативный канал — см. раздел 3 (backend)
+  });
+})();
+
     }
   });
 })();

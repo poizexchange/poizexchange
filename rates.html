@@ -1,38 +1,42 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Poiz Exchange — Табло</title>
+  <meta charset="UTF-8">
+  <title>Poiz Exchange — Курсы</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=50" />
-  <script src="./pricing.js?v=50"></script>
-  <script src="./rates.js?v=50" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=34" />
+  <script src="./pricing.js?v=34"></script>
 </head>
-<body>
+<body class="tg-white">
   <header class="tg-header">
     <div class="wrap">
-      <h1 class="title">ТАБЛО КУРСОВ</h1>
+      <h1 class="title small">ТАБЛО КУРСОВ</h1>
     </div>
   </header>
 
   <main class="wrap main-safe">
-    <section class="card">
-      <div class="chips" id="rt-city">
-        <button class="chip" data-city="moscow">Москва</button>
-        <button class="chip" data-city="guangzhou">Гуанчжоу</button>
-      </div>
-      <div class="tile-grid tile-3" id="rt-grid"></div>
-    </section>
-
     <section class="card compact">
-      <a class="btn-primary" href="./index.html?v=50" style="display:block;text-align:center;text-decoration:none">🔁 Перейти в калькулятор</a>
+      <div id="ratesGrid" class="tiles"></div>
     </section>
-
-    <nav class="footlinks">
-      <a href="./index.html?v=50">🔙 Калькулятор</a>
-      <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
-      <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
-    </nav>
   </main>
+
+  <script>
+    const ICON = n => `./icons/${n}.svg`;
+    const CODES = ["USD","USDT","CNY","BTC","ETH","XMR"];
+    function tile(code, rate){
+      const d = document.createElement('button');
+      d.type='button'; d.className='tile';
+      d.innerHTML = `
+        <span class="ico"><img src="${ICON(code.toLowerCase())}" alt=""></span>
+        <span class="cap">${code}</span>
+        <span class="sub">₽ ${rate}</span>`;
+      return d;
+    }
+    const grid = document.getElementById('ratesGrid');
+    CODES.forEach(c=>{
+      const q = quotePair(c,"RUB",1);
+      grid.appendChild(tile(c, q ? q.rate.toFixed(2) : "—"));
+    });
+  </script>
 </body>
 </html>

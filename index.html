@@ -2,347 +2,105 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="telegram-web-app" content="on" />
-  <title>Poiz Exchange</title>
-  <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;margin:0;padding:16px;background:#0e1117;color:#e6e6e6}
-    .row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-    .box{background:#151a23;border:1px solid #222838;border-radius:12px;padding:12px;flex:1 1 360px;min-width:300px}
-    .h{font-weight:700;margin:0 0 8px 0}
-    .chipbar{display:flex;gap:8px;flex-wrap:wrap}
-    .chip{border:1px solid #2a3347;background:#171e2b;border-radius:999px;padding:8px 12px;cursor:pointer}
-    .chip.active{border-color:#4b8cff;background:#1f2a3f}
-    .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
-    .tile{display:flex;align-items:center;gap:8px;border:1px solid #2a3347;background:#161d2a;border-radius:10px;padding:10px;cursor:pointer}
-    .tile.active{border-color:#4b8cff;background:#1e2a42}
-    .ico{width:24px;height:24px;display:flex;align-items:center;justify-content:center}
-    .ico span{font-size:18px}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    input,select,textarea{width:100%;background:#0f1420;border:1px solid #2a3347;border-radius:8px;color:#e6e6e6;padding:10px;box-sizing:border-box}
-    textarea{min-height:80px}
-    #sendBtn{width:100%;padding:14px 16px;border:0;border-radius:10px;background:#4b8cff;color:white;font-weight:700;font-size:16px;cursor:pointer}
-    #sendBtn:disabled{opacity:.6;cursor:not-allowed}
-    .hint{padding:10px;border:1px dashed #3b4660;border-radius:10px;background:#0f1420;margin-bottom:12px}
-    .hidden{display:none}
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькулятор обмена — Poiz Exchange</title>
+  <link rel="stylesheet" href="./styles.css?v=1" />
 </head>
 <body>
-  <div id="notInTg" class="hint hidden">
-    Эта форма должна открываться внутри Telegram.
-    <a id="openInTgLink" href="#" style="color:#8ab4ff;font-weight:700;">Открыть в Telegram</a>
-  </div>
+  <header class="container">
+    <h1>КАЛЬКУЛЯТОР ОБМЕНА</h1>
+  </header>
 
-  <div class="row">
-    <div class="box">
-      <p class="h">Отдаю</p>
-      <div id="from-pay" class="chipbar">
-        <button class="chip" data-type="cash">Наличные</button>
-        <button class="chip" data-type="bank">Банк РФ</button>
-        <button class="chip" data-type="crypto">Крипто</button>
+  <main class="container">
+    <!-- Отдаю -->
+    <section class="card">
+      <h2>Отдаю</h2>
+      <div id="from-pay" class="chips">
+        <button class="chip" data-type="cash">💵 Наличные</button>
+        <button class="chip" data-type="bank">🏦 Банк</button>
+        <button class="chip" data-type="crypto">🪙 Крипто</button>
       </div>
-      <div id="from-citybox" class="row" style="margin-top:8px;">
-        <div class="grid2" style="width:100%;">
-          <label>Город
-            <select id="cityFrom">
-              <option value="moscow">Москва</option>
-              <option value="guangzhou">Гуанчжоу</option>
-            </select>
-          </label>
+
+      <div id="from-citybox" class="row" hidden>
+        <label for="cityFrom">Город</label>
+        <select id="cityFrom">
+          <option value="moscow">Москва</option>
+          <option value="guangzhou">Гуанчжоу</option>
+        </select>
+      </div>
+
+      <div id="from-currencies" class="tiles"></div>
+    </section>
+
+    <!-- Получаю -->
+    <section class="card">
+      <h2>Получаю</h2>
+      <div id="to-pay" class="chips">
+        <button class="chip" data-type="cash">💵 Наличные</button>
+        <button class="chip" data-type="bank">🏦 Банк</button>
+        <button class="chip" data-type="crypto">🪙 Крипто</button>
+        <button class="chip" data-type="cnpay">🇨🇳 Китайские сервисы</button>
+      </div>
+
+      <div id="to-citybox" class="row" hidden>
+        <label for="cityTo">Город</label>
+        <select id="cityTo">
+          <option value="moscow">Москва</option>
+          <option value="guangzhou">Гуанчжоу</option>
+        </select>
+      </div>
+
+      <div id="to-currencies" class="tiles"></div>
+
+      <!-- QR для китайских сервисов (показывается логикой JS) -->
+      <div id="qrbox" class="row" hidden>
+        <label for="qrfile">QR/скрин получателя (необязательно)</label>
+        <input type="file" id="qrfile" accept="image/*" />
+      </div>
+    </section>
+
+    <!-- Расчёт -->
+    <section class="card">
+      <div class="grid2">
+        <div>
+          <label for="amount">Сумма</label>
+          <input id="amount" type="number" step="0.01" inputmode="decimal" placeholder="0.00" />
+        </div>
+        <div>
+          <div class="stat">
+            <div>Курс</div>
+            <div id="rateVal">—</div>
+          </div>
+          <div class="stat">
+            <div>К получению</div>
+            <div id="totalVal">—</div>
+          </div>
         </div>
       </div>
-      <div id="from-currencies" class="tiles" style="margin-top:8px;"></div>
-    </div>
+    </section>
 
-    <div class="box">
-      <p class="h">Получаю</p>
-      <div id="to-pay" class="chipbar">
-        <button class="chip" data-type="cash">Наличные</button>
-        <button class="chip" data-type="bank">Банк РФ</button>
-        <button class="chip" data-type="crypto">Крипто</button>
-        <button class="chip" data-type="cnpay">Китайские сервисы</button>
-      </div>
-      <div id="to-citybox" class="row" style="margin-top:8px;">
-        <div class="grid2" style="width:100%;">
-          <label>Город
-            <select id="cityTo">
-              <option value="moscow">Москва</option>
-              <option value="guangzhou">Гуанчжоу</option>
-            </select>
-          </label>
-        </div>
-      </div>
-      <div id="to-currencies" class="tiles" style="margin-top:8px;"></div>
-    </div>
-  </div>
+    <!-- Заявка -->
+    <section class="card">
+      <h2>Заявка</h2>
+      <label>Контакт</label>
+      <input id="contact" placeholder="@username или телефон" />
+      <label>Реквизиты (если нужны)</label>
+      <input id="requisites" placeholder="Номер карты / кошелька и т.д." />
+      <label>Комментарий</label>
+      <textarea id="note" rows="3" placeholder="Опционально"></textarea>
 
-  <div class="row">
-    <div class="box">
-      <p class="h">Сумма и расчёт</p>
-      <div class="grid2">
-        <label>Сумма
-          <input id="amount" type="number" placeholder="0.00" min="0" step="0.01" />
-        </label>
-        <label>Курс
-          <input id="rateVal" type="text" disabled placeholder="—" />
-        </label>
-      </div>
-      <div class="grid2" style="margin-top:8px;">
-        <label>К получению
-          <input id="totalVal" type="text" disabled placeholder="—" />
-        </label>
-        <label>Фиксация курса (мин)
-          <input id="fixMinutes" type="number" value="30" min="5" max="120" />
-        </label>
-      </div>
-    </div>
+      <button id="sendBtn" class="primary">Отправить заявку</button>
 
-    <div class="box">
-      <p class="h">Контакты</p>
-      <div class="grid2">
-        <label>Как с вами связаться?
-          <input id="contact" placeholder="@username, телефон, WeChat..." />
-        </label>
-        <label>Реквизиты (если нужны)
-          <input id="requisites" placeholder="Номер карты/кошелька" />
-        </label>
-      </div>
-      <label style="margin-top:8px;">Комментарий
-        <textarea id="note" placeholder="Ваши пожелания..."></textarea>
-      </label>
+      <!-- Подсказка, если открыто не в Telegram -->
+      <p id="hint" class="hint" hidden>
+        Чтобы отправить через Telegram WebApp, откройте страницу из бота.
+        <a href="https://t.me/PoizExchangeBot?startapp=%7B%22action%22%3A%22open%22%7D">Открыть в Telegram</a>
+      </p>
+    </section>
+  </main>
 
-      <div id="qrbox" class="hint hidden" style="margin-top:8px;">
-        Если получаете в Alipay / WeChat / карта Китая — вы можете приложить QR (опционально):
-        <input id="qrfile" type="file" accept="image/*" />
-      </div>
-    </div>
-  </div>
-
-  <button id="sendBtn">Отправить заявку</button>
-
-  <script>
-    // ===== Телеграм окружение / Deep link =====
-    const BOT_USERNAME = "PoizExchangeBot";
-    const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-    const notInTg = document.getElementById('notInTg');
-    const openLink = document.getElementById('openInTgLink');
-    if (!tg) {
-      notInTg.classList.remove('hidden');
-      const payload = encodeURIComponent(JSON.stringify({action:'open'}));
-      openLink.href = `https://t.me/${BOT_USERNAME}?startapp=${payload}`;
-      openLink.target = "_blank";
-    } else {
-      try { tg.expand(); tg.ready(); tg.sendData(JSON.stringify({ action:'webapp_open' })); } catch(e){}
-    }
-
-    // ===== ДАННЫЕ (матрица + котировки) ВСТРОЕНЫ =====
-    const C = {
-      RUB:{code:'RUB',nameRu:'Рубль', icon:'💸'},
-      USD:{code:'USD',nameRu:'Доллар',icon:'💵'},
-      CNY:{code:'CNY',nameRu:'Юань',  icon:'🀄️'},
-      SBP:{code:'SBP',nameRu:'СБП',        icon:'🏦'},
-      SBER:{code:'SBER',nameRu:'Сбер',     icon:'🏦'},
-      TCS:{code:'TCS',  nameRu:'Т-Банк',   icon:'🏦'},
-      ALFA:{code:'ALFA',nameRu:'Альфа',    icon:'🏦'},
-      VTB:{code:'VTB',  nameRu:'ВТБ',      icon:'🏦'},
-      RAIFF:{code:'RAIFF',nameRu:'Райфф',  icon:'🏦'},
-      OZON:{code:'OZON',nameRu:'Озон',     icon:'🏦'},
-      OTP:{code:'OTP',  nameRu:'ОТП',      icon:'🏦'},
-      USDT:{code:'USDT',nameRu:'USDT',icon:'🪙'},
-      BTC:{code:'BTC',  nameRu:'BTC', icon:'🪙'},
-      ETH:{code:'ETH',  nameRu:'ETH', icon:'🪙'},
-      SOL:{code:'SOL',  nameRu:'SOL', icon:'🪙'},
-      XMR:{code:'XMR',  nameRu:'XMR', icon:'🪙'},
-      XRP:{code:'XRP',  nameRu:'XRP', icon:'🪙'},
-      LTC:{code:'LTC',  nameRu:'LTC', icon:'🪙'},
-      TON:{code:'TON',  nameRu:'TON', icon:'🪙'},
-      ALIPAY:{code:'ALIPAY',nameRu:'Alipay', icon:'🉐'},
-      WECHAT:{code:'WECHAT',nameRu:'WeChat', icon:'🟩'},
-      CN_CARD:{code:'CN_CARD',nameRu:'Карта Китая',icon:'💳'}
-    };
-
-    const MATRIX = {
-      cash: {
-        moscow:   ['RUB','USD'],
-        guangzhou:['RUB','USD']
-      },
-      bank: {
-        moscow:   ['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP'],
-        guangzhou:['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP']
-      },
-      crypto: {
-        moscow:   ['USDT','BTC','ETH','SOL','XMR','XRP','LTC','TON'],
-        guangzhou:['USDT','BTC','ETH','SOL','XMR','XRP','LTC','TON']
-      },
-      cash_to: {
-        moscow:   ['RUB','USD'],
-        guangzhou:['RUB','USD','CNY']
-      },
-      bank_to: {
-        moscow:   ['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP'],
-        guangzhou:['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP']
-      },
-      crypto_to: {
-        moscow:   ['USDT','BTC','ETH','SOL','XMR','XRP','LTC','TON'],
-        guangzhou:['USDT','BTC','ETH','SOL','XMR','XRP','LTC','TON']
-      },
-      cnpay_to: {
-        moscow:   ['ALIPAY','WECHAT','CN_CARD'],
-        guangzhou:['ALIPAY','WECHAT','CN_CARD']
-      }
-    };
-
-    const R = {
-      'USD->RUB': 81.5, 'RUB->USD': 1/81.5,
-      'CNY->RUB': 11.75,'RUB->CNY': 1/11.75,
-      'USDT->RUB': 81.0,'RUB->USDT': 1/81.0,
-      'RUB->SBP':1,'SBP->RUB':1,'RUB->SBER':1,'SBER->RUB':1,
-      'RUB->TCS':1,'TCS->RUB':1,'RUB->ALFA':1,'ALFA->RUB':1,
-      'RUB->VTB':1,'VTB->RUB':1,'RUB->RAIFF':1,'RAIFF->RUB':1,
-      'RUB->OZON':1,'OZON->RUB':1,'RUB->OTP':1,'OTP->RUB':1,
-      'USDT->ALIPAY': 7.0,'USDT->WECHAT': 7.0,'USDT->CN_CARD': 7.0,
-      'RUB->ALIPAY': 1/11.75,'RUB->WECHAT': 1/11.75,'RUB->CN_CARD': 1/11.75
-    };
-
-    function currencies(kind, city, side){
-      if (side === 'from') {
-        const ok = (kind==='cash'||kind==='bank'||kind==='crypto') ? kind : 'cash';
-        return (MATRIX[ok][city]||[]).map(code=>C[code]).filter(Boolean);
-      } else {
-        let key = 'cash_to';
-        if (kind==='bank') key='bank_to';
-        else if (kind==='crypto') key='crypto_to';
-        else if (kind==='cnpay') key='cnpay_to';
-        return (MATRIX[key][city]||[]).map(code=>C[code]).filter(Boolean);
-      }
-    }
-
-    const fmt = (n,d=2)=> (n==null||isNaN(n)) ? '—' : Number(n).toLocaleString('ru-RU',{maximumFractionDigits:d});
-    function quote({from,to,amount}){
-      const a=Number(amount||0);
-      if(!from||!to||!a||a<=0) return {rate:null,total:null,rateText:'—',totalText:'—'};
-      let direct=R[`${from}->${to}`];
-      if(direct){const total=a*direct; return {rate:direct,total,rateText:`${fmt(direct,4)} ${to} за 1 ${from}`,totalText:`${fmt(total,2)} ${to}`};}
-      const r1=R[`${from}->RUB`], r2=R[`RUB->${to}`];
-      if(r1&&r2){const rate=r1*r2,total=a*rate;return {rate,total,rateText:`${fmt(rate,4)} ${to} за 1 ${from}`,totalText:`${fmt(total,2)} ${to}`};}
-      const u1=R[`${from}->USDT`], u2=R[`USDT->${to}`];
-      if(u1&&u2){const rate=u1*u2,total=a*rate;return {rate,total,rateText:`${fmt(rate,4)} ${to} за 1 ${from}`,totalText:`${fmt(total,2)} ${to}`};}
-      return {rate:null,total:null,rateText:'—',totalText:'—'};
-    }
-
-    // ===== UI =====
-    const $ = (id)=>document.getElementById(id);
-    const fromPayBox=$('from-pay'), toPayBox=$('to-pay');
-    const fromCityBox=$('from-citybox'), toCityBox=$('to-citybox');
-    const cityFromSel=$('cityFrom'), cityToSel=$('cityTo');
-    const fromWrap=$('from-currencies'), toWrap=$('to-currencies');
-    const amountInput=$('amount'), rateVal=$('rateVal'), totalVal=$('totalVal');
-    const contactInput=$('contact'), reqsInput=$('requisites'), noteInput=$('note');
-    const fixMinutesInput=$('fixMinutes');
-    const qrBox=$('qrbox'), qrFile=$('qrfile');
-    const sendBtn=$('sendBtn');
-
-    let fromPayType='cash', toPayType='cash';
-    let cityFrom='moscow', cityTo='moscow';
-    let selFrom=null, selTo=null, currentQuote={rate:null,total:null};
-
-    function clearNode(n){ while(n.firstChild) n.removeChild(n.firstChild); }
-    function tile(item, side){
-      const btn=document.createElement('button');
-      btn.type='button';
-      btn.className='tile';
-      btn.setAttribute('data-code', item.code);
-      btn.innerHTML = `<div class="ico"><span>${item.icon||'💱'}</span></div><div class="cap">${item.nameRu}</div>`;
-      btn.addEventListener('click', ()=>{
-        if(side==='from'){ selFrom=item.code; markActive(fromWrap,item.code); }
-        else { selTo=item.code; markActive(toWrap,item.code); }
-        recalc();
-        const cnpay=['ALIPAY','WECHAT','CN_CARD'];
-        qrBox.classList.toggle('hidden', !(toPayType==='cnpay' && side==='to' && selTo && cnpay.includes(selTo)));
-      });
-      return btn;
-    }
-    function markActive(container, code){
-      container.querySelectorAll('.tile').forEach(t=>t.classList.remove('active'));
-      container.querySelectorAll(`[data-code="${code}"]`).forEach(t=>t.classList.add('active'));
-    }
-    function renderTiles(container, list, side){
-      clearNode(container);
-      if(!list || !list.length){
-        const p=document.createElement('div');
-        p.textContent='Нет доступных вариантов для текущих настроек.';
-        container.appendChild(p);
-        return;
-      }
-      list.forEach(item=>container.appendChild(tile(item, side)));
-    }
-    function refreshFrom(){
-      fromCityBox.classList.toggle('hidden', fromPayType!=='cash');
-      const list=currencies(fromPayType, cityFrom, 'from');
-      renderTiles(fromWrap,list,'from');
-      selFrom=list?.[0]?.code||null;
-      if(selFrom) markActive(fromWrap, selFrom);
-    }
-    function refreshTo(){
-      toCityBox.classList.toggle('hidden', toPayType!=='cash');
-      const list=currencies(toPayType, cityTo, 'to');
-      renderTiles(toWrap,list,'to');
-      selTo=list?.[0]?.code||null;
-      if(selTo) markActive(toWrap, selTo);
-      const cnpay=['ALIPAY','WECHAT','CN_CARD'];
-      qrBox.classList.toggle('hidden', !(toPayType==='cnpay' && selTo && cnpay.includes(selTo)));
-    }
-    function recalc(){
-      const amount=Number(amountInput.value||0);
-      if(!selFrom||!selTo||!amount||amount<=0){
-        rateVal.value='—'; totalVal.value='—'; currentQuote={rate:null,total:null}; return;
-      }
-      const q=quote({from:selFrom,to:selTo,amount});
-      currentQuote=q; rateVal.value=q.rateText; totalVal.value=q.totalText;
-    }
-    function wireChips(box, cb){
-      const btns=[...box.querySelectorAll('.chip')];
-      btns.forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          btns.forEach(b=>b.classList.remove('active'));
-          btn.classList.add('active'); cb(btn.dataset.type);
-        });
-      });
-      if(btns[0]){ btns[0].classList.add('active'); cb(btns[0].dataset.type); }
-    }
-
-    wireChips(fromPayBox, (t)=>{ fromPayType=t; refreshFrom(); recalc(); });
-    wireChips(toPayBox,   (t)=>{ toPayType=t;   refreshTo();  recalc(); });
-
-    cityFromSel.addEventListener('change', ()=>{ cityFrom=cityFromSel.value; refreshFrom(); recalc(); });
-    cityToSel.addEventListener('change',   ()=>{ cityTo=cityToSel.value;   refreshTo();  recalc();  });
-    amountInput.addEventListener('input', recalc);
-
-    // первичный рендер
-    refreshFrom(); refreshTo(); recalc();
-
-    // отправка заявки
-    sendBtn.addEventListener('click', ()=>{
-      const payload = {
-        type:'order',
-        from_currency: selFrom, to_currency: selTo,
-        from_kind: fromPayType, to_kind: toPayType,
-        city_from: cityFrom, city_to: cityTo,
-        amount: Number(amountInput.value||0),
-        rate: currentQuote.rate, total: currentQuote.total,
-        contact: (contactInput.value||'').trim(),
-        requisites: (reqsInput.value||'').trim(),
-        note: (noteInput.value||'').trim(),
-        fix_minutes: Math.max(5,Math.min(120, Number(fixMinutesInput.value||30))),
-      };
-      if (tg) {
-        try { tg.sendData(JSON.stringify(payload)); tg.close(); }
-        catch(e){ alert('Ошибка отправки в Telegram. Попробуйте ещё раз.'); }
-      } else {
-        alert('Чтобы отправить заявку, откройте форму внутри Telegram. Нажмите «Открыть в Telegram».');
-        openLink.click();
-      }
-    });
-  </script>
+  <script src="./pricing.js?v=42"></script>
+  <script src="./index.js?v=42"></script>
 </body>
 </html>
+

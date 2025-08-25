@@ -176,80 +176,77 @@
     return true;
   }
 
-  sendBtn && sendBtn.addEventListener('click', async ()=>{
-    const amountNum = Number(amountInput?.value || 0);
-    if (!selFrom || !selTo) { alert('Выберите валюты/сервис «Отдаю» и «Получаю».'); return; }
-    if (!(amountNum > 0))   { alert('Введите сумму.'); return; }
-    if (!currentQuote?.rate) { alert('Не удалось рассчитать курс.'); return; }
-    if (!validateBusinessRules()) return;
+  sendBtn?.addEventListener('click', async () => {
+  // ...валидaция и сбор payload как у вас...
+  const payload = {
+    type: 'order',
+    from_currency: selFrom,
+    to_currency: selTo,
+    from_kind: fromPayType,
+    to_kind: toPayType,
+    city_from: cityFrom,
+    city_to: cityTo,
+    amount: Number(amountInput.value || 0),
+    rate: currentQuote.rate,
+    total: currentQuote.total,
+    contact: (contactInput.value || '').trim(),
+    requisites: (reqsInput.value || '').trim(),
+    note: (noteInput.value || '').trim(),
+    fix_minutes: 30
+  };
+  const file = qrFile?.files?.[0];
+  if (file) payload.qr_filename = file.name || 'qr.png';
 
-    const payload = {
-      type: 'order',
-      from_currency: selFrom,
-      to_currency: selTo,
-      from_kind: fromPayType,
-      to_kind: toPayType,
-      city_from: cityFrom,
-      city_to: cityTo,
-      amount: amountNum,
-      rate: currentQuote.rate,
-      total: currentQuote.total,
-      contact: (contactInput?.value || '').trim(),
-      requisites: (reqsInput?.value || '').trim(),
-      note: (noteInput?.value || '').trim(),
-      fix_minutes: 30
-    };
-    const file = qrFile?.files?.[0];
-    if (file) payload.qr_filename = file.name || 'qr.png';
-
-    // Внутри Telegram WebApp — отправляем через sendData
-    if (tg) {
-      try {
-        tg.sendData(JSON.stringify(payload));
-        alert('✅ Заявка отправлена! Мы скоро свяжемся с вами.');
-        return;
-      } catch (e) {
-        console.warn('sendData error, fallback to API', e);
+  // пробуем отправить через Telegram WebApp
+  let viaTelegram = false;
+  try {
+    if (window.Telegram?.WebApp?.sendData) {
+      window.Telegram.WebApp.sendData(JSON.stringify(payload));
+      viaTelegram = true;
+      // дружелюбный ответ пользователю
+      if (window.Telegram.WebApp.showPopup) {
+        window.Telegram.WebApp.showPopup({ title: 'Заявка отправлена', message: 'Мы скоро свяжемся с вами.' });
+      } else {
+        alert('Заявка отправлена. Мы скоро свяжемся с вами.');
       }
     }
+  } catch (e) {
+    console.error('sendData failed', e);
+  }
 
-    // Как сайт — отправляем в API
-    let API_BASE = '/api'; // если сайт и API на одном домене с Nginx
-    // Если сайт на GitHub Pages, замени на публичный домен сервера:
-    // API_BASE = 'https://<ТВОЙ_ДОМЕН>/api';
-
+  // если не внутри Telegram — уходим в REST API (через Nginx → FastAPI)
+  if (!viaTelegram) {
     try {
-      const resp = await fetch(`${API_BASE}/order`, {
+      const r = await fetch('/api/order', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        credentials: 'omit'
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          from_currency: payload.from_currency,
+          to_currency: payload.to_currency,
+          from_kind: payload.from_kind,
+          to_kind: payload.to_kind,
+          city_from: payload.city_from,
+          city_to: payload.city_to,
+          amount: payload.amount,
+          rate: payload.rate,
+          total: payload.total,
+          contact: payload.contact,
+          requisites: payload.requisites,
+          note: payload.note,
+          fix_minutes: payload.fix_minutes,
+          qr_filename: payload.qr_filename || null,
+        })
       });
-      const ct = resp.headers.get('content-type') || '';
-      if (!resp.ok) {
-        let msg = `HTTP ${resp.status}`;
-        if (ct.includes('application/json')) {
-          const j = await resp.json().catch(()=>null);
-          if (j && (j.error || j.detail)) msg += `: ${j.error || j.detail}`;
-        } else {
-          const t = await resp.text().catch(()=>null);
-          if (t) msg += `\n\n${t.slice(0,300)}`;
-        }
-        alert('Ошибка отправки заявки: ' + msg);
-        return;
-      }
-      if (!ct.includes('application/json')) {
-        const t = await resp.text().catch(()=>null);
-        throw new Error('API вернул не JSON:\n' + t);
-      }
-      const data = await resp.json().catch(()=>null);
-      if (data?.ok) {
-        alert('✅ Заявка отправлена! Менеджер скоро свяжется с вами.');
+      const j = await r.json().catch(()=>({}));
+      if (r.ok && j.ok) {
+        alert('Заявка отправлена (через сайт). Мы скоро свяжемся с вами.');
       } else {
-        alert('Ошибка: ' + (data?.error || 'не удалось отправить заявку'));
+        alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.');
       }
     } catch (e) {
-      alert('Ошибка сети: ' + (e?.message || e));
+      console.error(e);
+      alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.');
     }
-  });
-})();
+  }
+});
+

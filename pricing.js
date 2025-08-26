@@ -1,321 +1,248 @@
-// pricing.js v43 — матрица доступности + правила цен/порогов + котировки
+// pricing.js v71 — матрица доступности, курсы, наценки, расчеты
 (function () {
-  const ICON = (name) => `./icons/${name}.svg`;
-  const FALLBACK_ICON = ICON('bank');
-  const ensureIcon = (i)=>{ if(!i?.icon) i.icon=FALLBACK_ICON; return i; };
+  const ICON = (n)=>`./icons/${n}.svg`;
 
-  // ---- Справочник валют/сервисов с русскими подписями ----
+  // Валюты/сервисы
   const C = {
     // Наличные
-    RUB : {code:'RUB', nameRu:'Рубль',  icon:ICON('rub')},
-    USD : {code:'USD', nameRu:'Доллар', icon:ICON('usd')},
-    CNY : {code:'CNY', nameRu:'Юань',   icon:ICON('cny')},
+    RUB:{code:'RUB', nameRu:'Рубль',  icon:ICON('rub')},
+    USD:{code:'USD', nameRu:'Доллар', icon:ICON('usd')},
+    CNY:{code:'CNY', nameRu:'Юань',   icon:ICON('cny')},
 
-    // Банки РФ
-    SBP   : {code:'SBP',   nameRu:'СБП',        icon:ICON('sbp')},
-    SBER  : {code:'SBER',  nameRu:'Сбер',       icon:ICON('sber')},
-    TCS   : {code:'TCS',   nameRu:'Т-Банк',     icon:ICON('tbank')},
-    ALFA  : {code:'ALFA',  nameRu:'Альфа-Банк', icon:ICON('alfa')},
-    VTB   : {code:'VTB',   nameRu:'ВТБ',        icon:ICON('vtb')},
-    RAIFF : {code:'RAIFF', nameRu:'Райфф',      icon:ICON('raif')},
-    OZON  : {code:'OZON',  nameRu:'Озон',       icon:ICON('ozon')},
-    OTP   : {code:'OTP',   nameRu:'ОТП',        icon:ICON('bank')},
+    // Банки РФ (считаются как RUB)
+    SBP:{code:'SBP',   nameRu:'СБП',        icon:ICON('sbp')},
+    SBER:{code:'SBER', nameRu:'Сбер',       icon:ICON('sber')},
+    TCS:{code:'TCS',   nameRu:'Т-Банк',     icon:ICON('tbank')},
+    ALFA:{code:'ALFA', nameRu:'Альфа-Банк', icon:ICON('alfa')},
+    VTB:{code:'VTB',   nameRu:'ВТБ',        icon:ICON('vtb')},
+    RAIFF:{code:'RAIFF',nameRu:'Райфф',     icon:ICON('raif')},
+    OZON:{code:'OZON', nameRu:'Озон',       icon:ICON('ozon')},
+    OTP:{code:'OTP',   nameRu:'ОТП',        icon:ICON('bank')},
 
-    // Криптовалюты
-    USDT : {code:'USDT', nameRu:'USDT', icon:ICON('usdt')},
-    BTC  : {code:'BTC',  nameRu:'BTC',  icon:ICON('btc')},
-    ETH  : {code:'ETH',  nameRu:'ETH',  icon:ICON('eth')},
-    LTC  : {code:'LTC',  nameRu:'LTC',  icon:ICON('ltc')},
-    XMR  : {code:'XMR',  nameRu:'XMR',  icon:ICON('xmr')},
-    SOL  : {code:'SOL',  nameRu:'SOL',  icon:ICON('sol')},
-    XRP  : {code:'XRP',  nameRu:'XRP',  icon:ICON('xrp')},
-    TON  : {code:'TON',  nameRu:'TON',  icon:ICON('ton')},
+    // Крипто
+    USDT:{code:'USDT', nameRu:'USDT', icon:ICON('usdt')},
+    BTC:{code:'BTC',   nameRu:'BTC',  icon:ICON('btc')},
+    ETH:{code:'ETH',   nameRu:'ETH',  icon:ICON('eth')},
+    SOL:{code:'SOL',   nameRu:'SOL',  icon:ICON('sol')},
+    XMR:{code:'XMR',   nameRu:'XMR',  icon:ICON('xmr')},
+    XRP:{code:'XRP',   nameRu:'XRP',  icon:ICON('xrp')},
+    LTC:{code:'LTC',   nameRu:'LTC',  icon:ICON('ltc')},
+    TON:{code:'TON',   nameRu:'TON',  icon:ICON('ton')},
 
-    // Китайские сервисы
-    ALIPAY : {code:'ALIPAY', nameRu:'Alipay',       icon:ICON('alipay')},
-    WECHAT : {code:'WECHAT', nameRu:'WeChat',       icon:ICON('wechat')},
-    CN_CARD: {code:'CN_CARD',nameRu:'Карта Китая',  icon:ICON('bankcn')}
+    // Китайские сервисы (только ПОЛУЧАЮ)
+    ALIPAY:{code:'ALIPAY', nameRu:'Alipay',        icon:ICON('alipay')},
+    WECHAT:{code:'WECHAT', nameRu:'WeChat',        icon:ICON('wechat')},
+    CN_CARD:{code:'CN_CARD', nameRu:'Карта Китая', icon:ICON('bankcn')}
   };
+  const BANKS  = ['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP'];
+  const CNPAY  = ['ALIPAY','WECHAT','CN_CARD'];
 
-  // ---- Доступность (что показываем в «Отдаю / Получаю») ----
-  // Правила из чата:
-  // • отдавать CNY нельзя вообще
-  // • получить CNY наличными можно только в Гуанчжоу
-  // • кэш/банк/крипто — как раньше
+  // Доступность (важно: CNY наличными НЕЛЬЗЯ отдать; получить — только Гуанчжоу)
   const MATRIX = {
     // ОТДАЮ
-    from: {
-      cash: {
-        moscow:    ['RUB','USD'],     // CNY отдавать нельзя
-        guangzhou: ['RUB','USD']      // CNY отдавать нельзя
-      },
-      bank: {
-        moscow:    ['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP'],
-        guangzhou: ['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP']
-      },
-      crypto: {
-        moscow:    ['USDT','BTC','ETH','LTC','XMR','SOL','XRP','TON'],
-        guangzhou: ['USDT','BTC','ETH','LTC','XMR','SOL','XRP','TON']
-      }
+    cash: {
+      moscow:    ['RUB','USD'],     // CNY отсутствует
+      guangzhou: ['RUB','USD']
     },
+    bank: {
+      moscow:    BANKS,
+      guangzhou: BANKS
+    },
+    crypto: {
+      moscow:    ['USDT','BTC','ETH','SOL','XMR','XRP','LTC','TON'],
+      guangzhou: ['USDT','BTC','ETH','SOL','XMR','XRP','LTC','TON']
+    },
+
     // ПОЛУЧАЮ
-    to: {
-      cash: {
-        moscow:    ['RUB','USD'],          // CNY кэш в Москве не выдаём
-        guangzhou: ['RUB','USD','CNY']     // CNY кэш только тут
-      },
-      bank: {
-        moscow:    ['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP'],
-        guangzhou: ['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP']
-      },
-      crypto: {
-        moscow:    ['USDT','BTC','ETH','LTC','XMR','SOL','XRP','TON'],
-        guangzhou: ['USDT','BTC','ETH','LTC','XMR','SOL','XRP','TON']
-      },
-      cnpay: {
-        moscow:    ['ALIPAY','WECHAT','CN_CARD'],
-        guangzhou: ['ALIPAY','WECHAT','CN_CARD']
-      }
+    cash_to: {
+      moscow:    ['RUB','USD'],     // CNY нельзя получить в Москве
+      guangzhou: ['RUB','USD','CNY']
+    },
+    bank_to: {
+      moscow:    BANKS,
+      guangzhou: BANKS
+    },
+    crypto_to: {
+      moscow:    ['USDT','BTC','ETH','SOL','XMR','XRP','LTC','TON'],
+      guangzhou: ['USDT','BTC','ETH','SOL','XMR','XRP','LTC','TON']
+    },
+    cnpay_to: {
+      moscow:    CNPAY,             // показываем плитки, но курс/отправка из Москвы не будет
+      guangzhou: CNPAY
     }
   };
 
-  // ---- Базовые параметры и хелперы округления/формата ----
-  const fmtNum = (n, d=2) =>
-    (n==null || isNaN(n)) ? '—' : Number(n).toLocaleString('ru-RU', {minimumFractionDigits:0, maximumFractionDigits:d});
+  // Форматирование
+  const fmt = (n,d=2)=> (n==null||isNaN(n)) ? '—' : Number(n).toLocaleString('ru-RU',{maximumFractionDigits:d});
+  const two = (n)=> Math.round(n*100)/100;
 
-  const round2 = (n)=> Math.round(n * 100) / 100;
-  const round4 = (n)=> Math.round(n * 10000) / 10000;
+  // БАЗА КУРСОВ (можно обновлять через /api/rates и /setrate в боте)
+  const BASE = {
+    // Нал РУБ -> нал USD/USDT: базовая стоимость USD 81.40 RUB (наценка по диапазонам)
+    rubPerUsdBuy: 81.40,
+    // Нал USD/USDT -> РУБ: 79.50 RUB за 1
+    rubPerUsdSell: 79.50,
 
-  // ---- Тарифы (пороговые функции) ----
-  // 1) CASH RUB -> USD (курс 81.40 RUB за 1 USD, но применяется НАЦЕНКА по сумме USD)
-  function priceRUBtoUSD_perUSD(amountUSD){
-    const base = 81.40; // руб за $1
-    let extra = 0.025;  // <700 — 2.5%
-    if (amountUSD >= 700   && amountUSD <= 1499) extra = 0.020;
-    if (amountUSD >= 1500  && amountUSD <= 2999) extra = 0.017;
-    if (amountUSD >= 3000  && amountUSD <= 6000) extra = 0.0125;
-    if (amountUSD >= 6001  && amountUSD <= 9999) extra = 0.0095;
-    if (amountUSD >= 10000)                      extra = 0.007;
-    return base * (1 + extra);                   // руб/1 USD
+    // RUB/BTC и USD/BTC
+    rubPerBtc: 9300000,
+    usdPerBtc: 113000,
+
+    // RUB/ETH и USD/ETH
+    rubPerEth: 399000,
+    usdPerEth: 4900
+  };
+
+  // Фолы по прочим монетам (USD-цены), чтобы "не было пустых"
+  const USD_COIN = {
+    SOL: 150,
+    XMR: 150,
+    XRP: 0.5,
+    LTC: 80,
+    TON: 8
+  };
+
+  // OVERRIDES подхватываем с бэка
+  const OVERRIDES = {};
+  function getK(name){ return (name in OVERRIDES) ? OVERRIDES[name] : BASE[name]; }
+
+  // Наценка для RUB->USD(T) по сумме USD
+  function usdMarkupPct(usd){
+    if (usd < 700) return 0.025;
+    if (usd < 1500) return 0.020;
+    if (usd < 3000) return 0.017;
+    if (usd < 6000) return 0.0125;
+    if (usd < 10000) return 0.0095;
+    return 0.007;
+  }
+  function rubPerUsdForBuy(usdAmount){
+    const base = getK('rubPerUsdBuy');
+    return base * (1 + usdMarkupPct(usdAmount));
   }
 
-  // 2) CASH RUB -> USDT (аналогичная наценка по «долларовым» суммам)
-  function priceRUBtoUSDT_perUSDT(amountUSDT){
-    const base = 81.40; // считаем USDT≈USD
-    let extra = 0.025;
-    if (amountUSDT >= 700   && amountUSDT <= 1499) extra = 0.020;
-    if (amountUSDT >= 1500  && amountUSDT <= 2999) extra = 0.017;
-    if (amountUSDT >= 3000  && amountUSDT <= 6000) extra = 0.0125;
-    if (amountUSDT >= 6001  && amountUSDT <= 9999) extra = 0.0095;
-    if (amountUSDT >= 10000)                       extra = 0.007;
-    return base * (1 + extra);                     // руб/1 USDT
+  // RUB -> CNY (по сумме CNY)
+  function rubPerCnyByCnyAmount(cny){
+    if (cny < 1000) return 12.9;        // 500–1000 и меньше
+    if (cny < 3000) return 11.95;
+    if (cny < 15000) return 11.90;
+    if (cny < 30000) return 11.85;
+    if (cny < 70000) return 11.80;
+    return 11.75;
   }
 
-  // 3) RUB -> Китайские сервисы (руб/1 CNY) — пороги по сумме CNY
-  function priceRUBtoCNY_perCNY(amountCNY){
-    // от 500–1000 = 12.90, от 1000 = 11.95, от 3000 = 11.90, от 15000 = 11.85, от 30000 = 11.80, от 70000 = 11.75
-    if (amountCNY >= 70000) return 11.75;
-    if (amountCNY >= 30000) return 11.80;
-    if (amountCNY >= 15000) return 11.85;
-    if (amountCNY >= 3000)  return 11.90;
-    if (amountCNY >= 1000)  return 11.95;
-    if (amountCNY >= 500)   return 12.90;
-    return 12.90; // по умолчанию до 500 — держим 12.90, чтобы не оставлять «дыру»
+  // USDT/USD -> CNY (по сумме USDT/USD)
+  function cnyPerUsdtByAmount(u){
+    if (u <= 1000)  return 6.90;
+    if (u <= 3000)  return 6.95;
+    if (u <= 6000)  return 7.00;
+    if (u <= 10000) return 7.03;
+    return 7.07;
   }
+  const cnyPerUsdByAmount = cnyPerUsdtByAmount; // одинаково для USD и USDT
 
-  // 4) USD cash -> RUB cash (79.50 RUB за $1)
-  const priceUSDtoRUB_perUSD = 79.50;
+  // Нормализация кодов (банки — это RUB; китайские — это CNY)
+  const isBank = (c)=> BANKS.includes(c);
+  const isCnp  = (c)=> CNPAY.includes(c);
+  function norm(c){ if(isBank(c)) return 'RUB'; if(isCnp(c)) return 'CNY'; return c; }
 
-  // 5) USDT -> RUB (кэш и банки) (79.50 RUB за 1 USDT)
-  const priceUSDTtoRUB_perUSDT = 79.50;
-
-  // 6) USDT -> Китайские сервисы: по последней просьбе — держим как у USD к тем же сервисам.
-  // Для USD->CNPAY явного прайса нет, посчитаем через мост USD->RUB (обратный к RUB->USD) и RUB->CNY.
-  // USD->RUB (покупка RUB за USD) примем как 79.50, тогда RUB->CNY как в функции priceRUBtoCNY_perCNY.
-  // Итоговая USD->CNY ≈ (RUB/CNY) / (RUB/USD), но нам нужен CNY за 1 USD (то есть CNY/USD).
-  // CNY за 1 USD = (RUB/USD) / (RUB/CNY).
-  function priceUSDtoCNY_perUSD(amountUSD){
-    // сначала оценим целевой объём в CNY, чтобы выбрать порог
-    // приблизительно: возьмём среднюю ставку RUB->CNY для оценки (12.0), затем уточнять смысла мало — порог широкими ступенями
-    const approxRUBperUSD = priceUSDtoRUB_perUSD; // 79.50 руб / USD
-    // прицельно возьмём порог по amountCNY, исходя из ожидаемой выдачи за amountUSD
-    // CNY per USD = RUB/USD / RUB/CNY
-    // чтобы понять amountCNY, надо умножить amountUSD * (CNY per USD). Мы не знаем его до вычисления.
-    // упростим: сначала грубо через 12.0, чтобы выбрать порог, затем посчитаем точный курс.
-    const approxCNYperUSD = 79.50 / 12.0; // ≈ 6.625
-    const amountCNY = amountUSD * approxCNYperUSD;
-
-    const rubPerCNY = priceRUBtoCNY_perCNY(amountCNY); // выберем ступень
-    const cnyPerUSD = approxRUBperUSD / rubPerCNY;     // итог: CNY за 1 USD
-    return cnyPerUSD;
-  }
-  // И как просили: USDT->CNY == USD->CNY (та же логика)
-  function priceUSDTtoCNY_perUSDT(amountUSDT){
-    return priceUSDtoCNY_perUSD(amountUSDT);
-  }
-
-  // 7) Крипто котировки (BTC/ETH):
-  // RUB->BTC = 9,300,000 руб за 1 BTC; USD/USDT->BTC = 113,000 за 1 BTC
-  const RUB_per_BTC  = 9300000;
-  const USD_per_BTC  = 113000; // и для USDT тоже
-  // RUB->ETH = 399,000; USD/USDT->ETH = 4,900
-  const RUB_per_ETH  = 399000;
-  const USD_per_ETH  = 4900;
-
-  // ---- Вспомогательные классификаторы ----
-  const isBank = (code)=> ['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP'].includes(code);
-  const isCrypto = (code)=> ['USDT','BTC','ETH','LTC','XMR','SOL','XRP','TON'].includes(code);
-  const isCnpay = (code)=> ['ALIPAY','WECHAT','CN_CARD'].includes(code);
-
-  // ---- Основной прайс-двигатель: возвращает rate и total ----
-  // ВАЖНО: rate трактуем как «СКОЛЬКО ПОЛУЧАЕМ (to) за 1 ЕДИНУЦУ ОТДАЁМ (from)»
-  function makeQuote({from, to, amount}) {
-    const A = Number(amount || 0);
-    if (!from || !to || !(A > 0)) return null;
-
-    // Блок запретов из требований
-    if (from === 'CNY') return null; // отдавать CNY нельзя
-
-    // --- Прямые кейсы по прайсу ---
-    // RUB cash/bank -> USD: считаем сколько USD за 1 RUB
-    if (from === 'RUB' && to === 'USD') {
-      const rubPer1USD = priceRUBtoUSD_perUSD(A);     // RUB / 1 USD
-      const usdPerRub  = 1 / rubPer1USD;              // USD / 1 RUB
-      return {rate: round4(usdPerRub), total: round2(A * usdPerRub)};
-    }
-    // RUB -> USDT
-    if (from === 'RUB' && to === 'USDT') {
-      const rubPer1USDT = priceRUBtoUSDT_perUSDT(A);  // RUB / 1 USDT
-      const usdtPerRub  = 1 / rubPer1USDT;            // USDT / 1 RUB
-      return {rate: round4(usdtPerRub), total: round2(A * usdtPerRub)};
-    }
-    // RUB -> CNY (включая выдачу в Alipay/WeChat/CN_CARD — считаем как CNY)
-    if (from === 'RUB' && (to === 'CNY' || isCnpay(to))) {
-      const cnyPerRub = 1 / priceRUBtoCNY_perCNY(A);  // CNY / 1 RUB
-      return {rate: round4(cnyPerRub), total: round2(A * cnyPerRub)};
-    }
-
-    // USD -> RUB
-    if (from === 'USD' && to === 'RUB') {
-      const rub = priceUSDtoRUB_perUSD;               // RUB / 1 USD
-      return {rate: round4(rub), total: round2(A * rub)};
-    }
-
-    // USDT -> RUB (и в банки курс тот же)
-    if (from === 'USDT' && (to === 'RUB' || isBank(to))) {
-      const rub = priceUSDTtoRUB_perUSDT;             // RUB / 1 USDT
-      return {rate: round4(rub), total: round2(A * rub)};
-    }
-
-    // USD -> CNY / USDT -> CNY (и на Alipay/WeChat/CN_CARD)
-    if ((from === 'USD' || from === 'USDT') && (to === 'CNY' || isCnpay(to))) {
-      const per = (from === 'USD') ? priceUSDtoCNY_perUSD(A) : priceUSDTtoCNY_perUSDT(A); // CNY / 1 (USD|USDT)
-      return {rate: round4(per), total: round2(A * per)};
-    }
-
-    // --- Крипта BTC/ETH прайс ---
-    // RUB -> BTC/ETH
-    if (from === 'RUB' && to === 'BTC') {
-      const btcPerRub = 1 / RUB_per_BTC;
-      return {rate: round8(btcPerRub), total: round8(A * btcPerRub)};
-    }
-    if (from === 'RUB' && to === 'ETH') {
-      const ethPerRub = 1 / RUB_per_ETH;
-      return {rate: round8(ethPerRub), total: round8(A * ethPerRub)};
-    }
-    // USD/USDT -> BTC/ETH
-    if ((from === 'USD' || from === 'USDT') && to === 'BTC') {
-      const btcPer = 1 / USD_per_BTC;
-      return {rate: round8(btcPer), total: round8(A * btcPer)};
-    }
-    if ((from === 'USD' || from === 'USDT') && to === 'ETH') {
-      const ethPer = 1 / USD_per_ETH;
-      return {rate: round8(ethPer), total: round8(A * ethPer)};
-    }
-
-    // Банки -> всё остальное: курс такой же как у наличного рубля.
-    // Значит интерпретируем «из банка RUB» эквивалент «RUB cash».
-    if (isBank(from)) {
-      // 1) в RUB: банк->RUB 1:1
-      if (to === 'RUB') return {rate: 1, total: round2(A * 1)};
-      // 2) в USD/USDT/CNY/крипту — переиспользуем правила как для RUB
-      return makeQuote({from:'RUB', to, amount:A});
-    }
-
-    // Из крипты (кроме USDT вверху) → попробуем через USDT:
-    if (isCrypto(from) && from !== 'USDT') {
-      // пробуем мост from -> USDT (пока не задано — нет прямых), оставим пусто
-      // чтобы не "ломать", попытаемся через RUB: from->RUB не задан — fallback нет
-      // вернём null, UI покажет «—»
-      return null;
-    }
-
-    // RUB -> банки: 1:1
-    if (from === 'RUB' && isBank(to)) {
-      return {rate: 1, total: round2(A)};
-    }
-
-    // USD -> банки: пусть идёт как USD->RUB затем RUB->банк (1:1)
-    if (from === 'USD' && isBank(to)) {
-      const rub = priceUSDtoRUB_perUSD;
-      return {rate: round4(rub), total: round2(A * rub)};
-    }
-
-    // USDT -> банки — уже обработано выше (79.50)
-
-    // Остальные пары попробуем через мосты:
-    // 1) Через RUB
-    let r1 = makeQuote({from, to:'RUB', amount:1});
-    let r2 = makeQuote({from:'RUB', to, amount:A});
-    if (r1 && r2 && r1.rate>0) {
-      const rate = r2.rate / r1.rate;
-      return {rate: round4(rate), total: round2(A * rate)};
-    }
-    // 2) Через USD
-    r1 = makeQuote({from, to:'USD', amount:1});
-    r2 = makeQuote({from:'USD', to, amount:A});
-    if (r1 && r2 && r1.rate>0) {
-      const rate = r2.rate / r1.rate;
-      return {rate: round4(rate), total: round2(A * rate)};
-    }
-    // 3) Через USDT
-    r1 = makeQuote({from, to:'USDT', amount:1});
-    r2 = makeQuote({from:'USDT', to, amount:A});
-    if (r1 && r2 && r1.rate>0) {
-      const rate = r2.rate / r1.rate;
-      return {rate: round4(rate), total: round2(A * rate)};
-    }
-
-    return null;
-  }
-
-  function round8(n){ return Math.round(n * 1e8) / 1e8; }
-
-  // ---- Публичный API ----
+  // Список валют для плиток
   function currencies(kind, city, side){
-    const sideKey = side === 'from' ? 'from' : 'to';
-    let key = 'cash';
-    if (kind === 'bank') key = 'bank';
-    else if (kind === 'crypto') key = 'crypto';
-    else if (kind === 'cnpay') key = 'cnpay';
-
-    const list = (MATRIX[sideKey][key][city] || [])
-      .filter(code => !(side === 'from' && code === 'CNY')) // отдавать CNY нельзя
-      .map(code => ensureIcon(C[code]))
-      .filter(Boolean);
-    return list;
+    if (side==='from'){
+      const key = (kind==='cash' || kind==='bank' || kind==='crypto') ? kind : 'cash';
+      return (MATRIX[key][city]||[]).map(code=>C[code]).filter(Boolean);
+    } else {
+      let key='cash_to';
+      if (kind==='bank') key='bank_to';
+      else if (kind==='crypto') key='crypto_to';
+      else if (kind==='cnpay') key='cnpay_to';
+      let list = MATRIX[key][city]||[];
+      // СЮДА правило: CNY получать можно только в Гуанчжоу (в MATRIX уже учтено)
+      return list.map(code=>C[code]).filter(Boolean);
+    }
   }
 
-  function quote({from, to, amount}){
-    const q = makeQuote({from, to, amount});
-    if (!q) return {rate:null, total:null, rateText:'—', totalText:'—'};
+  // Универсальный расчет
+  function quote(opts){
+    const from = opts.from, to = opts.to;
+    const fromKind=opts.fromKind, toKind=opts.toKind;
+    const cityFrom=opts.cityFrom, cityTo=opts.cityTo;
+    const amount = Number(opts.amount||0);
+
+    // Запреты на бизнес-правила
+    if (norm(from)==='CNY') return null; // отдать CNY нельзя
+    if (to==='CNY' && (toKind==='cash' && cityTo!=='guangzhou')) return null; // получить CNY в Москве нельзя
+
+    const fromN = norm(from);
+    const toN   = norm(to);
+
+    let total = null; // в целевой «toN»
+    // 1) Прямые сценарии RUB ↔ USD/USDT
+    if (fromN==='RUB' && (toN==='USD' || toN==='USDT')){
+      // RUB -> USD/USDT: итеративно (наценка зависит от суммы USD)
+      let usd = amount / rubPerUsdForBuy(amount / getK('rubPerUsdBuy')); // грубая оценка
+      for (let i=0;i<3;i++){ usd = amount / rubPerUsdForBuy(usd); }
+      total = usd;
+    } else if ((fromN==='USD' || fromN==='USDT') && toN==='RUB'){
+      total = amount * getK('rubPerUsdSell');
+    }
+    // 2) RUB -> CNY (через piecewise по сумме CNY)
+    else if (fromN==='RUB' && toN==='CNY'){
+      let cny = amount / rubPerCnyByCnyAmount(amount/12); // старт
+      for (let i=0;i<3;i++){ cny = amount / rubPerCnyByCnyAmount(cny); }
+      total = cny;
+    }
+    // 3) USD/USDT -> CNY
+    else if ((fromN==='USD' || fromN==='USDT') && toN==='CNY'){
+      total = amount * cnyPerUsdtByAmount(amount); // одинаково для USD и USDT
+    }
+    // 4) Крипто BTC / ETH
+    else if (fromN==='RUB' && toN==='BTC'){ total = amount / getK('rubPerBtc'); }
+    else if ((fromN==='USD' || fromN==='USDT') && toN==='BTC'){ total = amount / getK('usdPerBtc'); }
+    else if (fromN==='BTC' && toN==='RUB'){ total = amount * getK('rubPerBtc'); }
+    else if (fromN==='BTC' && (toN==='USD'||toN==='USDT')){ total = amount * getK('usdPerBtc'); }
+
+    else if (fromN==='RUB' && toN==='ETH'){ total = amount / getK('rubPerEth'); }
+    else if ((fromN==='USD' || fromN==='USDT') && toN==='ETH'){ total = amount / getK('usdPerEth'); }
+    else if (fromN==='ETH' && toN==='RUB'){ total = amount * getK('rubPerEth'); }
+    else if (fromN==='ETH' && (toN==='USD'||toN==='USDT')){ total = amount * getK('usdPerEth'); }
+
+    // 5) Прочие крипты через USD (USD_COIN)
+    else if ((fromN==='USD'||fromN==='USDT') && USD_COIN[toN]){ total = amount / USD_COIN[toN]; }
+    else if (fromN in USD_COIN && (toN==='USD'||toN==='USDT')) { total = amount * USD_COIN[fromN]; }
+    else if (fromN==='RUB' && (toN in USD_COIN)) { // RUB -> COIN через USD
+      const usd = amount / getK('rubPerUsdBuy');      // приближенно без наценки — чтобы не занижать
+      total = usd / USD_COIN[toN];
+    } else if ((fromN in USD_COIN) && toN==='RUB'){   // COIN -> RUB через USD
+      const usd = amount * USD_COIN[fromN];
+      total = usd * getK('rubPerUsdSell');
+    }
+
+    // Фолбэк через USD или RUB если что-то не предусмотрели
+    if (total==null){
+      // через RUB
+      if (fromN!=='RUB' && toN!=='RUB'){
+        const mid = quote({from, to:'RUB', amount, fromKind, toKind, cityFrom, cityTo});
+        if (mid && mid.total){
+          const fin = quote({from:'RUB', to, amount: mid.total, fromKind, toKind, cityFrom, cityTo});
+          if (fin && fin.total!=null) total = fin.total;
+        }
+      }
+    }
+
+    if (total==null) return null;
+
+    const rate = total/amount; // сколько "получаю" за 1 "отдаю"
     return {
-      rate: q.rate,
-      total: q.total,
-      rateText: `${fmtNum(q.rate, 4)} ${to} за 1 ${from}`,
-      totalText: `${fmtNum(q.total, 2)} ${to}`
+      rate,
+      total: two(total),
+      rateText: `${fmt(rate,4)} ${to} за 1 ${from}`,
+      totalText: `${fmt(total,2)} ${to}`
     };
   }
 
-  window.PRICING = { currencies, quote };
+  function setOverrides(obj){
+    Object.assign(OVERRIDES, obj||{});
+  }
+
+  // Публичное API
+  window.PRICING = { currencies, quote, setOverrides };
 })();

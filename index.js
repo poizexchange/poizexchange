@@ -110,6 +110,7 @@
   }
 
   function recalc(){
+    amountInput?.addEventListener('input', recalc);
     const amount = Number(amountInput?.value || 0);
     if (!selFrom || !selTo || !amount || amount <= 0 || !window.PRICING?.quote){
       if (rateVal)  rateVal.textContent  = '—';

@@ -5,7 +5,7 @@
   // ====== НАСТРОЙКА API для сайта (вне Telegram) ======
   // Укажи свой домен/хост с Nginx→FastAPI (без завершающего '/')
   // Примеры: 'https://poiz.yourdomain.com' или 'http://<ip>'
-  const API_BASE = 'https://<ВАШ-ДОМЕН-API>'; // ← ОБНОВИ ЭТО
+  const API_BASE = 'https://<poizexchange.github.io/poizexchange>'; // ← ОБНОВИ ЭТО
 
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 

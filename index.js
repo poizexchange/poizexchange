@@ -1,32 +1,39 @@
-// index.js v43 — стабильный рендер, курс за получаемую валюту
+// index.js — стабильный рендер плиток + мгновенный пересчёт + отправка заявки
 (function () {
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 
-  const fromPayBox = document.getElementById('from-pay');
-  const toPayBox   = document.getElementById('to-pay');
-  const fromCityBox = document.getElementById('from-citybox');
-  const toCityBox   = document.getElementById('to-citybox');
-  const cityFromSel = document.getElementById('cityFrom');
-  const cityToSel   = document.getElementById('cityTo');
-  const fromWrap = document.getElementById('from-currencies');
-  const toWrap   = document.getElementById('to-currencies');
-  const amountInput = document.getElementById('amount');
-  const rateVal = document.getElementById('rateVal');
-  const totalVal = document.getElementById('totalVal');
+  const fromPayBox   = document.getElementById('from-pay');
+  const toPayBox     = document.getElementById('to-pay');
+
+  const fromCityBox  = document.getElementById('from-citybox');
+  const toCityBox    = document.getElementById('to-citybox');
+
+  const cityFromSel  = document.getElementById('cityFrom');
+  const cityToSel    = document.getElementById('cityTo');
+
+  const fromWrap     = document.getElementById('from-currencies');
+  const toWrap       = document.getElementById('to-currencies');
+
+  const amountInput  = document.getElementById('amount');
+  const rateVal      = document.getElementById('rateVal');
+  const totalVal     = document.getElementById('totalVal');
+
   const contactInput = document.getElementById('contact');
-  const reqsInput = document.getElementById('requisites');
-  const noteInput = document.getElementById('note');
-  const qrBox = document.getElementById('qrbox');
-  const qrFile = document.getElementById('qrfile');
-  const sendBtn = document.getElementById('sendBtn');
-  const hint = document.getElementById('hint');
+  const reqsInput    = document.getElementById('requisites');
+  const noteInput    = document.getElementById('note');
+
+  const qrBox        = document.getElementById('qrbox');
+  const qrFile       = document.getElementById('qrfile');
+
+  const sendBtn      = document.getElementById('sendBtn');
+  const hint         = document.getElementById('hint');
 
   let fromPayType = 'cash';
   let toPayType   = 'cash';
-  let cityFrom = 'moscow';
-  let cityTo   = 'moscow';
-  let selFrom = null;
-  let selTo = null;
+  let cityFrom    = 'moscow';
+  let cityTo      = 'moscow';
+  let selFrom     = null;
+  let selTo       = null;
   let currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
 
   if (tg) { try { tg.expand(); tg.ready(); } catch (e) {} }
@@ -44,8 +51,13 @@
       <div class="cap">${item.nameRu}</div>
     `;
     btn.addEventListener('click', () => {
-      if (side === 'from') { selFrom = item.code; markActive(fromWrap, item.code); }
-      else { selTo = item.code; markActive(toWrap, item.code); }
+      if (side === 'from') {
+        selFrom = item.code;
+        markActive(fromWrap, item.code);
+      } else {
+        selTo = item.code;
+        markActive(toWrap, item.code);
+      }
       updateQrVisibility();
       recalc();
     });
@@ -69,7 +81,7 @@
 
   function refreshFrom(){
     if (fromCityBox) fromCityBox.hidden = (fromPayType !== 'cash');
-    const list = window.PRICING?.currencies(fromPayType, cityFrom, 'from') || [];
+    const list = window.PRICING?.currencies ? window.PRICING.currencies(fromPayType, cityFrom, 'from') : [];
     renderTiles(fromWrap, list, 'from');
     selFrom = list[0]?.code || null;
     if (selFrom) markActive(fromWrap, selFrom);
@@ -77,7 +89,7 @@
 
   function refreshTo(){
     if (toCityBox) toCityBox.hidden = (toPayType !== 'cash');
-    const list = window.PRICING?.currencies(toPayType, cityTo, 'to') || [];
+    const list = window.PRICING?.currencies ? window.PRICING.currencies(toPayType, cityTo, 'to') : [];
     renderTiles(toWrap, list, 'to');
     selTo = list[0]?.code || null;
     if (selTo) markActive(toWrap, selTo);
@@ -87,15 +99,15 @@
   function recalc(){
     const amount = Number(amountInput?.value || 0);
     if (!selFrom || !selTo || !amount || amount <= 0 || !window.PRICING?.quote){
-      if (rateVal)  rateVal.textContent  = '—';
-      if (totalVal) totalVal.textContent = '—';
+      rateVal && (rateVal.textContent = '—');
+      totalVal && (totalVal.textContent = '—');
       currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
       return;
     }
     const q = window.PRICING.quote({ from: selFrom, to: selTo, amount });
     currentQuote = q || {};
-    rateVal.textContent  = q?.rateText  ?? '—';
-    totalVal.textContent = q?.totalText ?? '—';
+    rateVal  && (rateVal.textContent  = q?.rateText  ?? '—');
+    totalVal && (totalVal.textContent = q?.totalText ?? '—');
   }
 
   function wireChips(box, cb){
@@ -112,33 +124,58 @@
   }
 
   wireChips(fromPayBox, (type)=>{ fromPayType = type; refreshFrom(); recalc(); });
-  wireChips(toPayBox,   (type)=>{ toPayType   = type; refreshTo();  recalc(); });
+  wireChips(toPayBox,   (type)=>{ toPayType   = type; refreshTo();  recalc();  });
+
   cityFromSel && cityFromSel.addEventListener('change', ()=>{ cityFrom = cityFromSel.value; refreshFrom(); recalc(); });
-  cityToSel   && cityToSel.addEventListener('change',   ()=>{ cityTo   = cityToSel.value;   refreshTo();  recalc(); });
+  cityToSel   && cityToSel.addEventListener('change',   ()=>{ cityTo   = cityToSel.value;   refreshTo();  recalc();  });
+
+  // мгновенный пересчет при вводе
+  amountInput && amountInput.addEventListener('input', recalc);
 
   function boot() {
     if (!window.PRICING?.currencies || !window.PRICING?.quote) {
       setTimeout(boot, 100);
       return;
     }
-    refreshFrom(); refreshTo(); recalc();
+    refreshFrom();
+    refreshTo();
+    recalc();
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
 
-  // заявки
+  function validateBusinessRules(){
+    // запрещаем отдавать CNY вообще
+    if (selFrom === 'CNY') { alert('Отдавать CNY нельзя.'); return false; }
+    // наличные CNY — получать можно только в Гуанчжоу
+    if (toPayType === 'cash' && selTo === 'CNY' && cityTo !== 'guangzhou') {
+      alert('Наличные юани можно получить только в Гуанчжоу.');
+      return false;
+    }
+    return true;
+  }
+
   async function sendOrder(){
     const amountNum = Number(amountInput?.value || 0);
     if (!selFrom || !selTo) { alert('Выберите валюты «Отдаю» и «Получаю».'); return; }
     if (!(amountNum > 0))   { alert('Введите сумму.'); return; }
     if (!currentQuote.rate) { alert('Не удалось рассчитать курс.'); return; }
+    if (!validateBusinessRules()) return;
 
     const payload = {
       type: 'order',
-      from_currency: selFrom, to_currency: selTo,
-      from_kind: fromPayType, to_kind: toPayType,
-      city_from: cityFrom, city_to: cityTo,
-      amount: amountNum, rate: currentQuote.rate, total: currentQuote.total,
+      from_currency: selFrom,
+      to_currency: selTo,
+      from_kind: fromPayType,
+      to_kind: toPayType,
+      city_from: cityFrom,
+      city_to: cityTo,
+      amount: amountNum,
+      rate: currentQuote.rate,
+      total: currentQuote.total,
       contact: (contactInput?.value || '').trim(),
       requisites: (reqsInput?.value || '').trim(),
       note: (noteInput?.value || '').trim(),
@@ -151,24 +188,32 @@
       if (window.Telegram?.WebApp?.sendData) {
         window.Telegram.WebApp.sendData(JSON.stringify(payload));
         viaTelegram = true;
-        if (window.Telegram.WebApp.showPopup) window.Telegram.WebApp.showPopup({ title: 'Заявка отправлена', message: 'Мы скоро свяжемся с вами.' });
-        else alert('Заявка отправлена. Мы скоро свяжемся с вами.');
+        if (window.Telegram.WebApp.showPopup) {
+          window.Telegram.WebApp.showPopup({ title: 'Заявка отправлена', message: 'Мы скоро свяжемся с вами.' });
+        } else {
+          alert('Заявка отправлена. Мы скоро свяжемся с вами.');
+        }
       }
-    } catch (e) { console.error('sendData failed', e); }
+    } catch (e) {
+      console.error('sendData failed', e);
+    }
 
     if (!viaTelegram) {
       try {
         const r = await fetch('/api/order', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
         });
         const j = await r.json().catch(()=>({}));
-        if (r.ok && j.ok) alert('Заявка отправлена (через сайт). Мы скоро свяжемся с вами.');
+        if (r.ok && j.ok) alert('Заявка отправлена (сайт). Мы скоро свяжемся с вами.');
         else alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.');
-      } catch (e) { console.error(e); alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.'); }
+      } catch (e) {
+        console.error(e);
+        alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.');
+      }
     }
   }
 
   sendBtn && sendBtn.addEventListener('click', sendOrder);
-  amountInput && amountInput.addEventListener('input', recalc);
 })();

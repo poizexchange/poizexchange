@@ -4,11 +4,10 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Калькулятор</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=70" />
+  <link rel="stylesheet" href="./styles.css?v=80" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- ВАЖНО: pricing.js подключаем ПЕРЕД index.js -->
-  <script src="./pricing.js?v=70"></script>
-  <script src="./index.js?v=70" defer></script>
+  <script src="./pricing.js?v=80"></script>
+  <script src="./index.js?v=80" defer></script>
 </head>
 <body class="tg-white">
   <header class="tg-header">
@@ -19,10 +18,9 @@
 
   <main class="wrap main-safe">
 
-    <!-- ОТДАЮ -->
+    <!-- Отдаю -->
     <section class="card">
-      <h2 class="h2 h2-center">Отдаю</h2>
-
+      <h2 class="h2">Отдаю</h2>
       <div class="chips" id="from-pay">
         <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
         <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
@@ -40,7 +38,7 @@
       <div id="from-currencies" class="tiles"></div>
     </section>
 
-    <!-- РАСЧЁТ (перемещён между блоками) -->
+    <!-- Перенесённый блок суммы -->
     <section class="card">
       <div class="calc-grid">
         <div>
@@ -60,10 +58,9 @@
       </div>
     </section>
 
-    <!-- ПОЛУЧАЮ -->
+    <!-- Получаю -->
     <section class="card">
-      <h2 class="h2 h2-center">Получаю</h2>
-
+      <h2 class="h2">Получаю</h2>
       <div class="chips wrap" id="to-pay">
         <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
         <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
@@ -82,10 +79,9 @@
       <div id="to-currencies" class="tiles"></div>
     </section>
 
-    <!-- ЗАЯВКА -->
+    <!-- Заявка -->
     <section class="card">
-      <h2 class="h2 h2-center">Заявка</h2>
-
+      <h2 class="h2">Заявка</h2>
       <label class="label" for="contact">Контакт</label>
       <input id="contact" class="input" placeholder="@username или телефон" />
 
@@ -105,7 +101,7 @@
     </section>
 
     <nav class="footlinks">
-      <a href="./rates.html?v=70">📊 Табло</a>
+      <a href="./rates.html?v=80">📊 Табло</a>
       <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
       <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
     </nav>

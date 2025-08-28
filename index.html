@@ -4,10 +4,11 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Калькулятор</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=58" />
+  <link rel="stylesheet" href="./styles.css?v=60" />
+  <!-- ВАЖНО: сначала Telegram SDK, потом pricing.js, и только потом index.js -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="./pricing.js?v=71"></script>
-  <script src="./index.js?v=71" defer></script>
+  <script src="./pricing.js?v=60"></script>
+  <script src="./index.js?v=63" defer></script>
 </head>
 <body class="tg-white">
   <header class="tg-header">
@@ -36,6 +37,26 @@
       <div id="from-currencies" class="tiles"></div>
     </section>
 
+    <!-- Блок расчёта между «Отдаю» и «Получаю» (как просили) -->
+    <section class="card">
+      <div class="calc-grid">
+        <div>
+          <label class="label" for="amount">Сумма</label>
+          <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
+        </div>
+        <div class="result-card">
+          <div class="result-line">
+            <div class="r-cap">Курс</div>
+            <div id="rateVal" class="r-val">—</div>
+          </div>
+          <div class="result-line">
+            <div class="r-cap">К получению</div>
+            <div id="totalVal" class="r-big">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="card">
       <h2 class="h2">Получаю</h2>
       <div class="chips wrap" id="to-pay">
@@ -57,25 +78,6 @@
     </section>
 
     <section class="card">
-      <div class="calc-grid">
-        <div>
-          <label class="label" for="amount">Сумма</label>
-          <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
-        </div>
-        <div class="result-card">
-          <div class="result-line">
-            <div class="r-cap">Курс</div>
-            <div id="rateVal" class="r-val">—</div>
-          </div>
-          <div class="result-line">
-            <div class="r-cap">К получению</div>
-            <div id="totalVal" class="r-big">—</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
       <h2 class="h2">Заявка</h2>
       <label class="label" for="contact">Контакт</label>
       <input id="contact" class="input" placeholder="@username или телефон" />
@@ -87,7 +89,7 @@
       <textarea id="note" class="input" rows="3" placeholder="Детали, срочность…"></textarea>
 
       <div id="qrbox" class="qrbox" hidden>
-        <label class="label" for="qrfile">Пришлите QR-код (для Alipay / WeChat / карта Китая)</label>
+        <label class="label" for="qrfile">Прикрепите QR (Alipay / WeChat / карта Китая)</label>
         <input type="file" id="qrfile" accept="image/*,.png,.jpg,.jpeg,.webp" class="input-file">
       </div>
 
@@ -101,3 +103,5 @@
       <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
     </nav>
   </main>
+</body>
+</html>

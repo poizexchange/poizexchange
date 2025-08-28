@@ -1,11 +1,6 @@
-// index.js v42.3 — стабильный рендер плиток + отправка заявки
+// index.js v42.4 — стабильный рендер, пересчёт на вводе, WebApp.sendData + сайт-фолбэк
 (function () {
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-
-  // === НАСТРОЙКА API ===
-  // ГИТХАБ-страница не сможет стучаться в относительный /api,
-  // поэтому шлём на абсолютный домен API:
-  const API_BASE = 'https://api.poizexchange.ru'; // <— ВАЖНО!
 
   // элементы
   const fromPayBox   = document.getElementById('from-pay');
@@ -39,15 +34,15 @@
   let toPayType   = 'cash';   // cash | bank | crypto | cnpay
   let cityFrom    = 'moscow';
   let cityTo      = 'moscow';
-  let selFrom     = null;
-  let selTo       = null;
+  let selFrom     = null;     // код валюты/сервиса
+  let selTo       = null;     // код валюты/сервиса
   let currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
 
   // Инициализация WebApp
   if (tg) { try { tg.expand(); tg.ready(); } catch (e) {} }
   else if (hint) { hint.hidden = false; }
 
-  // ——— utils ———
+  // ---------- утилиты ----------
   function clear(node){ while(node && node.firstChild) node.removeChild(node.firstChild); }
 
   function tile(item, side){
@@ -60,8 +55,13 @@
       <div class="cap">${item.nameRu}</div>
     `;
     btn.addEventListener('click', () => {
-      if (side === 'from') { selFrom = item.code; markActive(fromWrap, item.code); }
-      else { selTo = item.code; markActive(toWrap, item.code); }
+      if (side === 'from') {
+        selFrom = item.code;
+        markActive(fromWrap, item.code);
+      } else {
+        selTo = item.code;
+        markActive(toWrap, item.code);
+      }
       updateQrVisibility();
       recalc();
     });
@@ -69,13 +69,13 @@
   }
 
   function markActive(container, code){
-    container.querySelectorAll('.tile').forEach(t=>t.classList.remove('active'));
-    container.querySelectorAll(`[data-code="${code}"]`).forEach(t=>t.classList.add('active'));
+    container?.querySelectorAll('.tile')?.forEach(t=>t.classList.remove('active'));
+    container?.querySelectorAll(`[data-code="${code}"]`)?.forEach(t=>t.classList.add('active'));
   }
 
   function renderTiles(container, list, side){
     clear(container);
-    list.forEach(item => container.appendChild(tile(item, side)));
+    (list || []).forEach(item => container.appendChild(tile(item, side)));
   }
 
   function updateQrVisibility(){
@@ -83,14 +83,10 @@
     if (qrBox) qrBox.hidden = !(toPayType === 'cnpay' && selTo && cnpay.includes(selTo));
   }
 
-  // ——— рендер списков ———
+  // ---------- рендер списков ----------
   function refreshFrom(){
     if (fromCityBox) fromCityBox.hidden = (fromPayType !== 'cash');
-
-    const list = (window.PRICING && window.PRICING.currencies)
-      ? window.PRICING.currencies(fromPayType, cityFrom, 'from')
-      : [];
-
+    const list = window?.PRICING?.currencies ? window.PRICING.currencies(fromPayType, cityFrom, 'from') : [];
     renderTiles(fromWrap, list, 'from');
     selFrom = list[0]?.code || null;
     if (selFrom) markActive(fromWrap, selFrom);
@@ -98,11 +94,7 @@
 
   function refreshTo(){
     if (toCityBox) toCityBox.hidden = (toPayType !== 'cash');
-
-    const list = (window.PRICING && window.PRICING.currencies)
-      ? window.PRICING.currencies(toPayType, cityTo, 'to')
-      : [];
-
+    const list = window?.PRICING?.currencies ? window.PRICING.currencies(toPayType, cityTo, 'to') : [];
     renderTiles(toWrap, list, 'to');
     selTo = list[0]?.code || null;
     if (selTo) markActive(toWrap, selTo);
@@ -111,7 +103,7 @@
 
   function recalc(){
     const amount = Number(amountInput?.value || 0);
-    if (!selFrom || !selTo || !amount || amount <= 0 || !window.PRICING?.quote){
+    if (!selFrom || !selTo || !amount || amount <= 0 || !window?.PRICING?.quote){
       if (rateVal)  rateVal.textContent  = '—';
       if (totalVal) totalVal.textContent = '—';
       currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
@@ -119,18 +111,11 @@
     }
     const q = window.PRICING.quote({ from: selFrom, to: selTo, amount });
     currentQuote = q || {};
-    if (rateVal)  rateVal.textContent  = q?.rateText  ?? '—';   // показываем курс за валюту, которую ПОЛУЧАЕМ
+    if (rateVal)  rateVal.textContent  = q?.rateText  ?? '—';
     if (totalVal) totalVal.textContent = q?.totalText ?? '—';
   }
 
-  // реагировать на ввод сразу
-  if (amountInput) {
-    ['input','change','keyup','paste'].forEach(evt => {
-      amountInput.addEventListener(evt, recalc);
-    });
-  }
-
-  // ——— кнопки-«чипы» ———
+  // ---------- кнопки-«чипы» ----------
   function wireChips(box, cb){
     if (!box) return;
     box.querySelectorAll('.chip').forEach(btn=>{
@@ -150,9 +135,12 @@
   cityFromSel && cityFromSel.addEventListener('change', ()=>{ cityFrom = cityFromSel.value; refreshFrom(); recalc(); });
   cityToSel   && cityToSel.addEventListener('change',   ()=>{ cityTo   = cityToSel.value;   refreshTo();  recalc();  });
 
-  // ——— безопасная инициализация ———
+  // Пересчёт в реальном времени
+  amountInput && ['input','change','keyup'].forEach(ev => amountInput.addEventListener(ev, recalc));
+
+  // Безопасный старт (ждём pricing.js)
   function boot() {
-    if (!window.PRICING?.currencies || !window.PRICING?.quote) {
+    if (!window?.PRICING?.currencies || !window?.PRICING?.quote) {
       setTimeout(boot, 100);
       return;
     }
@@ -160,18 +148,15 @@
     refreshTo();
     recalc();
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 
-  // ——— отправка заявки ———
+  // ---------- отправка заявки ----------
   function validateBusinessRules(){
-    // наличные CNY — только Гуанчжоу; отдать CNY нельзя вовсе, получить CNY только Гуанчжоу
-    if (fromPayType === 'cash' && selFrom === 'CNY') {
-      alert('Отдать наличные юани нельзя.');
-      return false;
-    }
+    // Нельзя ОТДАВАТЬ CNY вообще (по твоему требованию)
+    if (selFrom === 'CNY') { alert('Отдавать юани нельзя.'); return false; }
+    // Наличные CNY можно ПОЛУЧИТЬ только в Гуанчжоу
     if (toPayType === 'cash' && selTo === 'CNY' && cityTo !== 'guangzhou') {
-      alert('Получить наличные юани можно только в Гуанчжоу.');
+      alert('Наличные юани можно получить только в Гуанчжоу.');
       return false;
     }
     return true;
@@ -181,7 +166,7 @@
     const amountNum = Number(amountInput?.value || 0);
     if (!selFrom || !selTo) { alert('Выберите валюты «Отдаю» и «Получаю».'); return; }
     if (!(amountNum > 0))   { alert('Введите сумму.'); return; }
-    if (!currentQuote.rate) { alert('Не удалось рассчитать курс.'); return; }
+    if (!currentQuote?.rate) { alert('Не удалось рассчитать курс.'); return; }
     if (!validateBusinessRules()) return;
 
     const payload = {
@@ -202,39 +187,48 @@
     const file = qrFile?.files?.[0];
     if (file) payload.qr_filename = file.name || 'qr.png';
 
-    // 1) Telegram WebApp
+    // 1) Через Telegram WebApp
+    let viaTelegram = false;
     try {
       if (window.Telegram?.WebApp?.sendData) {
-        console.log('[SEND] via Telegram WebApp.sendData', payload);
+        console.log('[WebApp] sendData payload =', payload);
+        // подсказка для отладки, что дошли до вызова
+        alert('Пробую отправить через Telegram WebApp…');
         window.Telegram.WebApp.sendData(JSON.stringify(payload));
+        viaTelegram = true;
+
         if (window.Telegram.WebApp.showPopup) {
           window.Telegram.WebApp.showPopup({ title: 'Заявка отправлена', message: 'Мы скоро свяжемся с вами.' });
         } else {
           alert('Заявка отправлена. Мы скоро свяжемся с вами.');
         }
-        return; // не дублируем через REST
       }
     } catch (e) {
-      console.error('sendData failed', e);
+      console.error('[WebApp] sendData failed:', e);
+      alert('Ошибка WebApp.sendData: ' + (e?.message || e));
     }
 
-    // 2) REST API (сайт)
-    try {
-      console.log('[SEND] via REST', payload);
-      const r = await fetch(`${API_BASE}/order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const j = await r.json().catch(()=>({}));
-      if (r.ok && j.ok) alert('Заявка отправлена (через сайт). Мы скоро свяжемся с вами.');
-      else alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.');
-    } catch (e) {
-      console.error(e);
-      alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.');
+    // 2) Фолбэк через сайт (если не WebApp)
+    if (!viaTelegram) {
+      try {
+        const r = await fetch('/api/order', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const j = await r.json().catch(()=>({}));
+        if (r.ok && j.ok) {
+          alert('Заявка отправлена (через сайт). Мы скоро свяжемся с вами.');
+        } else {
+          alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.');
+        }
+      } catch (e) {
+        console.error('[API] order failed:', e);
+        alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.');
+      }
     }
   }
 
-  if (sendBtn) sendBtn.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); sendOrder(); });
+  sendBtn && sendBtn.addEventListener('click', sendOrder);
 })();
 

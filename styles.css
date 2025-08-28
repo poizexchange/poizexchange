@@ -1,73 +1,75 @@
-/* Clean white + azure accents (v34) */
+/* База — максимально близко к iOS/Apple */
 :root{
-  --bg:#ffffff; --ink:#0f1a2e; --muted:#5f6b85; --line:#e7ecf3;
-  --primary:#1aa3ff; --primary2:#0e78ff; --focus:#a6d2ff;
-  --chip-bg:#f3f9ff; --chip-border:#cfe6ff; --chip-shadow:0 6px 18px rgba(26,163,255,.18);
+  --bg:#f7f8fa;
+  --card:#ffffff;
+  --text:#0b0f1a;
+  --muted:#6b7280;
+  --primary:#2f80ed; /* синий iOS */
+  --line:#e5e7eb;
+  --chip:#f1f5f9;
+  --chip-active:#e8f0fe;
+  --radius:16px;
 }
-*{ box-sizing:border-box } html,body{height:100%}
-body{ margin:0; font-family: Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink); background:var(--bg) }
-.wrap{ width:100%; max-width:420px; margin:0 auto; padding:16px }
-.main-safe{ padding-bottom: calc(12px + env(safe-area-inset-bottom)) }
 
-/* iOS zoom prevention */
-input, select, textarea, button{ font-size:16px }
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,Inter,Arial,sans-serif}
 
-/* Header */
-.tg-header{ position:sticky; top:0; background:rgba(255,255,255,.95); backdrop-filter:saturate(160%) blur(8px); border-bottom:1px solid var(--line); z-index:10; box-shadow:0 8px 22px rgba(14,120,255,.10) }
-.title{ margin:10px 0; text-align:center; font-weight:1000; letter-spacing:.06em; color:#0b2c66; font-size:22px }
-.title.small{ font-size:18px }
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+.main-safe{padding-bottom:28px}
 
-/* Card */
-.card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; margin:12px 0; box-shadow:0 8px 24px rgba(26,163,255,.12) }
-.card.compact{ padding:10px }
-.h2{ margin:6px 0 10px; font-size:16px; color:#0b2c66; font-weight:1000; letter-spacing:.02em }
-.label{ display:block; margin:8px 0 6px; font-size:12px; color:var(--muted); font-weight:700 }
+.tg-header{position:sticky;top:0;background:var(--bg);backdrop-filter:saturate(180%) blur(14px);z-index:10;border-bottom:1px solid var(--line)}
+.title{margin:0;padding:14px 0;text-align:center;letter-spacing:0.06em;font-weight:700}
 
-/* Inputs */
-.input{ width:100%; border:1px solid var(--line); background:#fff; color:var(--ink); padding:10px 12px; border-radius:12px; font-size:16px; outline:none; box-shadow:0 2px 8px rgba(14,120,255,.06) }
-.input:focus{ border-color:var(--focus); box-shadow:0 0 0 3px rgba(14,120,255,.12), 0 8px 24px rgba(14,120,255,.10) }
-.input-file{ width:100%; border:1px dashed var(--line); background:#f9fbff; padding:10px; border-radius:12px }
+.h2{margin:0 0 12px 0;font-size:18px}
+.h2-center{text-align:center;letter-spacing:.04em}
 
-/* Chips (azure) */
-.chips{ display:flex; gap:8px }
-.chips.wrap{ flex-wrap:wrap }
-.chip{
-  flex:1; display:flex; gap:8px; align-items:center; justify-content:center;
-  padding:10px 8px; border:1px solid var(--chip-border); border-radius:12px;
-  background:var(--chip-bg); color:#0b2c66; font-weight:1000; cursor:pointer;
-  box-shadow: var(--chip-shadow);
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:12px 0;box-shadow:0 1px 2px rgb(0 0 0/4%)}
+
+/* Чипы-режимы оплаты */
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--chip);padding:10px 12px;border-radius:999px;font-weight:600;cursor:pointer}
+.chip img{width:18px;height:18px}
+.chip.active{background:var(--chip-active);border-color:#cfe0ff}
+
+/* Селект города */
+.citybox{margin-top:10px}
+.label{display:block;margin:8px 0 6px 2px;font-size:13px;color:var(--muted)}
+.input, .input-file, textarea.input{
+  width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;outline:none
 }
-.chip.full{ flex: 1 1 100% }
-.chip img{ width:18px; height:18px; object-fit:contain }
-.chip.active{ border-color:#7ec3ff; box-shadow:0 0 0 3px rgba(14,120,255,.12), 0 12px 26px rgba(14,120,255,.18) }
+.input:focus, textarea.input:focus{border-color:#cfe0ff;box-shadow:0 0 0 3px rgb(47 128 237/12%)}
 
-/* City box */
-.citybox{ margin:10px 0 6px; padding:10px; border:1px dashed var(--line); border-radius:12px; background:linear-gradient(180deg, #f3faff, #eef7ff) }
+/* Плитки валют — 3 в ряд на широкой, 2 на узкой */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:640px){ .tiles{grid-template-columns:repeat(2,1fr)} }
+.tile{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:14px 10px;border:1px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;
+  transition:transform .06s ease, box-shadow .06s ease, border-color .06s ease
+}
+.tile .ico img{width:36px;height:36px;display:block}
+.tile .cap{font-weight:600;font-size:14px;text-align:center}
+.tile.active{border-color:#cfe0ff;box-shadow:0 4px 14px rgb(47 128 237/10%);transform:translateY(-1px)}
 
-/* Tiles */
-.tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px }
-.tile{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px; min-height:100px; border:1px solid var(--line); background:#fff; border-radius:14px; cursor:pointer; transition:.12s; box-shadow:0 2px 10px rgba(14,120,255,.10) }
-.tile:hover{ transform:translateY(-1px) } .tile.active{ border-color:#7ec3ff; box-shadow:0 0 0 3px rgba(14,120,255,.12), 0 14px 24px rgba(14,120,255,.16) }
-.ico{ width:40px; height:40px; display:flex; align-items:center; justify-content:center }
-.ico img{ width:40px; height:40px; object-fit:contain }
-.cap{ font-weight:1000; font-size:13px; letter-spacing:.2px; color:#0b2c66; text-align:center }
-.sub{ font-weight:800; color:#446 }
+/* Расчёт */
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
+@media (max-width:720px){ .calc-grid{grid-template-columns:1fr} }
+.result-card{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;background:#fbfcff}
+.result-line{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0}
+.r-cap{color:var(--muted);font-size:13px}
+.r-val{font-weight:700}
+.r-big{font-size:20px;font-weight:800}
 
-/* Calculation block */
-.calc-grid{ display:grid; grid-template-columns:1fr; gap:12px } @media(min-width:380px){ .calc-grid{ grid-template-columns:1fr 1fr } }
-.result-card{ border:1px solid var(--line); border-radius:14px; padding:12px; background:linear-gradient(180deg, #fff, #f3faff); box-shadow:0 10px 24px rgba(26,163,255,.12) }
-.result-line{ display:flex; align-items:flex-end; justify-content:space-between; padding:6px 0; border-bottom:1px dashed #edf2fa }
-.result-line:last-child{ border-bottom:none }
-.r-cap{ font-size:12px; color:#6c7bad; font-weight:1000; letter-spacing:.02em }
-.r-val{ font-size:17px; font-weight:1000; color:#0e78ff }
-.r-big{ font-size:19px; font-weight:1000; color:#0a3ea1 }
+/* Кнопка отправки */
+.btn-primary{
+  display:inline-block;width:100%;padding:14px 18px;border:0;border-radius:14px;
+  background:var(--primary);color:#fff;font-weight:700;cursor:pointer;
+  box-shadow:0 6px 20px rgb(47 128 237/30%)
+}
+.btn-primary:active{transform:translateY(1px)}
 
-/* Submit */
-.btn-primary{ width:100%; background:linear-gradient(180deg, var(--primary), var(--primary2)); color:#fff; border:none; border-radius:12px; padding:12px 14px; font-weight:1000; letter-spacing:.2px; cursor:pointer; transition:.15s; box-shadow:0 16px 36px rgba(14,120,255,.26) }
-.btn-primary:active,.btn-primary:hover{ transform:translateY(-1px); filter:saturate(110%) }
+/* Ссылки внизу */
+.footlinks{display:flex;gap:16px;justify-content:center;margin:18px 0 4px;color:var(--muted)}
+.footlinks a{color:var(--primary);text-decoration:none;font-weight:600}
+.hint{margin-top:10px;color:var(--muted);font-size:13px}
 
-/* Footer */
-.footlinks{ display:flex; gap:12px; justify-content:center; padding:8px 0 calc(12px + env(safe-area-inset-bottom)) }
-.footlinks a{ color:#0b2c66; text-decoration:none; font-weight:1000; padding:6px 10px; border-radius:10px; background:#f3f9ff; border:1px solid var(--line); box-shadow:0 4px 10px rgba(14,120,255,.08) }
-
-.hint{ color:#a33; font-size:12px; margin:8px 0 0 }

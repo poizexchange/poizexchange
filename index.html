@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Калькулятор</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=80" />
+  <link rel="stylesheet" href="./styles.css?v=58" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="./pricing.js?v=80"></script>
-  <script src="./index.js?v=80" defer></script>
+  <script src="./pricing.js?v=71"></script>
+  <script src="./index.js?v=71" defer></script>
 </head>
 <body class="tg-white">
   <header class="tg-header">
@@ -17,8 +17,6 @@
   </header>
 
   <main class="wrap main-safe">
-
-    <!-- Отдаю -->
     <section class="card">
       <h2 class="h2">Отдаю</h2>
       <div class="chips" id="from-pay">
@@ -38,27 +36,6 @@
       <div id="from-currencies" class="tiles"></div>
     </section>
 
-    <!-- Перенесённый блок суммы -->
-    <section class="card">
-      <div class="calc-grid">
-        <div>
-          <label class="label" for="amount">Сумма</label>
-          <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
-        </div>
-        <div class="result-card">
-          <div class="result-line">
-            <div class="r-cap">Курс</div>
-            <div id="rateVal" class="r-val">—</div>
-          </div>
-          <div class="result-line">
-            <div class="r-cap">К получению</div>
-            <div id="totalVal" class="r-big">—</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Получаю -->
     <section class="card">
       <h2 class="h2">Получаю</h2>
       <div class="chips wrap" id="to-pay">
@@ -79,7 +56,25 @@
       <div id="to-currencies" class="tiles"></div>
     </section>
 
-    <!-- Заявка -->
+    <section class="card">
+      <div class="calc-grid">
+        <div>
+          <label class="label" for="amount">Сумма</label>
+          <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
+        </div>
+        <div class="result-card">
+          <div class="result-line">
+            <div class="r-cap">Курс</div>
+            <div id="rateVal" class="r-val">—</div>
+          </div>
+          <div class="result-line">
+            <div class="r-cap">К получению</div>
+            <div id="totalVal" class="r-big">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="card">
       <h2 class="h2">Заявка</h2>
       <label class="label" for="contact">Контакт</label>
@@ -101,10 +96,8 @@
     </section>
 
     <nav class="footlinks">
-      <a href="./rates.html?v=80">📊 Табло</a>
+      <a href="./rates.html?v=34">📊 Табло</a>
       <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
       <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
     </nav>
   </main>
-</body>
-</html>

@@ -119,7 +119,9 @@
   }
 
   async function sendOrder(){
-    if (sending) return; sending = true;
+    if (sending) return; 
+    sending = true;
+    sendBtn && (sendBtn.disabled = true);
     try{
       const amountNum = Number(amountInput?.value || 0);
       if (!selFrom || !selTo){ alert('Выберите валюты «Отдаю» и «Получаю».'); return; }
@@ -139,20 +141,32 @@
         qr_filename: qrFile?.files?.[0]?.name || null
       };
 
+      // Внутри Telegram WebApp — отправляем через sendData
       if (tg && tg.sendData){
         try { tg.sendData(JSON.stringify(payload)); } catch(e){ console.warn('sendData error', e); }
-        alert('Заявка отправлена.');
+        if (tg.showPopup) tg.showPopup({ title:'Заявка отправлена', message:'Мы скоро свяжемся с вами.' });
+        else alert('Заявка отправлена.');
         return;
       }
 
+      // Открыто как сайт — шлём в HTTPS API
       const r = await fetch(`${API_BASE}/order`, {
-        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
       });
       const j = await r.json().catch(()=>({}));
       if (r.ok && j.ok) alert('Заявка отправлена (через сайт).');
       else alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.');
-    } finally { sending = false; }
+    } finally {
+      sending = false;
+      sendBtn && (sendBtn.disabled = false);
+    }
   }
+
+  sendBtn && sendBtn.addEventListener('click', sendOrder);
+})();
+
 
   sendBtn && (sendBtn.onclick = sendOrder);
 })();

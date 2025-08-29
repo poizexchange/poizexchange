@@ -1,23 +1,32 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Poiz Exchange — Калькулятор</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=67" />
-  <!-- ВАЖНО: сначала телеграм, потом pricing.js, потом index.js -->
+  <meta charset="UTF-8">
+  <title>Poiz Exchange</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="./styles.css?v=58">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="./pricing.js?v=67"></script>
-  <script src="./index.js?v=67" defer></script>
+  <!-- pricing.js обязательно должен подгрузиться -->
+  <script src="./pricing.js?v=60"></script>
+  <script src="./index.js?v=70" defer></script>
 </head>
-<body class="tg-white">
-  <header class="tg-header">
-    <div class="wrap">
-      <h1 class="title">КАЛЬКУЛЯТОР ОБМЕНА</h1>
-    </div>
-  </header>
+<body>
+  <!-- ваш дизайн -->
+  <div id="from-pay"></div>
+  <div id="to-pay"></div>
+  <div id="from-currencies"></div>
+  <div id="to-currencies"></div>
+  <input id="amount" type="number" placeholder="Сумма">
+  <div id="rateVal">—</div>
+  <div id="totalVal">—</div>
+  <input id="contact" placeholder="Ваш контакт">
+  <input id="requisites" placeholder="Реквизиты">
+  <textarea id="note" placeholder="Комментарий"></textarea>
+  <div id="qrbox" hidden><input type="file" id="qrfile"></div>
+  <button id="sendBtn">Отправить заявку</button>
+  <div id="hint" hidden>Откройте в Telegram</div>
 
-  <main class="wrap main-safe">
+    <main class="wrap main-safe">
     <section class="card">
       <h2 class="h2">Отдаю</h2>
       <div class="chips" id="from-pay">

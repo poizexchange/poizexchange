@@ -1,4 +1,4 @@
-// index.js v71 — старый UI, стабильные плитки, WebApp=>sendData, сайт=>API
+// index.js v72 — не трогаем дизайн/верстку; стабильные плитки, пересчет, отправка
 (function () {
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 
@@ -29,20 +29,19 @@
   let cityTo      = 'moscow';
   let selFrom     = null;
   let selTo       = null;
+  let sending     = false;
   let currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
-  let sending = false;
 
-  // API base:
-  // - если открыто с GitHub Pages → шлём на прод API домен
-  // - если открыто с твоего домена (и стоит nginx proxy /api → 127.0.0.1:8081) → используем /api
+  // API base (не ломаем твой nginx-прокси)
   const API_BASE = (location.hostname.endsWith('github.io')) ? 'https://api.poizexchange.ru' : '/api';
 
-  // Telegram init (и мягкий пинг в бота)
-  if (tg) { try { tg.expand(); tg.ready(); tg.sendData(JSON.stringify({action:'webapp_open'})); } catch(e){} }
+  // Telegram init (без изменения UI)
+  if (tg) { try { tg.expand(); tg.ready(); tg.sendData(JSON.stringify({ action:'webapp_open' })); } catch(e){} }
   else if (hint) { hint.hidden = false; }
 
-  // Utils
-  const clear = (n)=>{ while(n && n.firstChild) n.removeChild(n.firstChild); };
+  // Helpers
+  function clear(node){ while(node && node.firstChild) node.removeChild(node.firstChild); }
+
   function tile(item, side){
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -54,27 +53,30 @@
     `;
     btn.addEventListener('click', ()=>{
       if (side === 'from') { selFrom = item.code; markActive(fromWrap, item.code); }
-      else { selTo = item.code; markActive(toWrap, item.code); }
+      else                 { selTo   = item.code; markActive(toWrap,  item.code); }
       updateQrVisibility();
       recalc();
     });
     return btn;
   }
+
   function markActive(container, code){
     if (!container) return;
     container.querySelectorAll('.tile').forEach(t=>t.classList.remove('active'));
     container.querySelectorAll(`[data-code="${code}"]`).forEach(t=>t.classList.add('active'));
   }
+
   function renderTiles(container, list, side){
     clear(container);
-    list.forEach(it => container.appendChild(tile(it, side)));
+    list.forEach(item => container.appendChild(tile(item, side)));
   }
+
   function updateQrVisibility(){
     const cnpay = ['ALIPAY','WECHAT','CN_CARD'];
     if (qrBox) qrBox.hidden = !(toPayType === 'cnpay' && selTo && cnpay.includes(selTo));
   }
 
-  // Рендер источников/приёмников
+  // Рендер плиток
   function refreshFrom(){
     if (fromCityBox) fromCityBox.hidden = (fromPayType !== 'cash');
     const list = window.PRICING?.currencies ? window.PRICING.currencies(fromPayType, cityFrom, 'from') : [];
@@ -82,6 +84,7 @@
     selFrom = list[0]?.code || null;
     if (selFrom) markActive(fromWrap, selFrom);
   }
+
   function refreshTo(){
     if (toCityBox) toCityBox.hidden = (toPayType !== 'cash');
     const list = window.PRICING?.currencies ? window.PRICING.currencies(toPayType, cityTo, 'to') : [];
@@ -95,18 +98,18 @@
   function recalc(){
     const amount = Number(amountInput?.value || 0);
     if (!selFrom || !selTo || !amount || amount <= 0 || !window.PRICING?.quote){
-      rateVal && (rateVal.textContent='—');
-      totalVal && (totalVal.textContent='—');
+      if (rateVal)  rateVal.textContent  = '—';
+      if (totalVal) totalVal.textContent = '—';
       currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
       return;
     }
     const q = window.PRICING.quote({ from: selFrom, to: selTo, amount });
     currentQuote = q || {};
-    rateVal && (rateVal.textContent = q?.rateText ?? '—');
-    totalVal && (totalVal.textContent = q?.totalText ?? '—');
+    if (rateVal)  rateVal.textContent  = q?.rateText  ?? '—';
+    if (totalVal) totalVal.textContent = q?.totalText ?? '—';
   }
 
-  // Выбор режима
+  // Chips
   function wireChips(box, cb){
     if (!box) return;
     box.querySelectorAll('.chip').forEach(btn=>{
@@ -119,6 +122,7 @@
     const first = box.querySelector('.chip');
     if (first){ first.classList.add('active'); cb && cb(first.dataset.type); }
   }
+
   wireChips(fromPayBox, (t)=>{ fromPayType=t; refreshFrom(); recalc(); });
   wireChips(toPayBox,   (t)=>{ toPayType=t;   refreshTo();  recalc(); });
 
@@ -126,7 +130,7 @@
   cityToSel   && cityToSel.addEventListener('change',   ()=>{ cityTo   = cityToSel.value;   refreshTo();  recalc(); });
   amountInput && amountInput.addEventListener('input', recalc);
 
-  // Безопасная инициализация
+  // Ждём pricing.js, чтобы не «съезжали» плитки
   function boot(){
     if (!window.PRICING?.currencies || !window.PRICING?.quote) return setTimeout(boot, 50);
     refreshFrom(); refreshTo(); recalc();
@@ -135,11 +139,12 @@
 
   // Бизнес-правила CNY
   function validateBusiness(){
-    if (fromPayType==='cash' && selFrom==='CNY' && cityFrom!=='guangzhou'){
+    // наличные юани — только в Гуанчжоу (и отдавать, и получать)
+    if (fromPayType === 'cash' && selFrom === 'CNY' && cityFrom !== 'guangzhou') {
       alert('Наличные юани можно ОТДАТЬ только в Гуанчжоу.');
       return false;
     }
-    if (toPayType==='cash' && selTo==='CNY' && cityTo!=='guangzhou'){
+    if (toPayType === 'cash' && selTo === 'CNY' && cityTo !== 'guangzhou') {
       alert('Наличные юани можно ПОЛУЧИТЬ только в Гуанчжоу.');
       return false;
     }
@@ -158,29 +163,29 @@
 
       const payload = {
         type:'order',
-        from_currency: selFrom, to_currency: selTo,
-        from_kind: fromPayType, to_kind: toPayType,
-        city_from: cityFrom, city_to: cityTo,
-        amount: amountNum, rate: currentQuote.rate, total: currentQuote.total,
+        from_currency: selFrom,
+        to_currency: selTo,
+        from_kind: fromPayType,
+        to_kind: toPayType,
+        city_from: cityFrom,
+        city_to: cityTo,
+        amount: amountNum,
+        rate: currentQuote.rate,
+        total: currentQuote.total,
         contact: (contactInput?.value||'').trim(),
         requisites: (reqsInput?.value||'').trim(),
         note: (noteInput?.value||'').trim(),
         qr_filename: qrFile?.files?.[0]?.name || null
       };
 
-      // 1) Внутри Telegram — отправка в бота (web_app_data)
+      // внутри Telegram — отправка в бота
       if (tg && tg.sendData){
-        try {
-          tg.sendData(JSON.stringify(payload));
-          alert('Заявка отправлена.');
-        } catch(e){
-          console.warn('sendData error', e);
-          alert('Ошибка передачи в Telegram. Попробуйте ещё раз.');
-        }
+        try { tg.sendData(JSON.stringify(payload)); alert('Заявка отправлена.'); }
+        catch(e){ console.warn('sendData error', e); alert('Ошибка передачи в Telegram.'); }
         return;
       }
 
-      // 2) Открыто как сайт — уходим в API
+      // сайт — отправка на API
       const r = await fetch(`${API_BASE}/order`, {
         method:'POST',
         headers:{'Content-Type':'application/json'},

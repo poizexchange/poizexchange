@@ -1,70 +1,44 @@
 /* ===== БАЗА ===== */
 * { box-sizing: border-box; }
-body.ui-blue {
-  margin: 0;
-  background: #f5f9ff;
-  color: #0a2b4b;
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", Roboto, Segoe UI, Arial, sans-serif;
-}
+body.ui-blue { margin:0; background:#f5f9ff; color:#0a2b4b;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", Roboto, Segoe UI, Arial, sans-serif; }
 
 /* ===== ХЕДЕР ===== */
-.hero {
-  padding: 14px 16px 6px;
-}
+.hero{ padding:14px 16px 6px; }
 .hero-badge{
-  display:inline-flex;flex-wrap:wrap;gap:10px 18px;align-items:center;
-  background: linear-gradient(135deg,#52b2ff, #2f92ff);
-  color:#fff;border-radius:22px;padding:14px 18px;
-  box-shadow: 0 8px 22px rgba(47,146,255,.25);
+  display:inline-flex; flex-wrap:wrap; gap:10px 16px; align-items:center;
+  background: linear-gradient(135deg,#52b2ff,#2f92ff);
+  color:#fff; border-radius:22px; padding:14px 18px;
+  box-shadow:0 8px 22px rgba(47,146,255,.25);
 }
-.hero-badge .logo{font-weight:800;font-style:italic;letter-spacing:.5px;font-size:22px}
-.hero-badge .sublogo{font-weight:700;opacity:.9}
-.hero-badge .title{font-weight:800;font-size:18px}
+.hero-badge .brand{ font-weight:900; font-style:italic; letter-spacing:.5px; font-size:22px; }
+.hero-badge .descr{ font-weight:800; font-size:18px; margin-left:8px; opacity:.95; }
 
 /* ===== КАРТОЧКИ ===== */
-.wrap { max-width: 960px; margin: 0 auto; padding: 0 16px 40px; }
-.card{
-  background:#fff;border:1px solid #dbe9ff;border-radius:18px;
-  box-shadow: 0 8px 18px rgba(24,97,185,.06);
-  padding:16px;margin:14px 0;
-}
-.card.soft{ padding: 12px 16px; }
-
-.section-title{
-  margin:4px 0 12px; font-size:18px; font-weight:800; letter-spacing:.3px;
-}
+.wrap{ max-width:960px; margin:0 auto; padding:0 16px 40px; }
+.card{ background:#fff; border:1px solid #dbe9ff; border-radius:18px;
+  box-shadow:0 8px 18px rgba(24,97,185,.06); padding:16px; margin:14px 0; }
+.card.soft{ padding:12px 16px; }
+.section-title{ margin:4px 0 12px; font-size:18px; font-weight:800; letter-spacing:.3px; }
 
 /* ===== ФОРМЫ ===== */
 .label{ display:block; margin:6px 0 6px; font-weight:600; color:#28527a; font-size:14px; }
-.input{
-  width:100%; padding:12px 14px; border-radius:14px; border:1px solid #cfe1ff;
-  background:#fff; font-size:16px; outline:none;
-}
+.input{ width:100%; padding:12px 14px; border-radius:14px; border:1px solid #cfe1ff; background:#fff; font-size:16px; outline:none; }
 .input:focus{ border-color:#3fa9ff; box-shadow:0 0 0 3px rgba(63,169,255,.15); }
-
 .input-file{ width:100%; padding:10px; border:1px dashed #cfe1ff; border-radius:12px; background:#fbfdff; }
 
 /* ===== ЧИПЫ ===== */
 .chips{ display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
-.chip{
-  flex:1; min-width: 120px;
-  display:flex; align-items:center; justify-content:center; gap:8px;
-  padding:12px 14px; border-radius:14px;
-  border:1px solid #cfe1ff; background:#eaf4ff; color:#0a2b4b;
-  font-weight:800; font-size:16px; cursor:pointer; user-select:none; transition:.15s;
-}
+.chip{ flex:1; min-width:120px; display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:12px 14px; border-radius:14px; border:1px solid #cfe1ff; background:#eaf4ff; color:#0a2b4b;
+  font-weight:800; font-size:16px; cursor:pointer; user-select:none; transition:.15s; }
 .chip img{ width:18px; height:18px; }
 .chip.active{ background:#3fa9ff; border-color:#3fa9ff; color:#fff; box-shadow:0 6px 14px rgba(63,169,255,.28); }
 
 /* ===== ПЛИТКИ ===== */
-.tiles{
-  display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;
-}
-.tile{
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
-  padding:16px 6px; border-radius:16px; background:#fff;
-  border:2px solid #d6e6ff; cursor:pointer; transition:.15s;
-}
+.tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.tile{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+  padding:16px 6px; border-radius:16px; background:#fff; border:2px solid #d6e6ff; cursor:pointer; transition:.15s; }
 .tile .ico{ width:44px; height:44px; }
 .tile .ico img{ width:100%; height:100%; object-fit:contain; }
 .tile .cap{ font-weight:800; font-size:15px; letter-spacing:.2px; }
@@ -72,31 +46,20 @@ body.ui-blue {
 .tile.active{ border-color:#3fa9ff; box-shadow:0 8px 18px rgba(63,169,255,.25); }
 
 /* ===== РЕЗУЛЬТАТЫ ===== */
-.calc-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; align-items:stretch; }
-.result-card{
-  border:1px solid #cfe1ff; border-radius:14px; padding:10px 12px; background:#f7fbff;
-}
+.calc-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:stretch; }
+.result-card{ border:1px solid #cfe1ff; border-radius:14px; padding:10px 12px; background:#f7fbff; }
 .result-line{ display:flex; align-items:center; justify-content:space-between; padding:8px 2px; }
 .r-cap{ color:#3a6798; font-weight:700; }
 .r-val{ font-weight:800; }
 .r-big{ font-size:20px; font-weight:900; }
 
 /* ===== КНОПКИ ===== */
-.btn-primary{
-  width:100%; margin-top:10px;
-  padding:14px 16px; border:none; border-radius:16px; cursor:pointer;
-  background:linear-gradient(135deg,#52b2ff, #2f92ff); color:#fff; font-weight:900; font-size:16px;
-  box-shadow: 0 10px 22px rgba(47,146,255,.28);
-}
+.btn-primary{ width:100%; margin-top:10px; padding:14px 16px; border:none; border-radius:16px; cursor:pointer;
+  background:linear-gradient(135deg,#52b2ff,#2f92ff); color:#fff; font-weight:900; font-size:16px;
+  box-shadow:0 10px 22px rgba(47,146,255,.28); }
 .hint{ margin:8px 0 0; color:#5c7ea8; }
 
-/* ===== ДОП. БЛОКИ ===== */
-.citybox{ margin:10px 0 0; }
-
-.footlinks{
-  display:flex; gap:16px; justify-content:center; margin-top:10px;
-}
-.footlinks a{
-  text-decoration:none; color:#1c5fb8; font-weight:700;
-}
-
+/* city box сверху скрываем/показываем через JS (id=cityTop) */
+.cityTop{ margin-top:4px; }
+.footlinks{ display:flex; gap:16px; justify-content:center; margin-top:10px; }
+.footlinks a{ text-decoration:none; color:#1c5fb8; font-weight:700; }

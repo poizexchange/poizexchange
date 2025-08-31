@@ -2,37 +2,34 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Poiz Exchange — Калькулятор</title>
+  <title>Poiz Exchange — Обмен валют</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=blue-01" />
+  <link rel="stylesheet" href="./styles.css?v=blue-02" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- ТВОИ СКРИПТЫ (НЕ МЕНЯЕМ) -->
+  <!-- твои скрипты -->
   <script src="./pricing.js?v=60"></script>
-  <script src="./index.js?v=70" defer></script>
+  <script src="./index.js?v=71" defer></script>
 </head>
 <body class="ui-blue">
 
-  <!-- Баннер как на макете -->
+  <!-- Баннер -->
   <header class="hero">
     <div class="hero-badge">
-      <span class="logo">POIZ</span>
-      <span class="sublogo">EXCHANGE</span>
-      <span class="title">КАЛЬКУЛЯТОР</span>
-      <span class="title">ОБМЕНА</span>
+      <span class="brand">POIZ</span><span class="brand">EXCHANGE</span>
+      <span class="descr">ОБМЕН ВАЛЮТ</span>
     </div>
   </header>
 
   <main class="wrap">
-    <!-- Город (один селектор сверху — как на макете) -->
-    <section class="card soft">
+    <!-- Город (общий селектор; показывается только для cash) -->
+    <section class="card soft cityTop" id="cityTop" hidden>
       <label class="label" for="cityFrom">Город</label>
       <select id="cityFrom" class="input">
         <option value="moscow">Москва</option>
         <option value="spb">Санкт-Петербург</option>
         <option value="guangzhou">Гуанчжоу</option>
       </select>
-      <!-- для «Получаю» синхронизируем тем же значением -->
       <select id="cityTo" class="input" hidden>
         <option value="moscow">Москва</option>
         <option value="spb">Санкт-Петербург</option>
@@ -44,20 +41,13 @@
     <section class="card">
       <h2 class="section-title">Отдаю</h2>
 
-      <!-- Чипы типов оплаты -->
       <div class="chips" id="from-pay">
         <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
         <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
         <button class="chip" data-type="crypto"><img src="./icons/crypto.svg" alt="">Крипто</button>
       </div>
 
-      <!-- Город для «Отдаю» (по логике показывается только при cash) -->
-      <div id="from-citybox" class="citybox" hidden>
-        <label class="label">Город для наличных</label>
-        <!-- используем тот же селектор города сверху; можно оставить пустым -->
-      </div>
-
-      <!-- Плитки валют/сервисов -->
+      <div id="from-citybox" class="citybox" hidden></div>
       <div id="from-currencies" class="tiles"></div>
     </section>
 
@@ -65,7 +55,6 @@
     <section class="card">
       <h2 class="section-title">Получаю</h2>
 
-      <!-- Чипы типов получения -->
       <div class="chips" id="to-pay">
         <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
         <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
@@ -73,12 +62,7 @@
         <button class="chip" data-type="cnpay"><img src="./icons/bankcn.svg" alt="">Китайские сервисы</button>
       </div>
 
-      <!-- Город для «Получаю» (показывается только при cash) -->
-      <div id="to-citybox" class="citybox" hidden>
-        <label class="label">Город для наличных</label>
-      </div>
-
-      <!-- Плитки валют/сервисов -->
+      <div id="to-citybox" class="citybox" hidden></div>
       <div id="to-currencies" class="tiles"></div>
     </section>
 

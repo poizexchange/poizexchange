@@ -1,113 +1,64 @@
-// index.js v71 — надёжный рендер плиток + fallback без pricing.js + корректная отправка заявки
+// index.js v71 — стабильные плитки + автопересчёт + TG WebApp sendData + резерв в API
 (function () {
+  // ===== DOM =====
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 
-  // DOM
   const fromPayBox   = document.getElementById('from-pay');
   const toPayBox     = document.getElementById('to-pay');
+
   const fromCityBox  = document.getElementById('from-citybox');
   const toCityBox    = document.getElementById('to-citybox');
+
   const cityFromSel  = document.getElementById('cityFrom');
   const cityToSel    = document.getElementById('cityTo');
+
   const fromWrap     = document.getElementById('from-currencies');
   const toWrap       = document.getElementById('to-currencies');
+
   const amountInput  = document.getElementById('amount');
   const rateVal      = document.getElementById('rateVal');
   const totalVal     = document.getElementById('totalVal');
+
   const contactInput = document.getElementById('contact');
   const reqsInput    = document.getElementById('requisites');
   const noteInput    = document.getElementById('note');
+
   const qrBox        = document.getElementById('qrbox');
   const qrFile       = document.getElementById('qrfile');
+
   const sendBtn      = document.getElementById('sendBtn');
   const hint         = document.getElementById('hint');
 
-  // Состояние
-  let fromPayType = 'bank';     // старт как просили: отдаю — банки
-  let toPayType   = 'cnpay';    // получаю — китайские сервисы
+  // ===== STATE =====
+  // По твоему требованию стартуем: Отдаю = БАНК, Получаю = КИТ.СЕРВИСЫ
+  let fromPayType = 'bank';     // cash | bank | crypto
+  let toPayType   = 'cnpay';    // cash | bank | crypto | cnpay
   let cityFrom    = 'moscow';
-  let cityTo      = 'guangzhou';
-  let selFrom     = null;
+  let cityTo      = 'guangzhou'; // чтобы сразу корректно для CNY cash
+  let selFrom     = null;       // код валюты/сервиса (например 'RUB', 'USDT', 'ALIPAY')
   let selTo       = null;
   let currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
   let sending = false;
 
-  // API
+  // ===== CONST =====
   const API_BASE = 'https://api.poizexchange.ru';
+  const CNPAY_CODES = ['ALIPAY','WECHAT','CN_CARD','CNY']; // в «китайских сервисах» и наличные CNY
 
-  // Telegram init
-  if (tg) { try { tg.expand(); tg.ready(); } catch(e){} } else if (hint) { hint.hidden = false; }
+  // ===== INIT TG =====
+  if (tg) {
+    try {
+      tg.expand(); tg.ready();
+      // легкий пинг, чтобы в логах бота видеть открытие формы
+      try { tg.sendData(JSON.stringify({action:'webapp_open'})); } catch(e){}
+    } catch(e){}
+  } else if (hint) {
+    hint.hidden = false;
+  }
 
-  // ---------- fallback каталога валют на случай пустого pricing.js ----------
-  const FALLBACK = {
-    // откуда
-    from: {
-      cash: [
-        { code:'RUB',  nameRu:'Рубль',  icon:'./icons/rub.svg' },
-        { code:'USD',  nameRu:'Доллар', icon:'./icons/usd.svg' },
-        { code:'CNY',  nameRu:'Юань',   icon:'./icons/cny.svg' }, // блокируем бизнес-правилом при отправке
-      ],
-      bank: [
-        { code:'SBP',  nameRu:'СБП',    icon:'./icons/sbp.svg' },
-        { code:'SBER', nameRu:'Сбер',   icon:'./icons/sber.svg' },
-        { code:'ALFA', nameRu:'Альфа',  icon:'./icons/alfa.svg' },
-        { code:'TINK', nameRu:'Т-Банк', icon:'./icons/tink.svg' },
-        { code:'VTB',  nameRu:'ВТБ',    icon:'./icons/vtb.svg' },
-        { code:'RAIF', nameRu:'Райф',   icon:'./icons/raif.svg' },
-        { code:'OZON', nameRu:'Ozon',   icon:'./icons/ozon.svg' },
-        { code:'OTP',  nameRu:'OTP',    icon:'./icons/otp.svg' },
-      ],
-      crypto: [
-        { code:'USDT', nameRu:'USDT', icon:'./icons/usdt.svg' },
-        { code:'BTC',  nameRu:'BTC',  icon:'./icons/btc.svg'  },
-        { code:'ETH',  nameRu:'ETH',  icon:'./icons/eth.svg'  },
-        { code:'LTC',  nameRu:'LTC',  icon:'./icons/ltc.svg'  },
-        { code:'XMR',  nameRu:'XMR',  icon:'./icons/xmr.svg'  },
-        { code:'SOL',  nameRu:'SOL',  icon:'./icons/sol.svg'  },
-        { code:'TON',  nameRu:'TON',  icon:'./icons/ton.svg'  },
-        { code:'XRP',  nameRu:'XRP',  icon:'./icons/xrp.svg'  },
-      ],
-    },
-    // куда
-    to: {
-      cash: [
-        { code:'RUB', nameRu:'Рубль',  icon:'./icons/rub.svg' },
-        { code:'USD', nameRu:'Доллар', icon:'./icons/usd.svg' },
-        { code:'CNY', nameRu:'Юань',   icon:'./icons/cny.svg' }, // показываем, но проверим город
-      ],
-      bank: [
-        { code:'SBP',  nameRu:'СБП',    icon:'./icons/sbp.svg' },
-        { code:'SBER', nameRu:'Сбер',   icon:'./icons/sber.svg' },
-        { code:'ALFA', nameRu:'Альфа',  icon:'./icons/alfa.svg' },
-        { code:'TINK', nameRu:'Т-Банк', icon:'./icons/tink.svg' },
-        { code:'VTB',  nameRu:'ВТБ',    icon:'./icons/vtb.svg' },
-        { code:'RAIF', nameRu:'Райф',   icon:'./icons/raif.svg' },
-        { code:'OZON', nameRu:'Ozon',   icon:'./icons/ozon.svg' },
-        { code:'OTP',  nameRu:'OTP',    icon:'./icons/otp.svg' },
-      ],
-      crypto: [
-        { code:'USDT', nameRu:'USDT', icon:'./icons/usdt.svg' },
-        { code:'BTC',  nameRu:'BTC',  icon:'./icons/btc.svg'  },
-        { code:'ETH',  nameRu:'ETH',  icon:'./icons/eth.svg'  },
-        { code:'LTC',  nameRu:'LTC',  icon:'./icons/ltc.svg'  },
-        { code:'XMR',  nameRu:'XMR',  icon:'./icons/xmr.svg'  },
-        { code:'SOL',  nameRu:'SOL',  icon:'./icons/sol.svg'  },
-        { code:'TON',  nameRu:'TON',  icon:'./icons/ton.svg'  },
-        { code:'XRP',  nameRu:'XRP',  icon:'./icons/xrp.svg'  },
-      ],
-      cnpay: [
-        { code:'ALIPAY',  nameRu:'Alipay',      icon:'./icons/alipay.svg' },
-        { code:'WECHAT',  nameRu:'WeChat Pay',  icon:'./icons/wechat.svg' },
-        { code:'CN_CARD', nameRu:'Карта Китая', icon:'./icons/cncard.svg' },
-        { code:'CNY',     nameRu:'Нал. юани',   icon:'./icons/cny.svg' }, // получение наличных CNY
-      ],
-    }
-  };
-
-  // ---------- утилиты ----------
+  // ===== UTILS =====
   function clear(node){ while(node && node.firstChild) node.removeChild(node.firstChild); }
 
-  function makeTile(item){
+  function tile(item, side){
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'tile';
@@ -116,193 +67,217 @@
       <div class="ico"><img src="${item.icon}" alt=""></div>
       <div class="cap">${item.nameRu}</div>
     `;
+
+    // Правила видимости/блокировки (минимум защиты на фронте)
+    // 1) Отдать наличные CNY нельзя — делаем их неактивными
+    if (side === 'from' && fromPayType === 'cash' && item.code === 'CNY') {
+      btn.disabled = true;
+      btn.classList.add('disabled');
+    }
+    // 2) Получить наличные CNY можно только в Гуанчжоу
+    if (side === 'to' && toPayType === 'cash' && item.code === 'CNY' && cityTo !== 'guangzhou') {
+      btn.disabled = true;
+      btn.classList.add('disabled');
+    }
+
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      if (side === 'from') {
+        selFrom = item.code;
+        markActive(fromWrap, item.code);
+      } else {
+        selTo = item.code;
+        markActive(toWrap, item.code);
+      }
+      updateQrVisibility();
+      recalc();
+    });
     return btn;
   }
 
   function markActive(container, code){
     if (!container) return;
     container.querySelectorAll('.tile').forEach(t=>t.classList.remove('active'));
-    container.querySelectorAll(`[data-code="${code}"]`).forEach(t=>t.classList.add('active'));
+    const match = container.querySelector(`[data-code="${code}"]`);
+    if (match) match.classList.add('active');
   }
 
-  function renderTiles(container, list){
+  function renderTiles(container, list, side){
     clear(container);
-    if (!list || list.length === 0) {
-      const msg = document.createElement('div');
-      msg.className = 'tiles-empty';
-      msg.textContent = 'Нет доступных вариантов';
-      container.appendChild(msg);
-      return;
-    }
-    list.forEach(item => container.appendChild(makeTile(item)));
+    list.forEach(item => container.appendChild(tile(item, side)));
   }
 
-  function listFromPricing(kind, city, side){
-    try {
-      if (window.PRICING?.currencies) {
-        const arr = window.PRICING.currencies(kind, city, side);
-        if (Array.isArray(arr) && arr.length) return arr;
-        console.warn(`[pricing] Пусто для ${side}/${kind}/${city}. Использую fallback.`);
-      } else {
-        console.warn('[pricing] window.PRICING.currencies отсутствует, использую fallback.');
-      }
-    } catch (e) {
-      console.warn('[pricing] ошибка currencies()', e);
-    }
-    // fallback
-    return (side === 'from') ? (FALLBACK.from[kind] || []) : (FALLBACK.to[kind] || []);
+  function firstEnabledCode(container){
+    const btn = container.querySelector('.tile:not(.disabled)');
+    return btn ? btn.getAttribute('data-code') : null;
   }
 
   function updateQrVisibility(){
-    const cnpay = ['ALIPAY','WECHAT','CN_CARD','CNY'];
-    if (qrBox) qrBox.hidden = !(toPayType === 'cnpay' && selTo && cnpay.includes(selTo));
+    // Показываем файл для QR только когда выбираются китайские сервисы (ALIPAY/WECHAT/CN_CARD) при получении
+    const show = (toPayType === 'cnpay') && selTo && CNPAY_CODES.includes(selTo) && selTo !== 'CNY';
+    if (qrBox) qrBox.hidden = !show;
   }
 
-  // ---------- рендер списков ----------
+  // ===== RENDER LISTS =====
   function refreshFrom(){
     if (fromCityBox) fromCityBox.hidden = (fromPayType !== 'cash');
-    const list = listFromPricing(fromPayType, cityFrom, 'from');
-    renderTiles(fromWrap, list);
-    selFrom = list[0]?.code || null;
+    const list = (window.PRICING && window.PRICING.currencies)
+      ? window.PRICING.currencies(fromPayType, cityFrom, 'from')
+      : [];
+    renderTiles(fromWrap, list, 'from');
+    // Выбираем первый доступный элемент
+    selFrom = firstEnabledCode(fromWrap) || (list[0]?.code ?? null);
     if (selFrom) markActive(fromWrap, selFrom);
   }
 
   function refreshTo(){
     if (toCityBox) toCityBox.hidden = (toPayType !== 'cash');
-    const list = listFromPricing(toPayType, cityTo, 'to');
-    renderTiles(toWrap, list);
-    selTo = list[0]?.code || null;
+    const list = (window.PRICING && window.PRICING.currencies)
+      ? window.PRICING.currencies(toPayType, cityTo, 'to')
+      : [];
+    renderTiles(toWrap, list, 'to');
+    selTo = firstEnabledCode(toWrap) || (list[0]?.code ?? null);
     if (selTo) markActive(toWrap, selTo);
     updateQrVisibility();
   }
 
+  // ===== QUOTE =====
   function recalc(){
     const amount = Number(amountInput?.value || 0);
     if (!selFrom || !selTo || !amount || amount <= 0 || !window.PRICING?.quote){
-      rateVal && (rateVal.textContent='—'); totalVal && (totalVal.textContent='—');
+      if (rateVal)  rateVal.textContent  = '—';
+      if (totalVal) totalVal.textContent = '—';
       currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
       return;
     }
-    try{
-      const q = window.PRICING.quote({ from: selFrom, to: selTo, amount });
-      currentQuote = q || {};
-      rateVal && (rateVal.textContent = q?.rateText ?? '—');
-      totalVal && (totalVal.textContent = q?.totalText ?? '—');
-    } catch(e){
-      console.warn('[pricing] ошибка quote()', e);
-      rateVal && (rateVal.textContent='—'); totalVal && (totalVal.textContent='—');
-      currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
-    }
+    const q = window.PRICING.quote({ from: selFrom, to: selTo, amount });
+    currentQuote = q || {};
+    if (rateVal)  rateVal.textContent  = q?.rateText  ?? '—';
+    if (totalVal) totalVal.textContent = q?.totalText ?? '—';
   }
 
-  // Делегирование кликов по плиткам (надёжно при динамическом рендере)
-  function bindTilesClick(container, side){
-    if (!container) return;
-    container.addEventListener('click', (ev)=>{
-      const btn = ev.target.closest('.tile');
-      if (!btn) return;
-      const code = btn.dataset.code;
-      if (!code) return;
-      if (side === 'from') {
-        selFrom = code; markActive(fromWrap, code);
-      } else {
-        selTo   = code; markActive(toWrap, code);
-      }
-      updateQrVisibility();
-      recalc();
-    });
-  }
-  bindTilesClick(fromWrap, 'from');
-  bindTilesClick(toWrap, 'to');
-
-  // ---------- чипы ----------
+  // ===== CHIPS =====
   function wireChips(box, cb){
     if (!box) return;
     box.querySelectorAll('.chip').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         box.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active'); cb && cb(btn.dataset.type);
+        btn.classList.add('active');
+        cb && cb(btn.dataset.type);
       });
     });
-    const first = box.querySelector(`.chip[data-type="${box.id==='to-pay'?'cnpay':'bank'}"]`) || box.querySelector('.chip');
-    if (first){ first.classList.add('active'); cb && cb(first.dataset.type); }
   }
-  wireChips(fromPayBox, (t)=>{ fromPayType=t; refreshFrom(); recalc(); });
-  wireChips(toPayBox,   (t)=>{ toPayType=t;   refreshTo();  recalc(); });
+
+  // ===== EVENTS =====
+  wireChips(fromPayBox, (type)=>{ fromPayType = type; refreshFrom(); recalc(); });
+  wireChips(toPayBox,   (type)=>{ toPayType   = type; refreshTo();  recalc(); });
 
   cityFromSel && cityFromSel.addEventListener('change', ()=>{ cityFrom = cityFromSel.value; refreshFrom(); recalc(); });
   cityToSel   && cityToSel.addEventListener('change',   ()=>{ cityTo   = cityToSel.value;   refreshTo();  recalc(); });
+
   amountInput && amountInput.addEventListener('input', recalc);
 
-  // ---------- инициализация ----------
-  function boot(){
-    // ждём pricing.js, но не блокируем UI (есть fallback)
-    if (!window.PRICING?.currencies || !window.PRICING?.quote) {
-      console.warn('[boot] pricing.js ещё не готов. UI поднимется на fallback и повторит попытку.');
+  // ===== SAFE BOOT (ждём PRICING) =====
+  function bootOnceReady(){
+    if (!window.PRICING?.currencies || !window.PRICING?.quote) { setTimeout(bootOnceReady, 50); return; }
+
+    // Проставляем активные чипы по умолчанию: Отдаю=Банк, Получаю=Кит.сервисы
+    if (fromPayBox) {
+      fromPayBox.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
+      const defFrom = fromPayBox.querySelector('.chip[data-type="bank"]') || fromPayBox.querySelector('.chip');
+      if (defFrom){ defFrom.classList.add('active'); fromPayType = defFrom.dataset.type || 'bank'; }
     }
+    if (toPayBox) {
+      toPayBox.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
+      const defTo = toPayBox.querySelector('.chip[data-type="cnpay"]') || toPayBox.querySelector('.chip');
+      if (defTo){ defTo.classList.add('active'); toPayType = defTo.dataset.type || 'cnpay'; }
+    }
+
+    // Город: для cash показываем селект, начинаем с moscow/guangzhou уже заданы в state
+    if (fromCityBox) fromCityBox.hidden = (fromPayType !== 'cash');
+    if (toCityBox)   toCityBox.hidden   = (toPayType   !== 'cash');
+
     refreshFrom();
     refreshTo();
     recalc();
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootOnceReady);
+  else bootOnceReady();
 
-  // ---------- бизнес-правила ----------
+  // ===== BUSINESS VALIDATION (перед отправкой) =====
   function validateBusiness(){
-    // отдать наличные CNY — нельзя
-    if (fromPayType==='cash' && selFrom==='CNY'){
-      alert('Наличные юани ОТДАТЬ нельзя.');
+    // Отдавать юани нельзя вообще (особенно наличные)
+    if (selFrom === 'CNY') {
+      alert('Отдавать CNY нельзя.');
       return false;
     }
-    // получить наличные CNY можно только в Гуанчжоу
-    if (toPayType==='cash' && selTo==='CNY' && cityTo!=='guangzhou'){
-      alert('Наличные юани ПОЛУЧИТЬ можно только в Гуанчжоу.');
+    // Получить наличные CNY можно только в Гуанчжоу
+    if (toPayType === 'cash' && selTo === 'CNY' && cityTo !== 'guangzhou') {
+      alert('Наличные CNY можно получить только в Гуанчжоу.');
       return false;
     }
     return true;
   }
 
-  // ---------- отправка заявки ----------
+  // ===== SEND ORDER =====
   async function sendOrder(){
-    if (sending) return; sending = true;
+    if (sending) return;
+    sending = true;
     try{
       const amountNum = Number(amountInput?.value || 0);
-      if (!selFrom || !selTo){ alert('Выберите валюты «Отдаю» и «Получаю».'); return; }
-      if (!(amountNum>0)){ alert('Введите сумму.'); return; }
-
-      // пересчёт может быть недоступен, но заявку всё равно можно отправить — просто без rate/total
+      if (!selFrom || !selTo) { alert('Выберите валюты «Отдаю» и «Получаю».'); return; }
+      if (!(amountNum > 0))   { alert('Введите сумму.'); return; }
+      if (!currentQuote.rate) { alert('Не удалось рассчитать курс.'); return; }
       if (!validateBusiness()) return;
 
       const payload = {
-        type:'order',
-        from_currency: selFrom, to_currency: selTo,
-        from_kind: fromPayType, to_kind: toPayType,
-        city_from: cityFrom, city_to: cityTo,
+        type: 'order',
+        from_currency: selFrom,
+        to_currency: selTo,
+        from_kind: fromPayType,
+        to_kind: toPayType,
+        city_from: cityFrom,
+        city_to: cityTo,
         amount: amountNum,
-        rate: currentQuote.rate ?? null,
-        total: currentQuote.total ?? null,
-        contact: (contactInput?.value||'').trim(),
-        requisites: (reqsInput?.value||'').trim(),
-        note: (noteInput?.value||'').trim(),
-        qr_filename: qrFile?.files?.[0]?.name || null
+        rate: currentQuote.rate,
+        total: currentQuote.total,
+        contact: (contactInput?.value || '').trim(),
+        requisites: (reqsInput?.value || '').trim(),
+        note: (noteInput?.value || '').trim(),
+        qr_filename: qrFile?.files?.[0]?.name || null,
+        nonce: Date.now().toString(36) + Math.random().toString(36).slice(2)
       };
 
-      // В Telegram WebApp шлём через sendData (бот ловит через handlers_webapp.py)
-      if (tg && tg.sendData){
-        try { tg.sendData(JSON.stringify(payload)); } catch(e){ console.warn('sendData error', e); }
-        alert('Заявка отправлена (через Telegram).');
-        return;
-      }
+      // 1) Пытаемся через TG WebApp
+      let webappTried = false;
+      try {
+        if (window.Telegram?.WebApp?.sendData) {
+          window.Telegram.WebApp.sendData(JSON.stringify(payload));
+          webappTried = true;
+        }
+      } catch (e) { console.warn('sendData error', e); }
 
-      // На сайте — шлём в FastAPI
-      const r = await fetch(`${API_BASE}/order`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      });
-      const j = await r.json().catch(()=>({}));
-      if (r.ok && j.ok) alert('Заявка отправлена (через сайт).');
-      else alert('Ошибка сети при отправке заявки.');
-    } finally { sending = false; }
+      // 2) ОБЯЗАТЕЛЬНО шлём резервом на API — чтобы заявка не потерялась
+      try {
+        const r = await fetch(`${API_BASE}/order`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const j = await r.json().catch(()=>({}));
+        if (r.ok && j.ok) {
+          alert(webappTried ? 'Заявка отправлена.' : 'Заявка отправлена (через сайт).');
+        } else {
+          alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.');
+      }
+    } finally {
+      sending = false;
+    }
   }
+
   sendBtn && sendBtn.addEventListener('click', sendOrder);
 })();

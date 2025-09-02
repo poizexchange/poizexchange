@@ -1,19 +1,19 @@
-// index.js v72 — двусторонний пересчёт суммы (отдаю/получаю) без изменений дизайна
+// index.js v73 — дефолт: Отдаю=bank, Получаю=cnpay; город только для cash; двусторонний пересчёт; отправка заявки
 (function () {
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 
   // DOM
   const fromPayBox   = document.getElementById('from-pay');
   const toPayBox     = document.getElementById('to-pay');
-  const fromCityBox  = document.getElementById('from-citybox');
-  const toCityBox    = document.getElementById('to-citybox');
+  const fromCityBox  = document.getElementById('from-citybox') || document.getElementById('cityTop');
+  const toCityBox    = document.getElementById('to-citybox')   || document.getElementById('cityTop');
   const cityFromSel  = document.getElementById('cityFrom');
   const cityToSel    = document.getElementById('cityTo');
   const fromWrap     = document.getElementById('from-currencies');
   const toWrap       = document.getElementById('to-currencies');
 
-  const amountInput  = document.getElementById('amount');     // "Сумма" (отдаю)
-  const amountGetInp = document.getElementById('amountGet');  // "Хочу получить" (получаю)
+  const amountInput  = document.getElementById('amount');     // отдаю
+  const amountGetInp = document.getElementById('amountGet');  // хочу получить
 
   const rateVal      = document.getElementById('rateVal');
   const totalVal     = document.getElementById('totalVal');
@@ -28,20 +28,19 @@
   const sendBtn      = document.getElementById('sendBtn');
   const hint         = document.getElementById('hint');
 
-  // State
-  let fromPayType = 'cash';   // cash | bank | crypto
-  let toPayType   = 'cash';   // cash | bank | crypto | cnpay
+  // State (дефолт — банк → китайские сервисы)
+  let fromPayType = 'bank';   // cash | bank | crypto
+  let toPayType   = 'cnpay';  // cash | bank | crypto | cnpay
   let cityFrom    = 'moscow';
   let cityTo      = 'moscow';
   let selFrom     = null;     // код валюты/сервиса
   let selTo       = null;     // код валюты/сервиса
   let currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
 
-  // кто последний редактировал: 'from' | 'to'
-  let lastEdited = 'from';
-  let syncing = false; // чтобы не ловить рекурсивные инпут-события
+  let lastEdited = 'from'; // кто последний менял: 'from' | 'to'
+  let syncing = false;
 
-  // API (на случай отправки заявки через сайт)
+  // API
   const API_BASE = 'https://api.poizexchange.ru';
 
   // Telegram init
@@ -50,6 +49,7 @@
 
   // Utils
   function clear(node){ while(node && node.firstChild) node.removeChild(node.firstChild); }
+  function fmt(n, decimals=2){ if (!isFinite(n)) return '—'; return Number(n).toFixed(decimals); }
 
   function tile(item, side){
     const btn = document.createElement('button');
@@ -62,8 +62,7 @@
     btn.addEventListener('click', () => {
       if (side === 'from') { selFrom = item.code; markActive(fromWrap, item.code); }
       else { selTo = item.code; markActive(toWrap, item.code); }
-      updateQrVisibility();
-      recalc();
+      updateQrVisibility(); updateCityVisibility(); recalc();
     });
     return btn;
   }
@@ -84,9 +83,18 @@
     if (qrBox) qrBox.hidden = !(toPayType === 'cnpay' && selTo && cnpay.includes(selTo));
   }
 
-  // Рендер списков
+  function updateCityVisibility(){
+    // Город показываем только при выборе Наличных (хватает одного общего блока)
+    const showCity = (fromPayType === 'cash') || (toPayType === 'cash');
+    const box = document.getElementById('cityTop');
+    if (box) box.hidden = !showCity;
+
+    // Доп.правила по юаню наличными
+    // (здесь лишь визуальная часть — блокировка валидации ниже)
+  }
+
+  // --- Рендер списков
   function refreshFrom(){
-    if (fromCityBox) fromCityBox.hidden = (fromPayType !== 'cash');
     const list = (window.PRICING && window.PRICING.currencies)
       ? window.PRICING.currencies(fromPayType, cityFrom, 'from')
       : [];
@@ -96,7 +104,6 @@
   }
 
   function refreshTo(){
-    if (toCityBox) toCityBox.hidden = (toPayType !== 'cash');
     const list = (window.PRICING && window.PRICING.currencies)
       ? window.PRICING.currencies(toPayType, cityTo, 'to')
       : [];
@@ -106,144 +113,119 @@
     updateQrVisibility();
   }
 
-  // Форматирование для числа (простое: 2 знака; крипте можно больше)
-  function fmt(n, decimals=2){
-    if (!isFinite(n)) return '—';
-    return Number(n).toFixed(decimals);
-  }
-
-  // Основной прямой расчёт по "Сумма" (отдаю)
+  // --- Расчёт вперёд: по "Сумма" (отдаю)
   function recalcForward(){
     const amount = Number(amountInput?.value || 0);
     if (!selFrom || !selTo || !(amount>0) || !window.PRICING?.quote){
       rateVal && (rateVal.textContent='—');
       totalVal && (totalVal.textContent='—');
-      if (amountGetInp && !syncing) {
-        syncing = true; amountGetInp.value = ''; syncing = false;
-      }
+      if (amountGetInp && !syncing){ syncing=true; amountGetInp.value=''; syncing=false; }
       currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
       return;
     }
     const q = window.PRICING.quote({ from: selFrom, to: selTo, amount });
     currentQuote = q || {};
-    rateVal && (rateVal.textContent = q?.rateText ?? '—');
+    rateVal  && (rateVal.textContent  = q?.rateText  ?? '—');
     totalVal && (totalVal.textContent = q?.totalText ?? '—');
 
-    // синхронизируем «Хочу получить»
     if (amountGetInp && !syncing) {
       syncing = true;
-      if (q?.total != null) amountGetInp.value = fmt(q.total, 6); else amountGetInp.value = '';
+      amountGetInp.value = (q?.total != null) ? fmt(q.total, 6) : '';
       syncing = false;
     }
   }
 
-  // Обратный расчёт: зная "хочу получить" => найти "сколько отдать"
-  // Используем бинарный поиск по amount_from, вызывая PRICING.quote(), т.к. внутри могут быть ступени/наценки.
+  // --- Расчёт назад: по "Хочу получить"
   function recalcInverse(){
     const want = Number(amountGetInp?.value || 0);
     if (!selFrom || !selTo || !(want>0) || !window.PRICING?.quote){
-      // сброс
       rateVal && (rateVal.textContent='—');
       totalVal && (totalVal.textContent='—');
-      if (amountInput && !syncing) { syncing = true; amountInput.value=''; syncing=false; }
+      if (amountInput && !syncing){ syncing=true; amountInput.value=''; syncing=false; }
       currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
       return;
     }
 
-    // Поиск диапазона
-    let lo = 0, hi = 1;
-    // Увеличиваем hi пока не перекроем want
-    for (let i=0; i<40; i++){
+    // Поиск подходящего "amount" с учётом возможных ступеней
+    let lo=0, hi=1;
+    for(let i=0;i<40;i++){
       const q = window.PRICING.quote({ from: selFrom, to: selTo, amount: hi });
-      const out = q?.total || 0;
-      if (out >= want) break;
+      if ((q?.total||0) >= want) break;
       hi *= 2;
     }
-    if (hi === 0) hi = 1;
-
-    // Бинарный поиск
-    let best = null;
-    for (let i=0; i<50; i++){
-      const mid = (lo + hi)/2;
+    let best=null;
+    for(let i=0;i<50;i++){
+      const mid=(lo+hi)/2;
       const q = window.PRICING.quote({ from: selFrom, to: selTo, amount: mid });
-      const out = q?.total || 0;
-      if (!q){ break; }
+      if (!q) break;
       best = { q, mid };
+      const out=q.total||0;
       if (Math.abs(out - want) <= Math.max(1e-8, want*1e-8)) break;
-      if (out < want) lo = mid; else hi = mid;
+      if (out < want) lo=mid; else hi=mid;
     }
-
-    if (best && best.q){
-      currentQuote = best.q;
-      rateVal && (rateVal.textContent = best.q.rateText ?? '—');
+    if (best){
+      currentQuote=best.q;
+      rateVal  && (rateVal.textContent  = best.q.rateText  ?? '—');
       totalVal && (totalVal.textContent = best.q.totalText ?? '—');
-
-      // синхронизируем «Сумма» (отдаю)
-      if (amountInput && !syncing) {
-        syncing = true;
-        amountInput.value = fmt(best.mid, 6);
-        syncing = false;
-      }
+      if (amountInput && !syncing){ syncing=true; amountInput.value=fmt(best.mid,6); syncing=false; }
     } else {
-      // не смогли посчитать
       rateVal && (rateVal.textContent='—');
       totalVal && (totalVal.textContent='—');
     }
   }
 
-  // Обёртка пересчёта
   function recalc(){
-    if (lastEdited === 'to') recalcInverse();
+    if (lastEdited==='to') recalcInverse();
     else recalcForward();
   }
 
-  // Chips
-  function wireChips(box, cb){
+  // --- Чипы (с поддержкой дефолтного значения)
+  function wireChips(box, defaultType, cb){
     if (!box) return;
-    box.querySelectorAll('.chip').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        box.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        cb && cb(btn.dataset.type);
-      });
+    const chips = box.querySelectorAll('.chip');
+    function activate(btn){
+      chips.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      cb && cb(btn.dataset.type);
+    }
+    chips.forEach(btn=>{
+      btn.addEventListener('click', ()=> activate(btn));
     });
-    const first = box.querySelector('.chip');
-    if (first){ first.classList.add('active'); cb && cb(first.dataset.type); }
+    // активируем по умолчанию
+    const def = defaultType ? box.querySelector(`.chip[data-type="${defaultType}"]`) : chips[0];
+    if (def) activate(def);
   }
-  wireChips(fromPayBox, (t)=>{ fromPayType=t; refreshFrom(); recalc(); });
-  wireChips(toPayBox,   (t)=>{ toPayType=t;   refreshTo();  recalc();  });
 
-  cityFromSel && cityFromSel.addEventListener('change', ()=>{ cityFrom = cityFromSel.value; refreshFrom(); recalc(); });
-  cityToSel   && cityToSel.addEventListener('change',   ()=>{ cityTo   = cityToSel.value;   refreshTo();  recalc();  });
+  wireChips(fromPayBox, 'bank',  (t)=>{ fromPayType=t; updateCityVisibility(); refreshFrom(); recalc(); });
+  wireChips(toPayBox,   'cnpay', (t)=>{ toPayType=t;   updateCityVisibility(); refreshTo();  recalc(); });
 
-  // Автопересчёт при вводе
+  cityFromSel && cityFromSel.addEventListener('change', ()=>{ cityFrom = cityFromSel.value; recalc(); });
+  cityToSel   && cityToSel.addEventListener('change',   ()=>{ cityTo   = cityToSel.value;   recalc(); });
+
   amountInput && amountInput.addEventListener('input', ()=>{
-    if (syncing) return;
-    lastEdited = 'from';
-    recalcForward();
+    if (syncing) return; lastEdited='from'; recalcForward();
   });
   amountGetInp && amountGetInp.addEventListener('input', ()=>{
-    if (syncing) return;
-    lastEdited = 'to';
-    recalcInverse();
+    if (syncing) return; lastEdited='to'; recalcInverse();
   });
 
-  // Инициализация (ждём PRICING)
+  // --- Инициализация (ждём PRICING)
   function boot(){
     if (!window.PRICING?.currencies || !window.PRICING?.quote) return setTimeout(boot, 50);
-    refreshFrom(); refreshTo(); recalc();
+    refreshFrom(); refreshTo(); updateCityVisibility(); recalc();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 
-  // Бизнес-правила
+  // --- Бизнес-правила
   function validateBusinessRules(){
-    // наличные CNY — только Гуанчжоу
-    if (fromPayType === 'cash' && selFrom === 'CNY' && cityFrom !== 'guangzhou') { alert('Наличные юани можно ОТДАТЬ только в Гуанчжоу.'); return false; }
-    if (toPayType   === 'cash' && selTo   === 'CNY' && cityTo   !== 'guangzhou') { alert('Наличные юани можно ПОЛУЧИТЬ только в Гуанчжоу.'); return false; }
+    // наличные CNY: получить можно только в Гуанчжоу, отдать наличные юани нельзя
+    if (fromPayType==='cash' && selFrom==='CNY') { alert('Отдать наличные юани нельзя.'); return false; }
+    if (toPayType==='cash' && selTo==='CNY' && cityTo!=='guangzhou') { alert('Получить наличные юани можно только в Гуанчжоу.'); return false; }
+    if (fromPayType==='cash' && selFrom==='CNY' && cityFrom!=='guangzhou') { alert('Наличные юани можно ОТДАТЬ только в Гуанчжоу.'); return false; } // если всё-таки появится
     return true;
   }
 
-  // Отправка заявки
+  // --- Отправка заявки
   async function sendOrder(){
     const amountNum = Number(amountInput?.value || 0);
     if (!selFrom || !selTo) { alert('Выберите валюты «Отдаю» и «Получаю».'); return; }
@@ -268,7 +250,7 @@
       qr_filename: qrFile?.files?.[0]?.name || null
     };
 
-    // 1) Если открыто внутри Telegram — шлём через sendData
+    // Внутри Telegram — WebApp.sendData
     try {
       if (window.Telegram?.WebApp?.sendData) {
         window.Telegram.WebApp.sendData(JSON.stringify(payload));
@@ -281,7 +263,7 @@
       }
     } catch (e) { console.warn('sendData failed', e); }
 
-    // 2) Иначе — REST API
+    // Иначе — REST API
     try {
       const r = await fetch(`${API_BASE}/order`, {
         method: 'POST',

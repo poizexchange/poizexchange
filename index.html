@@ -7,9 +7,9 @@
   <link rel="stylesheet" href="./styles.css?v=blue-03" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- твои скрипты (порядок важен: pricing раньше index.js) -->
+  <!-- важно: pricing раньше index.js -->
   <script src="./pricing.js?v=60"></script>
-  <script src="./index.js?v=71" defer></script>
+  <script src="./index.js?v=72" defer></script>
 </head>
 <body class="ui-blue">
   <div class="app-scale"><!-- масштаб -10% -->
@@ -77,7 +77,12 @@
           <div>
             <label class="label" for="amount">Сумма</label>
             <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
+            
+            <!-- 🔹 ДОБАВЛЕНО: инпут «Хочу получить» (не меняет внешний вид, использует те же стили) -->
+            <label class="label" for="amountGet" style="margin-top:10px;">Хочу получить</label>
+            <input id="amountGet" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
           </div>
+
           <div class="result-card">
             <div class="result-line">
               <div class="r-cap">Курс</div>
@@ -122,4 +127,3 @@
   </div>
 </body>
 </html>
-

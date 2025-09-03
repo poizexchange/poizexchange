@@ -1,8 +1,8 @@
-// index.js v71 — стабильные плитки, автопересчёт, надёжная отправка (API + дублирование в TG)
+// index.js v71 — твой дизайн; стабильный рендер; WebApp/sendData и API; бизнес-правила CNY
 (function () {
   const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 
-  // --- DOM ---
+  // DOM
   const fromPayBox   = document.getElementById('from-pay');
   const toPayBox     = document.getElementById('to-pay');
 
@@ -29,47 +29,24 @@
   const sendBtn      = document.getElementById('sendBtn');
   const hint         = document.getElementById('hint');
 
-  // --- CONST / API ---
-  const API_BASE = 'https://api.poizexchange.ru';
-
-  // --- STATE ---
-  // По просьбе: стартуем Банк -> Китайские сервисы
-  let fromPayType = 'bank';     // cash | bank | crypto
-  let toPayType   = 'cnpay';    // cash | bank | crypto | cnpay
+  // State
+  let fromPayType = 'bank';   // старт: Банк
+  let toPayType   = 'cnpay';  // старт: Китайские сервисы
   let cityFrom    = 'moscow';
   let cityTo      = 'moscow';
-  let selFrom     = null;
-  let selTo       = null;
+  let selFrom     = null;     // код валюты/сервиса
+  let selTo       = null;     // код валюты/сервиса
   let currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
   let sending = false;
 
-  // --- Telegram init ---
-  if (tg) {
-    try {
-      tg.expand();
-      tg.ready();
-      // необязательно, но удобный пинг для логов бота
-      tg.sendData(JSON.stringify({action:'webapp_open'}));
-    } catch(e){}
-  } else if (hint) {
-    // если НЕ внутри Telegram — покажем подсказку под кнопкой
-    hint.hidden = false;
-  }
+  const API_BASE = 'https://api.poizexchange.ru';
 
-  // --- helpers ---
+  // Telegram init (без агрессивных попапов)
+  if (tg) { try { tg.expand(); tg.ready(); } catch (e) {} }
+  else if (hint) { hint.hidden = false; }
+
+  // ---------- helpers ----------
   function clear(node){ while(node && node.firstChild) node.removeChild(node.firstChild); }
-
-  function markActive(container, code){
-    if (!container) return;
-    container.querySelectorAll('.tile').forEach(t=>t.classList.remove('active'));
-    const found = container.querySelectorAll(`[data-code="${code}"]`);
-    found.forEach(t=>t.classList.add('active'));
-  }
-
-  function updateQrVisibility(){
-    const cnpay = ['ALIPAY','WECHAT','CN_CARD'];
-    if (qrBox) qrBox.hidden = !(toPayType === 'cnpay' && selTo && cnpay.includes(selTo));
-  }
 
   function tile(item, side){
     const btn = document.createElement('button');
@@ -80,17 +57,7 @@
       <div class="ico"><img src="${item.icon}" alt=""></div>
       <div class="cap">${item.nameRu}</div>
     `;
-
-    // По бизнес-правилу: "отдавать юани нельзя вообще"
-    if (side === 'from' && item.code === 'CNY') {
-      btn.classList.add('disabled');
-      btn.title = 'Отдавать юани нельзя';
-    }
-
     btn.addEventListener('click', () => {
-      // игнор клика по запрещённой "CNY" в Отдаю
-      if (side === 'from' && item.code === 'CNY') { return; }
-
       if (side === 'from') {
         selFrom = item.code;
         markActive(fromWrap, item.code);
@@ -104,105 +71,131 @@
     return btn;
   }
 
+  function markActive(container, code){
+    if (!container) return;
+    container.querySelectorAll('.tile').forEach(t=>t.classList.remove('active'));
+    container.querySelectorAll(`[data-code="${code}"]`).forEach(t=>t.classList.add('active'));
+  }
+
   function renderTiles(container, list, side){
     clear(container);
     list.forEach(item => container.appendChild(tile(item, side)));
   }
 
-  // --- списки валют ---
+  function updateQrVisibility(){
+    const cnpay = ['ALIPAY','WECHAT','CN_CARD'];
+    if (qrBox) qrBox.hidden = !(toPayType === 'cnpay' && selTo && cnpay.includes(selTo));
+  }
+
+  // ---------- lists ----------
+  function filteredList(kind, city, side){
+    // базовый список из pricing.js
+    const raw = (window.PRICING && window.PRICING.currencies)
+      ? window.PRICING.currencies(kind, city, side)
+      : [];
+
+    // бизнес-правила по CNY — скрыть невозможные варианты
+    if (kind === 'cash') {
+      return raw.filter(it => {
+        // Отдавать наличные CNY нельзя нигде
+        if (side === 'from' && it.code === 'CNY') return false;
+        // Получать наличные CNY только в Гуанчжоу
+        if (side === 'to' && it.code === 'CNY' && city !== 'guangzhou') return false;
+        return true;
+      });
+    }
+    return raw;
+  }
+
   function refreshFrom(){
     if (fromCityBox) fromCityBox.hidden = (fromPayType !== 'cash');
 
-    const list = (window.PRICING && window.PRICING.currencies)
-      ? window.PRICING.currencies(fromPayType, cityFrom, 'from')
-      : [];
-
+    const list = filteredList(fromPayType, cityFrom, 'from');
     renderTiles(fromWrap, list, 'from');
-
-    // Автовыбор первой доступной (не CNY)
-    const firstAllowed = list.find(x => x.code !== 'CNY');
-    selFrom = (firstAllowed ? firstAllowed.code : list[0]?.code) || null;
+    selFrom = list[0]?.code || null;
     if (selFrom) markActive(fromWrap, selFrom);
   }
 
   function refreshTo(){
     if (toCityBox) toCityBox.hidden = (toPayType !== 'cash');
 
-    const list = (window.PRICING && window.PRICING.currencies)
-      ? window.PRICING.currencies(toPayType, cityTo, 'to')
-      : [];
-
+    const list = filteredList(toPayType, cityTo, 'to');
     renderTiles(toWrap, list, 'to');
     selTo = list[0]?.code || null;
     if (selTo) markActive(toWrap, selTo);
     updateQrVisibility();
   }
 
-  // --- расчёт ---
   function recalc(){
     const amount = Number(amountInput?.value || 0);
     if (!selFrom || !selTo || !amount || amount <= 0 || !window.PRICING?.quote){
-      if (rateVal)  rateVal.textContent  = '—';
-      if (totalVal) totalVal.textContent = '—';
+      rateVal && (rateVal.textContent='—');
+      totalVal && (totalVal.textContent='—');
       currentQuote = { rate:null, total:null, rateText:'—', totalText:'—' };
       return;
     }
+    // Внутри pricing.quote уже учтено «курс за получаемую валюту»
     const q = window.PRICING.quote({ from: selFrom, to: selTo, amount });
     currentQuote = q || {};
-    if (rateVal)  rateVal.textContent  = q?.rateText  ?? '—';
-    if (totalVal) totalVal.textContent = q?.totalText ?? '—';
+    rateVal && (rateVal.textContent = q?.rateText ?? '—');
+    totalVal && (totalVal.textContent = q?.totalText ?? '—');
   }
 
-  // --- чипы ---
-  function wireChips(box, cb, initialType){
+  // ---------- chips ----------
+  function wireChips(box, cb){
     if (!box) return;
-    const chips = Array.from(box.querySelectorAll('.chip'));
-    chips.forEach(btn=>{
+    box.querySelectorAll('.chip').forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        chips.forEach(b=>b.classList.remove('active'));
+        box.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
         cb && cb(btn.dataset.type);
       });
     });
-
-    // Активируем запрошенный тип, иначе первый
-    const initial = initialType ? box.querySelector(`.chip[data-type="${initialType}"]`) : chips[0];
-    if (initial) {
-      initial.classList.add('active');
-      cb && cb(initial.dataset.type);
-    }
+    // активируем тот, что соответствует текущему state
+    const current = box.querySelector(`.chip[data-type="${box===fromPayBox?fromPayType:toPayType}"]`) || box.querySelector('.chip');
+    if (current){ current.classList.add('active'); cb && cb(current.dataset.type); }
   }
 
-  // --- бизнес-правила ---
-  function validateBusinessRules(){
-    // 1) Отдавать юани нельзя вообще
-    if (selFrom === 'CNY') {
-      alert('Отдавать юани нельзя.');
-      return false;
-    }
-    // 2) Наличные CNY — только Гуанчжоу
-    if (fromPayType === 'cash' && selFrom === 'CNY' && cityFrom !== 'guangzhou') {
-      alert('Наличные юани можно ОТДАТЬ только в Гуанчжоу.');
+  wireChips(fromPayBox, (type)=>{ fromPayType = type; refreshFrom(); recalc(); });
+  wireChips(toPayBox,   (type)=>{ toPayType   = type; refreshTo();  recalc();  });
+
+  cityFromSel && cityFromSel.addEventListener('change', ()=>{ cityFrom = cityFromSel.value; refreshFrom(); recalc(); });
+  cityToSel   && cityToSel.addEventListener('change',   ()=>{ cityTo   = cityToSel.value;   refreshTo();  recalc();  });
+
+  amountInput && amountInput.addEventListener('input', recalc);
+
+  // безопасная инициализация (ждём pricing.js)
+  function boot(){
+    if (!window.PRICING?.currencies || !window.PRICING?.quote) return setTimeout(boot, 50);
+    refreshFrom();
+    refreshTo();
+    recalc();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+
+  // ---------- business checks ----------
+  function validateBusiness(){
+    if (fromPayType === 'cash' && selFrom === 'CNY') {
+      alert('Наличные юани отдать нельзя.');
       return false;
     }
     if (toPayType === 'cash' && selTo === 'CNY' && cityTo !== 'guangzhou') {
-      alert('Наличные юани можно ПОЛУЧИТЬ только в Гуанчжоу.');
+      alert('Наличные юани получить можно только в Гуанчжоу.');
       return false;
     }
     return true;
   }
 
-  // --- отправка заявки (надёжная: API + дублирование в TG) ---
+  // ---------- send order ----------
   async function sendOrder(){
     if (sending) return;
     sending = true;
-
-    try {
+    try{
       const amountNum = Number(amountInput?.value || 0);
-      if (!selFrom || !selTo) { alert('Выберите валюты «Отдаю» и «Получаю».'); return; }
-      if (!(amountNum > 0))   { alert('Введите сумму.'); return; }
-      if (!currentQuote.rate) { alert('Не удалось рассчитать курс.'); return; }
-      if (!validateBusinessRules()) return;
+      if (!selFrom || !selTo){ alert('Выберите валюты «Отдаю» и «Получаю».'); return; }
+      if (!(amountNum>0)){ alert('Введите сумму.'); return; }
+      if (!currentQuote.rate){ alert('Не удалось рассчитать курс.'); return; }
+      if (!validateBusiness()) return;
 
       const payload = {
         type: 'order',
@@ -221,57 +214,27 @@
         qr_filename: qrFile?.files?.[0]?.name || null
       };
 
-      // Дублирование в TG (если открыто в Telegram)
-      try {
-        if (tg && tg.sendData) tg.sendData(JSON.stringify(payload));
-      } catch(e){ console.warn('sendData failed', e); }
+      // 1) Telegram WebApp
+      if (tg && tg.sendData) {
+        try { tg.sendData(JSON.stringify(payload)); } catch(e){ console.warn('sendData error', e); }
+        if (tg.showPopup) tg.showPopup({title:'Заявка отправлена', message:'Мы скоро свяжемся с вами.'});
+        else alert('Заявка отправлена.');
+        return;
+      }
 
-      // Основной гарантированный маршрут — REST API
+      // 2) Сайт -> API
       const r = await fetch(`${API_BASE}/order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify(payload)
       });
       const j = await r.json().catch(()=>({}));
-
-      if (r.ok && j.ok) {
-        if (tg?.showPopup) tg.showPopup({ title: 'Заявка отправлена', message: 'Мы скоро свяжемся с вами.' });
-        else alert('Заявка отправлена. Мы скоро свяжемся с вами.');
-      } else {
-        alert('Ошибка при отправке заявки. Попробуйте ещё раз.');
-        console.error('ORDER FAIL', r.status, j);
-      }
-    } catch (e) {
-      alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.');
-      console.error('ORDER NET ERR', e);
+      if (r.ok && j.ok) alert('Заявка отправлена (через сайт).');
+      else alert('Ошибка сети при отправке заявки. Попробуйте ещё раз.');
     } finally {
       sending = false;
     }
   }
 
-  // --- события ---
-  wireChips(fromPayBox, (type)=>{ fromPayType = type; refreshFrom(); recalc(); }, 'bank');
-  wireChips(toPayBox,   (type)=>{ toPayType   = type; refreshTo();  recalc(); }, 'cnpay');
-
-  cityFromSel && cityFromSel.addEventListener('change', ()=>{ cityFrom = cityFromSel.value; refreshFrom(); recalc(); });
-  cityToSel   && cityToSel.addEventListener('change',   ()=>{ cityTo   = cityToSel.value;   refreshTo();  recalc(); });
-
-  amountInput && amountInput.addEventListener('input', recalc);
-
   sendBtn && sendBtn.addEventListener('click', sendOrder);
-
-  // --- безопасный старт (ждём, пока pricing.js загрузится) ---
-  function bootOnceReady(){
-    if (!window.PRICING?.currencies || !window.PRICING?.quote) {
-      return setTimeout(bootOnceReady, 50);
-    }
-    refreshFrom();
-    refreshTo();
-    recalc();
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bootOnceReady);
-  } else {
-    bootOnceReady();
-  }
 })();

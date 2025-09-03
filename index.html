@@ -4,26 +4,31 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Обмен валют</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=blue-03" />
+  <link rel="stylesheet" href="./styles.css?v=blue-04" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <!-- Важно: pricing раньше index.js -->
   <script src="./pricing.js?v=60"></script>
-  <script src="./index.js?v=73" defer></script>
+  <script src="./index.js?v=74" defer></script>
 </head>
 <body class="ui-blue">
   <div class="app-scale"><!-- если был масштаб - оставь -->
 
-    <header class="tg-header">
-      <div class="wrap">
-        <h1 class="title">POIZ EXCHANGE — ОБМЕН ВАЛЮТ</h1>
+    <!-- ШАПКА в стиле твоего макета -->
+    <header class="hero">
+      <div class="hero-badge">
+        <div class="brand-wrap">
+          <div class="poiz-express brand">POIZ</div>
+          <div class="poiz-express">EXCHANGE</div>
+        </div>
+        <div class="descr">ОБМЕН&nbsp;ВАЛЮТ</div>
       </div>
     </header>
 
     <main class="wrap main-safe">
-      <!-- Город (общий — показываем только для наличных) -->
+      <!-- Город (общий — показываем только для наличных; какой именно — решает JS) -->
       <section class="card soft cityTop" id="cityTop" hidden>
-        <label class="label" for="cityFrom">Город</label>
+        <label class="label" id="cityLabel" for="cityFrom">Город</label>
         <select id="cityFrom" class="input">
           <option value="moscow">Москва</option>
           <option value="spb">Санкт-Петербург</option>
@@ -38,19 +43,20 @@
 
       <!-- Отдаю -->
       <section class="card">
-        <h2 class="h2 center">Отдаю</h2>
+        <h2 class="h2 center badge">Отдаю</h2>
         <div class="chips" id="from-pay">
           <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
           <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
           <button class="chip" data-type="crypto"><img src="./icons/crypto.svg" alt="">Крипто</button>
         </div>
+        <!-- пустые коробки оставляем — так и было -->
         <div id="from-citybox" class="citybox" hidden></div>
         <div id="from-currencies" class="tiles"></div>
       </section>
 
       <!-- Получаю -->
       <section class="card">
-        <h2 class="h2 center">Получаю</h2>
+        <h2 class="h2 center badge">Получаю</h2>
         <div class="chips" id="to-pay">
           <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
           <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
@@ -65,10 +71,9 @@
       <section class="card">
         <div class="calc-grid">
           <div>
-            <label class="label" for="amount">Сумма</label>
+            <label class="label" for="amount">Сумма (отдаю)</label>
             <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
 
-            <!-- ДОБАВЛЕНО: поле «Хочу получить» -->
             <label class="label" for="amountGet" style="margin-top:10px;">Хочу получить</label>
             <input id="amountGet" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
           </div>
@@ -88,7 +93,7 @@
 
       <!-- Заявка -->
       <section class="card">
-        <h2 class="h2 center">Заявка</h2>
+        <h2 class="h2 center badge">Заявка</h2>
         <label class="label" for="contact">Контакт</label>
         <input id="contact" class="input" placeholder="@username или телефон" />
 

@@ -4,17 +4,17 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Обмен валют</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=blue-05" />
+  <link rel="stylesheet" href="./styles.css?v=blue-06" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Важно: pricing раньше index.js -->
+  <!-- pricing раньше index.js -->
   <script src="./pricing.js?v=45"></script>
   <script src="./index.js?v=75" defer></script>
 </head>
 <body class="ui-blue">
   <div class="app-scale">
 
-    <!-- БАННЕР -->
+    <!-- Баннер -->
     <header class="hero">
       <div class="hero-badge">
         <div class="brand-wrap">
@@ -27,8 +27,7 @@
     </header>
 
     <main class="wrap main-safe">
-
-      <!-- Город (виден только для наличных) -->
+      <!-- Город (виден только при «Наличные») -->
       <section class="card soft cityTop" id="cityTop" hidden>
         <label class="label" for="cityFrom">Город</label>
         <select id="cityFrom" class="input">
@@ -45,9 +44,7 @@
 
       <!-- ОТДАЮ -->
       <section class="card">
-        <div class="section-head framed">
-          <span class="section-pill">Отдаю</span>
-        </div>
+        <h2 class="section-title center">Отдаю</h2>
 
         <div class="chips" id="from-pay">
           <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
@@ -61,9 +58,7 @@
 
       <!-- ПОЛУЧАЮ -->
       <section class="card">
-        <div class="section-head framed green">
-          <span class="section-pill">Получаю</span>
-        </div>
+        <h2 class="section-title center">Получаю</h2>
 
         <div class="chips" id="to-pay">
           <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
@@ -102,9 +97,7 @@
 
       <!-- ЗАЯВКА -->
       <section class="card">
-        <div class="section-head framed violet">
-          <span class="section-pill">Заявка</span>
-        </div>
+        <h2 class="section-title center">Заявка</h2>
 
         <label class="label" for="contact">Контакт</label>
         <input id="contact" class="input" placeholder="@username или телефон" />

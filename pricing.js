@@ -1,34 +1,35 @@
-// pricing.js v44 — курс «FROM per 1 TO», матрица доступности, тарифы
+// pricing.js v61 — пара "FROM/TO" (FROM per 1 TO), runtime override, обратные пары, quoteReverse
 (function () {
   const ICON = (name) => `./icons/${name}.svg`;
   const FALLBACK_ICON = ICON('bank');
 
+  // ---- Справочник валют/сервисов ----
   const C = {
-    RUB:{code:'RUB',nameRu:'Рубль',icon:ICON('rub')},
-    USD:{code:'USD',nameRu:'Доллар',icon:ICON('usd')},
-    CNY:{code:'CNY',nameRu:'Юань',icon:ICON('cny')},
+    RUB:   { code:'RUB',   nameRu:'Рубль',       icon:ICON('rub') },
+    USD:   { code:'USD',   nameRu:'Доллар',      icon:ICON('usd') },
+    CNY:   { code:'CNY',   nameRu:'Юань',        icon:ICON('cny') },
 
-    SBP:{code:'SBP',nameRu:'СБП',icon:ICON('sbp')},
-    SBER:{code:'SBER',nameRu:'Сбер',icon:ICON('sber')},
-    TCS:{code:'TCS',nameRu:'Т-Банк',icon:ICON('tbank')},
-    ALFA:{code:'ALFA',nameRu:'Альфа-Банк',icon:ICON('alfa')},
-    VTB:{code:'VTB',nameRu:'ВТБ',icon:ICON('vtb')},
-    RAIFF:{code:'RAIFF',nameRu:'Райфф',icon:ICON('raif')},
-    OZON:{code:'OZON',nameRu:'Озон',icon:ICON('ozon')},
-    OTP:{code:'OTP',nameRu:'ОТП',icon:ICON('bank')},
+    SBP:   { code:'SBP',   nameRu:'СБП',         icon:ICON('sbp') },
+    SBER:  { code:'SBER',  nameRu:'Сбер',        icon:ICON('sber') },
+    TCS:   { code:'TCS',   nameRu:'Т-Банк',      icon:ICON('tbank') },
+    ALFA:  { code:'ALFA',  nameRu:'Альфа-Банк',  icon:ICON('alfa') },
+    VTB:   { code:'VTB',   nameRu:'ВТБ',         icon:ICON('vtb') },
+    RAIFF: { code:'RAIFF', nameRu:'Райфф',       icon:ICON('raif') },
+    OZON:  { code:'OZON',  nameRu:'Озон',        icon:ICON('ozon') },
+    OTP:   { code:'OTP',   nameRu:'ОТП',         icon:ICON('bank') },
 
-    USDT:{code:'USDT',nameRu:'USDT',icon:ICON('usdt')},
-    BTC:{code:'BTC',nameRu:'BTC',icon:ICON('btc')},
-    ETH:{code:'ETH',nameRu:'ETH',icon:ICON('eth')},
-    SOL:{code:'SOL',nameRu:'SOL',icon:ICON('sol')},
-    XMR:{code:'XMR',nameRu:'XMR',icon:ICON('xmr')},
-    XRP:{code:'XRP',nameRu:'XRP',icon:ICON('xrp')},
-    LTC:{code:'LTC',nameRu:'LTC',icon:ICON('ltc')},
-    TON:{code:'TON',nameRu:'TON',icon:ICON('ton')},
+    USDT:  { code:'USDT',  nameRu:'USDT',        icon:ICON('usdt') },
+    BTC:   { code:'BTC',   nameRu:'BTC',         icon:ICON('btc') },
+    ETH:   { code:'ETH',   nameRu:'ETH',         icon:ICON('eth') },
+    SOL:   { code:'SOL',   nameRu:'SOL',         icon:ICON('sol') },
+    XMR:   { code:'XMR',   nameRu:'XMR',         icon:ICON('xmr') },
+    XRP:   { code:'XRP',   nameRu:'XRP',         icon:ICON('xrp') },
+    LTC:   { code:'LTC',   nameRu:'LTC',         icon:ICON('ltc') },
+    TON:   { code:'TON',   nameRu:'TON',         icon:ICON('ton') },
 
-    ALIPAY:{code:'ALIPAY',nameRu:'Alipay',icon:ICON('alipay')},
-    WECHAT:{code:'WECHAT',nameRu:'WeChat',icon:ICON('wechat')},
-    CN_CARD:{code:'CN_CARD',nameRu:'Карта Китая',icon:ICON('bankcn')},
+    ALIPAY:{ code:'ALIPAY', nameRu:'Alipay',     icon:ICON('alipay') },
+    WECHAT:{ code:'WECHAT', nameRu:'WeChat',     icon:ICON('wechat') },
+    CN_CARD:{code:'CN_CARD',nameRu:'Карта Китая',icon:ICON('bankcn') },
   };
 
   const BANKS = ['SBP','SBER','TCS','ALFA','VTB','RAIFF','OZON','OTP'];
@@ -38,65 +39,88 @@
   const ensureIcon = (i)=>{ if(!i?.icon) i.icon=FALLBACK_ICON; return i; };
   const mapCodes   = (codes)=> codes.map(code => ensureIcon(C[code])).filter(Boolean);
 
-  // Матрица доступности (отдавать CNY запрещено)
+  // Матрица доступности
   const MATRIX = {
     cash: { moscow:['RUB','USD'], guangzhou:['RUB','USD'] },
     bank: { moscow:BANKS, guangzhou:BANKS },
-    crypto:{ moscow:CRYPTO, guangzhou:CRYPTO },
+    crypto: { moscow:CRYPTO, guangzhou:CRYPTO },
 
     cash_to: { moscow:['RUB','USD'], guangzhou:['RUB','USD','CNY'] },
     bank_to: { moscow:BANKS, guangzhou:BANKS },
-    crypto_to:{ moscow:CRYPTO, guangzhou:CRYPTO },
+    crypto_to: { moscow:CRYPTO, guangzhou:CRYPTO },
     cnpay_to: { moscow:CNPAY, guangzhou:CNPAY }
   };
 
-  // Базовые споты
-  const SPOT = {
-    RUB_per_USD_base_cash: 81.40,
-    RUB_per_USD_cash_buy: 79.50,
-    RUB_per_USDT_cash_buy: 79.50,
-    RUB_per_BTC: 9300000,
-    RUB_per_ETH: 399000,
-    USD_per_BTC: 113000,
-    USD_per_ETH: 4900,
+  // ======= БАЗОВЫЕ КУРСЫ (дефолты), формат PAR: "FROM/TO": rate (FROM per 1 TO) =======
+  const DEFAULT_PAIRS = {
+    // Рубли к USD/USDT/CNY (примерные дефолты)
+    'RUB/USD': 81.40,
+    'RUB/USDT': 81.40,
+
+    // USDT/ALIPAY через «CNY за 1 USDT» ~6.9 => USDT/CNY ~ 1/6.9 = 0.1449
+    'USDT/CNY': 1/6.90,
+
+    // RUB/BTC и RUB/ETH как «RUB per 1»
+    'RUB/BTC': 9300000,
+    'RUB/ETH': 399000,
+
+    // USD/BTC, USD/ETH
+    'USD/BTC': 113000,
+    'USD/ETH': 4900,
+
+    // Покупка RUB за USD/USDT (RUB per 1 USD/USDT) => обратные пары нам не обязательно прописывать — возьмём инверсию при необходимости
+    // 'USD/RUB': 1/79.50,
+    // 'USDT/RUB': 1/79.50,
   };
 
-  // Лестницы
-  function usdMarkupPerc(usdAmount){
-    if (usdAmount >= 10000) return 0.0070;
-    if (usdAmount >= 6000)  return 0.0095;
-    if (usdAmount >= 3000)  return 0.0125;
-    if (usdAmount >= 1500)  return 0.0170;
-    if (usdAmount >= 700)   return 0.0200;
-    return 0.0250;
+  // ======= RUNTIME override из API (/rates) =======
+  // Формат: { "RUB/USD": 81.4, "USD/CNY": 7.30, ... }
+  const RUNTIME_PAIRS = {};
+
+  function setPair(from, to, rate){
+    if (!from || !to) return;
+    const key = `${from.toUpperCase()}/${to.toUpperCase()}`;
+    if (typeof rate === 'number' && isFinite(rate) && rate > 0) {
+      RUNTIME_PAIRS[key] = rate;
+    }
   }
-  function rubPerCnyByTier(cnyAmount){
-    if (cnyAmount >= 70000) return 11.75;
-    if (cnyAmount >= 30000) return 11.80;
-    if (cnyAmount >= 15000) return 11.85;
-    if (cnyAmount >= 3000)  return 11.90;
-    if (cnyAmount >= 1000)  return 11.95;
-    if (cnyAmount >= 500)   return 12.90;
-    return 12.90;
+  function overrideRates(map){
+    if (!map || typeof map !== 'object') return;
+    for (const k of Object.keys(map)) {
+      const v = map[k];
+      if (typeof v === 'number' && isFinite(v) && v > 0) {
+        RUNTIME_PAIRS[k.toUpperCase()] = v;
+      }
+    }
   }
-  function cnyPerUsdtByTier(usdtAmount){
-    if (usdtAmount >= 10000) return 7.07;
-    if (usdtAmount >= 6000)  return 7.00;
-    if (usdtAmount >= 3000)  return 6.95;
-    return 6.90;
+  function getPair(from, to){
+    const k = `${from}/${to}`;
+    if (k in RUNTIME_PAIRS) return RUNTIME_PAIRS[k];
+    if (k in DEFAULT_PAIRS) return DEFAULT_PAIRS[k];
+    return null;
+  }
+  function pairOrInverse(from, to){
+    const p = getPair(from, to);
+    if (p) return p;
+    const inv = getPair(to, from);
+    if (inv) return 1 / inv;
+    return null;
   }
 
+  // Вспомогательные
   const asRUB = (code) => (code === 'RUB' || BANKS.includes(code));
   const isCNP = (code) => CNPAY.includes(code);
 
   const fmtNum = (n, d=2) => (n == null || isNaN(n)) ? '—' :
     Number(n).toLocaleString('ru-RU',{ maximumFractionDigits:d });
+
   function rateText(from, to, rate){
     const decimals = rate < 1 ? 6 : 4;
     return `${fmtNum(rate, decimals)} ${from} за 1 ${to}`;
+    // from per 1 to
   }
 
-  // Котировщик: rate = FROM per 1 TO; total = сколько ПОЛУЧУ
+  // ======= КОТИРОВЩИК (прямой) =======
   function quote({ from, to, amount }) {
     from = (from || '').toUpperCase();
     to   = (to   || '').toUpperCase();
@@ -104,96 +128,74 @@
     if (!from || !to || !a || a <= 0) {
       return { rate:null, total:null, rateText:'—', totalText:'—' };
     }
-    if (from === 'CNY') return { rate:null, total:null, rateText:'—', totalText:'—' };
-
-    let rate = null, total = null;
-
-    // RUB/BANK -> USD
-    if (asRUB(from) && to === 'USD') {
-      const usdEst = a / SPOT.RUB_per_USD_base_cash;
-      const m = usdMarkupPerc(usdEst);
-      const rubPerUsd = SPOT.RUB_per_USD_base_cash * (1 + m);
-      rate = rubPerUsd; total = a / rate;
-      return { rate,total, rateText:rateText(from,to,rate), totalText:`${fmtNum(total,2)} USD` };
+    if (from === 'CNY') { // бизнес-правило — отдавать CNY нельзя
+      return { rate:null, total:null, rateText:'—', totalText:'—' };
     }
-    // RUB/BANK -> USDT
-    if (asRUB(from) && to === 'USDT') {
-      const usdtEst = a / SPOT.RUB_per_USD_base_cash;
-      const m = usdMarkupPerc(usdtEst);
-      const rubPerUsdt = SPOT.RUB_per_USD_base_cash * (1 + m);
-      rate = rubPerUsdt; total = a / rate;
-      return { rate,total, rateText:rateText(from,to,rate), totalText:`${fmtNum(total,2)} USDT` };
+
+    // Сначала пробуем явную пару/обратную:
+    let rate = pairOrInverse(from, to); // FROM per 1 TO
+    if (rate) {
+      const total = a / rate;
+      const decimalsByTo =
+        (to === 'BTC') ? 8 :
+        (to === 'ETH') ? 6 :
+        (to === 'RUB' || to === 'USD' || to === 'USDT' || to === 'CNY') ? 2 : 2;
+      return {
+        rate, total,
+        rateText: rateText(from, to, rate),
+        totalText: `${fmtNum(total, decimalsByTo)} ${to}`,
+      };
     }
-    // RUB/BANK -> CNPAY
+
+    // Специальные мосты, если пара не задана:
+    // (пример: RUB -> CNPAY через CNY или USDT -> CNY)
     if (asRUB(from) && isCNP(to)) {
-      let rubPerCny = rubPerCnyByTier(1000);
-      let cny = a / rubPerCny;
-      for (let i=0;i<4;i++){ rubPerCny = rubPerCnyByTier(cny); cny = a / rubPerCny; }
-      rate = rubPerCny; total = cny;
-      return { rate,total, rateText:rateText(from,'CNY',rate), totalText:`${fmtNum(total,2)} CNY` };
-    }
-    // USD -> RUB
-    if (from === 'USD' && asRUB(to)) {
-      rate = 1 / SPOT.RUB_per_USD_cash_buy; total = a / rate;
-      return { rate,total, rateText:rateText('USD',to,rate), totalText:`${fmtNum(total,0)} ${to}` };
-    }
-    // USDT -> RUB
-    if (from === 'USDT' && asRUB(to)) {
-      rate = 1 / SPOT.RUB_per_USDT_cash_buy; total = a / rate;
-      return { rate,total, rateText:rateText('USDT',to,rate), totalText:`${fmtNum(total,0)} ${to}` };
-    }
-    // USDT -> CNPAY
-    if (from === 'USDT' && isCNP(to)) {
-      const cnyPerUsdt = cnyPerUsdtByTier(a);
-      rate = 1 / cnyPerUsdt; total = a / rate;
-      return { rate,total, rateText:rateText('USDT','CNY',rate), totalText:`${fmtNum(total,2)} CNY` };
-    }
-    // RUB/BANK -> BTC/ETH
-    if (asRUB(from) && to === 'BTC') {
-      rate = SPOT.RUB_per_BTC; total = a / rate;
-      return { rate,total, rateText:rateText(from,'BTC',rate), totalText:`${fmtNum(total,8)} BTC` };
-    }
-    if (asRUB(from) && to === 'ETH') {
-      rate = SPOT.RUB_per_ETH; total = a / rate;
-      return { rate,total, rateText:rateText(from,'ETH',rate), totalText:`${fmtNum(total,6)} ETH` };
-    }
-    // USD/USDT -> BTC/ETH
-    if ((from === 'USD' || from === 'USDT') && to === 'BTC') {
-      rate = SPOT.USD_per_BTC; total = a / rate;
-      return { rate,total, rateText:rateText(from,'BTC',rate), totalText:`${fmtNum(total,8)} BTC` };
-    }
-    if ((from === 'USD' || from === 'USDT') && to === 'ETH') {
-      rate = SPOT.USD_per_ETH; total = a / rate;
-      return { rate,total, rateText:rateText(from,'ETH',rate), totalText:`${fmtNum(total,6)} ETH` };
+      // через CNY: ищем RUB/CNY; если нет — RUB/USDT и USDT/CNY
+      let rubPerCny = pairOrInverse('RUB', 'CNY');
+      if (!rubPerCny) {
+        const rubPerUsdt = pairOrInverse('RUB','USDT');
+        const usdtPerCny = pairOrInverse('USDT','CNY'); // USDT per 1 CNY
+        if (rubPerUsdt && usdtPerCny) rubPerCny = rubPerUsdt * usdtPerCny;
+      }
+      if (rubPerCny) {
+        const total = a / rubPerCny; // CNY
+        return {
+          rate: rubPerCny,
+          total,
+          rateText: rateText('RUB','CNY',rubPerCny),
+          totalText: `${fmtNum(total,2)} CNY`,
+        };
+      }
     }
 
-    // Фолбэки
-    if (asRUB(from) && asRUB(to)) return { rate:null, total:null, rateText:'—', totalText:'—' };
-    if ((from === 'USD' && to === 'USDT') || (from === 'USDT' && to === 'USD')) {
-      const rate = 1, total = a; return { rate,total, rateText:rateText(from,to,rate), totalText:`${fmtNum(total,2)} ${to}` };
-    }
-    if (isCNP(to)) {
-      let usdtInterm = null;
-      if (from === 'USD') usdtInterm = a;
-      else if (asRUB(from)) {
-        const usdtEst = a / SPOT.RUB_per_USD_base_cash;
-        const m = usdMarkupPerc(usdtEst);
-        const rubPerUsdt = SPOT.RUB_per_USD_base_cash * (1 + m);
-        usdtInterm = a / rubPerUsdt;
-      } else if (from === 'BTC') {
-        const usd = a * SPOT.USD_per_BTC; usdtInterm = usd;
-      } else if (from === 'ETH') {
-        const usd = a * SPOT.USD_per_ETH; usdtInterm = usd;
-      }
-      if (usdtInterm != null && usdtInterm > 0) {
-        const cnyPerUsdt = cnyPerUsdtByTier(usdtInterm);
-        const rate = 1 / cnyPerUsdt;
-        const cnyTotal = usdtInterm * cnyPerUsdt;
-        return { rate,total:cnyTotal, rateText:rateText(from,'CNY',rate), totalText:`${fmtNum(cnyTotal,2)} CNY` };
+    if (from === 'USDT' && isCNP(to)) {
+      const usdtPerCny = pairOrInverse('USDT','CNY'); // USDT per 1 CNY
+      if (usdtPerCny) {
+        const cny = a / (1/usdtPerCny); // a * (CNY per 1 USDT)
+        return {
+          rate: usdtPerCny,
+          total: cny,
+          rateText: rateText('USDT','CNY',usdtPerCny),
+          totalText: `${fmtNum(cny,2)} CNY`,
+        };
       }
     }
 
     return { rate:null, total:null, rateText:'—', totalText:'—' };
+  }
+
+  // ======= ОБРАТНЫЙ КОТИРОВЩИК: given want (TO amount) => need (FROM amount) =======
+  function quoteReverse({ from, to, want }){
+    from = (from || '').toUpperCase();
+    to   = (to   || '').toUpperCase();
+    const w = Number(want || 0);
+    if (!from || !to || !w || w <= 0) return { ok:false };
+
+    let rate = pairOrInverse(from, to); // FROM per 1 TO
+    if (!rate) return { ok:false };
+
+    const need = w * rate; // сколько FROM нужно отдать
+    return { ok:true, need, rate };
   }
 
   function currencies(kind, city, side){
@@ -207,13 +209,13 @@
       return mapCodes(lst.filter(x => x !== 'CNY')); // отдавать CNY нельзя
     } else {
       let key = 'cash_to';
-      if (kind === 'bank') key = 'bank_to';
+      if (kind === 'bank')   key = 'bank_to';
       else if (kind === 'crypto') key = 'crypto_to';
-      else if (kind === 'cnpay') key = 'cnpay_to';
+      else if (kind === 'cnpay')  key = 'cnpay_to';
       const lst = (MATRIX[key] && MATRIX[key][city]) ? MATRIX[key][city] : [];
       return mapCodes(lst);
     }
   }
 
-  window.PRICING = { currencies, quote };
+  window.PRICING = { currencies, quote, quoteReverse, overrideRates, setPair };
 })();

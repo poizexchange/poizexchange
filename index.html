@@ -8,20 +8,27 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <!-- Важно: pricing раньше index.js -->
-  <script src="./pricing.js?v=61"></script>
+  <script src="./pricing.js?v=44"></script>
   <script src="./index.js?v=74" defer></script>
 </head>
 <body class="ui-blue">
-  <div class="app-scale">
+  <div class="app-scale"><!-- если был масштаб - оставь -->
 
-    <header class="tg-header">
-      <div class="wrap">
-        <h1 class="title">POIZ EXCHANGE — ОБМЕН ВАЛЮТ</h1>
+    <!-- БАННЕР -->
+    <header class="hero">
+      <div class="hero-badge">
+        <div class="brand-wrap">
+          <div class="brand poiz-express">POIZ</div>
+          <div class="brand">EXCHANGE</div>
+        </div>
+        <div class="flex-spacer"></div>
+        <div class="descr">ОБМЕН&nbsp;ВАЛЮТ</div>
       </div>
     </header>
 
     <main class="wrap main-safe">
-      <!-- Общий селектор города (показываем только для наличных) -->
+
+      <!-- Город (общий — показываем только для наличных) -->
       <section class="card soft cityTop" id="cityTop" hidden>
         <label class="label" for="cityFrom">Город</label>
         <select id="cityFrom" class="input">
@@ -36,39 +43,46 @@
         </select>
       </section>
 
-      <!-- Отдаю -->
+      <!-- ОТДАЮ -->
       <section class="card">
-        <h2 class="h2 center">Отдаю</h2>
+        <div class="section-head">
+          <span class="section-pill">Отдаю</span>
+        </div>
+
         <div class="chips" id="from-pay">
           <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
           <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
           <button class="chip" data-type="crypto"><img src="./icons/crypto.svg" alt="">Крипто</button>
         </div>
+
         <div id="from-citybox" class="citybox" hidden></div>
         <div id="from-currencies" class="tiles"></div>
       </section>
 
-      <!-- Получаю -->
+      <!-- ПОЛУЧАЮ -->
       <section class="card">
-        <h2 class="h2 center">Получаю</h2>
+        <div class="section-head">
+          <span class="section-pill pill-green">Получаю</span>
+        </div>
+
         <div class="chips" id="to-pay">
           <button class="chip" data-type="cash"><img src="./icons/cash.svg" alt="">Наличные</button>
           <button class="chip" data-type="bank"><img src="./icons/bank.svg" alt="">Банк</button>
           <button class="chip" data-type="crypto"><img src="./icons/crypto.svg" alt="">Крипто</button>
           <button class="chip full" data-type="cnpay"><img src="./icons/bankcn.svg" alt="">Китайские сервисы</button>
         </div>
+
         <div id="to-citybox" class="citybox" hidden></div>
         <div id="to-currencies" class="tiles"></div>
       </section>
 
-      <!-- Калькулятор -->
+      <!-- КАЛЬКУЛЯТОР -->
       <section class="card">
         <div class="calc-grid">
           <div>
-            <label class="label" for="amount">Сумма</label>
+            <label class="label" for="amount">Сумма (отдаю)</label>
             <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
 
-            <!-- Поле «Хочу получить» -->
             <label class="label" for="amountGet" style="margin-top:10px;">Хочу получить</label>
             <input id="amountGet" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
           </div>
@@ -86,9 +100,12 @@
         </div>
       </section>
 
-      <!-- Заявка -->
+      <!-- ЗАЯВКА -->
       <section class="card">
-        <h2 class="h2 center">Заявка</h2>
+        <div class="section-head">
+          <span class="section-pill">Заявка</span>
+        </div>
+
         <label class="label" for="contact">Контакт</label>
         <input id="contact" class="input" placeholder="@username или телефон" />
 

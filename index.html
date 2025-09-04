@@ -4,15 +4,15 @@
   <meta charset="UTF-8" />
   <title>Poiz Exchange — Обмен валют</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
-  <link rel="stylesheet" href="./styles.css?v=blue-04" />
+  <link rel="stylesheet" href="./styles.css?v=blue-05" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <!-- Важно: pricing раньше index.js -->
-  <script src="./pricing.js?v=44"></script>
-  <script src="./index.js?v=74" defer></script>
+  <script src="./pricing.js?v=45"></script>
+  <script src="./index.js?v=75" defer></script>
 </head>
 <body class="ui-blue">
-  <div class="app-scale"><!-- если был масштаб - оставь -->
+  <div class="app-scale">
 
     <!-- БАННЕР -->
     <header class="hero">
@@ -28,7 +28,7 @@
 
     <main class="wrap main-safe">
 
-      <!-- Город (общий — показываем только для наличных) -->
+      <!-- Город (виден только для наличных) -->
       <section class="card soft cityTop" id="cityTop" hidden>
         <label class="label" for="cityFrom">Город</label>
         <select id="cityFrom" class="input">
@@ -45,7 +45,7 @@
 
       <!-- ОТДАЮ -->
       <section class="card">
-        <div class="section-head">
+        <div class="section-head framed">
           <span class="section-pill">Отдаю</span>
         </div>
 
@@ -61,8 +61,8 @@
 
       <!-- ПОЛУЧАЮ -->
       <section class="card">
-        <div class="section-head">
-          <span class="section-pill pill-green">Получаю</span>
+        <div class="section-head framed green">
+          <span class="section-pill">Получаю</span>
         </div>
 
         <div class="chips" id="to-pay">
@@ -84,7 +84,7 @@
             <input id="amount" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
 
             <label class="label" for="amountGet" style="margin-top:10px;">Хочу получить</label>
-            <input id="amountGet" type="number" inputmode="decimal" step="0.01" min="0" class="input" placeholder="0.00" />
+            <input id="amountGet" type="number" inputmode="decimal" step="0.000001" min="0" class="input" placeholder="0.00" />
           </div>
 
           <div class="result-card">
@@ -102,7 +102,7 @@
 
       <!-- ЗАЯВКА -->
       <section class="card">
-        <div class="section-head">
+        <div class="section-head framed violet">
           <span class="section-pill">Заявка</span>
         </div>
 
@@ -122,7 +122,7 @@
       </section>
 
       <nav class="footlinks">
-        <a href="./rates.html?v=36">📊 Табло</a>
+        <a href="./rates.html?v=37">📊 Табло</a>
         <a href="https://t.me/poizchat" target="_blank">💬 Чат</a>
         <a href="https://t.me/poizmanager" target="_blank">📞 Админ</a>
       </nav>

@@ -26,24 +26,11 @@ body.ui-blue { margin:0; background:#f5f9ff; color:#0a2b4b;
   box-shadow:0 8px 18px rgba(24,97,185,.06); padding:16px; margin:14px 0; }
 .card.soft{ padding:12px 16px; }
 
-/* ==== ОТДЕЛЬНЫЕ ПЕЛЬМЕНИ «ОТДАЮ/ПОЛУЧАЮ/ЗАЯВКА» ==== */
-.section-head{ display:flex; align-items:center; margin:2px 0 12px; }
-.section-head.framed{
-  --grad: linear-gradient(135deg, #9fd0ff, #d7eaff);
-  position:relative; padding:7px; border-radius:16px;
-  background: var(--grad); /* рамка */
-}
-.section-head.framed.green{ --grad: linear-gradient(135deg,#baf3d0,#e2ffe8); }
-.section-head.framed.violet{ --grad: linear-gradient(135deg,#cdbbff,#e5dfff); }
-.section-head.framed::before{
-  content:""; position:absolute; inset:1.5px; border-radius:14px; background:#fff; z-index:0;
-}
-.section-head .section-pill{
-  position:relative; z-index:1;
-  display:inline-flex; align-items:center; justify-content:center; padding:8px 14px;
-  background:linear-gradient(135deg,#eaf4ff,#d7eaff);
-  color:#0a2b4b; border:1px solid #cfe1ff; border-radius:999px;
-  font-weight:900; letter-spacing:.2px; box-shadow:0 6px 14px rgba(63,169,255,.12);
+/* Простой заголовок секции (по центру) */
+.section-title{
+  margin:2px 0 12px;
+  font-size:18px; font-weight:900; letter-spacing:.2px;
+  text-align:center; color:#0a2b4b;
 }
 
 /* ===== ФОРМЫ ===== */

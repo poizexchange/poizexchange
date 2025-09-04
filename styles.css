@@ -1,16 +1,16 @@
 /* ===== БАЗА ===== */
 * { box-sizing: border-box; }
 body.ui-blue { margin:0; background:#f5f9ff; color:#0a2b4b;
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", Roboto, Segoe UI, Arial, sans-serif; }
+  font-family:-apple-system,BlinkMacSystemFont,"Inter",Roboto,"Segoe UI",Arial,sans-serif; }
 
-/* уменьшение всего интерфейса на ~10% */
-.app-scale{ transform: scale(.9); transform-origin: top center; }
+/* уменьшение всего интерфейса ~10% (как просили) */
+.app-scale{ transform:scale(.9); transform-origin:top center; }
 
-/* ===== ХЕДЕР ===== */
+/* ===== БАННЕР ===== */
 .hero{ padding:12px 16px 4px; }
 .hero-badge{
   display:flex; align-items:center; gap:12px; width:100%;
-  background: linear-gradient(135deg,#52b2ff,#2f92ff);
+  background:linear-gradient(135deg,#52b2ff,#2f92ff);
   color:#fff; border-radius:22px; padding:14px 18px;
   box-shadow:0 8px 22px rgba(47,146,255,.25);
 }
@@ -20,13 +20,21 @@ body.ui-blue { margin:0; background:#f5f9ff; color:#0a2b4b;
 .descr{ margin-left:auto; font-size:20px; line-height:1; opacity:.98; white-space:nowrap; }
 .flex-spacer{ flex:1; }
 
-/* ===== КАРТОЧКИ ===== */
+/* ===== ОБЩЕЕ ===== */
 .wrap{ max-width:960px; margin:0 auto; padding:0 16px 40px; }
 .card{ background:#fff; border:1px solid #dbe9ff; border-radius:18px;
   box-shadow:0 8px 18px rgba(24,97,185,.06); padding:16px; margin:14px 0; }
 .card.soft{ padding:12px 16px; }
-.section-title{ margin:4px 0 12px; font-size:18px; font-weight:800; letter-spacing:.3px; }
-.section-title.center{ text-align:center; }
+.section-head{ display:flex; align-items:center; margin:2px 0 10px; }
+.section-pill{
+  display:inline-flex; align-items:center; justify-content:center; padding:8px 14px;
+  background:linear-gradient(135deg,#eaf4ff,#d7eaff); color:#0a2b4b; border:1px solid #cfe1ff;
+  border-radius:999px; font-weight:900; letter-spacing:.2px;
+  box-shadow:0 6px 14px rgba(63,169,255,.12);
+}
+.section-pill.pill-green{
+  background:linear-gradient(135deg,#e9fff2,#d6ffe8); border-color:#bde8cc;
+}
 
 /* ===== ФОРМЫ ===== */
 .label{ display:block; margin:6px 0 6px; font-weight:600; color:#28527a; font-size:14px; }
@@ -46,11 +54,12 @@ body.ui-blue { margin:0; background:#f5f9ff; color:#0a2b4b;
 .tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
 .tile{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
   padding:14px 6px; border-radius:16px; background:#fff; border:2px solid #d6e6ff; cursor:pointer; transition:.15s; }
-.tile .ico{ width:40px; height:40px; }
+.tile .ico{ width:40px; height:40px; }        /* было 44px → -10% */
 .tile .ico img{ width:100%; height:100%; object-fit:contain; }
 .tile .cap{ font-weight:800; font-size:14px; letter-spacing:.2px; }
 .tile:hover{ transform:translateY(-1px); }
 .tile.active{ border-color:#3fa9ff; box-shadow:0 8px 18px rgba(63,169,255,.25); }
+.tile.disabled{ opacity:.45; filter:grayscale(25%); cursor:not-allowed; }
 
 /* ===== РЕЗУЛЬТАТЫ ===== */
 .calc-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:stretch; }
@@ -58,7 +67,7 @@ body.ui-blue { margin:0; background:#f5f9ff; color:#0a2b4b;
 .result-line{ display:flex; align-items:center; justify-content:space-between; padding:8px 2px; }
 .r-cap{ color:#3a6798; font-weight:700; }
 .r-val{ font-weight:800; }
-.r-big{ font-size:19px; font-weight:900; }
+.r-big{ font-size:19px; font-weight:900; }    /* чуть меньше */
 
 /* ===== КНОПКИ ===== */
 .btn-primary{ width:100%; margin-top:10px; padding:13px 16px; border:none; border-radius:16px; cursor:pointer;
@@ -66,7 +75,9 @@ body.ui-blue { margin:0; background:#f5f9ff; color:#0a2b4b;
   box-shadow:0 10px 22px rgba(47,146,255,.28); }
 .hint{ margin:8px 0 0; color:#5c7ea8; }
 
-/* city box сверху скрываем/показываем через JS (id=cityTop) */
-.cityTop{ margin-top:4px; }
+/* фут */
 .footlinks{ display:flex; gap:16px; justify-content:center; margin-top:10px; }
 .footlinks a{ text-decoration:none; color:#1c5fb8; font-weight:700; }
+
+/* city box сверху скрываем/показываем через JS (id=cityTop) */
+.cityTop{ margin-top:4px; }
